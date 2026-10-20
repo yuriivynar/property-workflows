@@ -64,6 +64,13 @@ begin
     raise exception 'INVALID_ASSIGNEE' using errcode = '22023';
   end if;
 
+  -- jsonb розрізняє ключі "abc…" і "ABC…"; після lower() вони вказали б на ту саму задачу шаблону, і запуск отримав би
+  -- її двічі (AC-RUN-01). Такий набір призначень неоднозначний — відхиляємо.
+  if (select count(*) from jsonb_object_keys(v_assignments))
+     <> (select count(distinct lower(k)) from jsonb_object_keys(v_assignments) as k) then
+    raise exception 'INVALID_ASSIGNEE' using errcode = '22023';
+  end if;
+
   -- Виконавець — лише менеджер або адміністратор. UUID порівнюємо в нижньому регістрі.
   if exists (
     select 1
