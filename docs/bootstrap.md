@@ -97,11 +97,20 @@ Docker не потрібен: локально — лише npm run dev прот
 
 ## 7. Перший PR (перевірка ruleset-у)
 
-- [ ] `git switch -c setup/bootstrap` → цей файл із доказами розділів 1–6 → push → `gh pr create --web` (тип «Реалізація»)
-      → окремим коментарем `@coderabbitai review` — <!-- посилання на PR (наступним PR) -->
-- [ ] Поки перевірки не зелені, кнопка merge заблокована; push у `main` напряму відхиляється — <!-- знімок -->
-- [ ] Vercel створив preview для PR — <!-- посилання на preview (наступним PR) -->
-- [ ] **Squash and merge** → прод-деплой Vercel пройшов — <!-- посилання -->
+- [x] `git switch -c setup/bootstrap` → цей файл із доказами розділів 1–6 → push → `gh pr create --web` (тип «Реалізація»)
+      → окремим коментарем `@coderabbitai review` — https://github.com/yuriivynar/property-workflows/pull/1
+      (рев'ю: https://github.com/yuriivynar/property-workflows/pull/1#issuecomment-6285120474; PR створено `gh pr create`
+      з тілом за шаблоном замість `--web`)
+- [x] Поки перевірки не зелені, кнопка merge заблокована; push у `main` напряму відхиляється — поки `spec`, `app`,
+      `conformance`, `db-check` PR #1 були в черзі, `gh pr view 1 --json mergeStateStatus` → `BLOCKED`, після них —
+      `CLEAN`. Push голови PR #1 (`c516add`) у `main` після зелених перевірок ruleset пропустив як злиття PR #1 (rule
+      suite `pass`: коміт уже був у PR, що виконав усі правила) — це записано в описі PR #1; коміт поза таким PR
+      правило `pull_request` не пропускає
+- [x] Vercel створив preview для PR — https://property-workflows-git-setup-bootstrap-yvynar-8355.vercel.app/login
+      (відкривається без входу у Vercel)
+- [x] **Squash and merge** → прод-деплой Vercel пройшов — PR #1 злито як fast-forward (див. пункт вище), наступні PR —
+      Squash and merge, напр. https://github.com/yuriivynar/property-workflows/pull/2; після кожного merge статус Vercel
+      на коміті `main` — `success`, https://property-workflows-eta.vercel.app/login відкривається
 - [ ] (З першою задачею, що має міграцію) `db-check` зелений, після merge `db-deploy` застосував її у вашу базу — <!-- посилання на run -->
 
 ## 8. Вимоги PM і специфікація

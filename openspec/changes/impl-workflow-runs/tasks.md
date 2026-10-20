@@ -6,7 +6,7 @@
 
 ## 1. Запуск шаблону для випадку
 
-- [ ] 1.1 Запуск шаблону: міграція ролей (`member` → `manager`, default `manager`,
+- [x] 1.1 Запуск шаблону: міграція ролей (`member` → `manager`, default `manager`,
   `check (role in ('manager', 'admin'))`) і `supabase/demo-users.json` (`admin@example.test`,
   `manager.a@example.test`, `manager.b@example.test`, `manager.c@example.test`); міграція схеми (`templates`,
   `template_sections`, `template_tasks`, `runs`, `run_sections`, `run_tasks` з RLS, `revoke` + явними GRANT,
@@ -16,14 +16,14 @@
   Done when: AC-RUN-01, AC-RUN-04, AC-RUN-05, AC-RUN-06, AC-RUN-08, AC-RUN-09 — менеджер і адміністратор запускають
   «Tenant move-in»: рівно один запуск «in progress» з 5 задачами «to do», менеджер запуску — той, хто запустив,
   виконавці — призначені або менеджер запуску (тести бази й preview).
-- [ ] 1.2 Незмінність запуску: `launch_run` копіює розділи й задачі (назви, позиції, обов'язковість) у
+- [x] 1.2 Незмінність запуску: `launch_run` копіює розділи й задачі (назви, позиції, обов'язковість) у
   `run_sections` / `run_tasks`; тест змінює шаблон після запуску.
   Done when: AC-RUN-02 — після додавання шостої задачі й перейменування першої запуск має ті самі 5 задач.
-- [ ] 1.3 Назва випадку: `src/lib/runs/messages.ts` і `validateCaseName` у формі; помилки `CASE_NAME_REQUIRED` /
+- [x] 1.3 Назва випадку: `src/lib/runs/messages.ts` і `validateCaseName` у формі; помилки `CASE_NAME_REQUIRED` /
   `CASE_NAME_TOO_LONG` у `launch_run`; повідомлення на формі `/runs/new`; тести домену й бази.
   Done when: AC-RUN-03, AC-RUN-07 — запуску немає, повідомлення «Enter a case name» і «Case name must be at most
   100 characters».
-- [ ] 1.4 Розділ 7 `docs/bootstrap.md` (посилання на PR #1, preview, прод-деплой); рядки AC-RUN-* у
+- [x] 1.4 Розділ 7 `docs/bootstrap.md` (посилання на PR #1, preview, прод-деплой); рядки AC-RUN-* у
   `docs/conformance.md` — `реалізовано`.
   Done when: AC-RUN-01…AC-RUN-09 — `npm run ac:coverage` зелений, рядки AC-RUN-* `реалізовано`.
 

@@ -1,17 +1,22 @@
 [
   {
     "email": "admin@example.test",
-    "full_name": "Олена Демо-Адмін",
+    "full_name": "Admin",
     "role": "admin"
   },
   {
-    "email": "member1@example.test",
-    "full_name": "Андрій Демо-Перший",
-    "role": "member"
+    "email": "manager.a@example.test",
+    "full_name": "Manager A",
+    "role": "manager"
   },
   {
-    "email": "member2@example.test",
-    "full_name": "Марія Демо-Друга",
-    "role": "member"
+    "email": "manager.b@example.test",
+    "full_name": "Manager B",
+    "role": "manager"
+  },
+  {
+    "email": "manager.c@example.test",
+    "full_name": "Manager C",
+    "role": "manager"
   }
 ]
