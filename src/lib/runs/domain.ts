@@ -62,6 +62,29 @@ export function requiredLabel(isRequired: boolean): string {
   return isRequired ? REQUIRED_LABELS.required : REQUIRED_LABELS.optional;
 }
 
+/**
+ * Прогрес запуску: «N of M done», де N — задачі зі статусом done, M — усі задачі запуску, обов'язкові й ні
+ * (AC-TASK-05, AC-TASK-09; глосарій PM, «Progress»).
+ */
+export function formatProgress(done: number, total: number): string {
+  return `${done} of ${total} done`;
+}
+
+/**
+ * Чи показувати кнопку позначки: виконавець задачі, менеджер запуску або адміністратор (AC-TASK-01, AC-TASK-02,
+ * AC-TASK-07). Лише для інтерфейсу — остаточно вирішує функція бази mark_task_done (AC-TASK-03).
+ */
+export function canMarkTask(input: {
+  userId: string;
+  role: string | null | undefined;
+  runManagerId: string;
+  assigneeId: string;
+  status: string;
+}): boolean {
+  if (input.status === "done") return false;
+  return input.role === "admin" || input.userId === input.runManagerId || input.userId === input.assigneeId;
+}
+
 /** Підпис колеги у виборі виконавця й біля задачі: ім'я та email (робоче рішення solomchaak/property-workflows-spec#5). */
 export function staffLabel(person: { full_name: string | null; email: string | null }): string {
   const email = person.email ?? "";

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { runStatusLabel } from "@/lib/runs/domain";
+import { formatProgress, runStatusLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
-// Список запусків. Які запуски видно, вирішує RLS: менеджер — свої й ті, де він виконавець; адміністратор — усі
-// (AC-TASK-06). Найновіші вгорі, у рядку — назва шаблону (робоче рішення до коментаря в solomchaak/property-workflows-spec#10).
+// Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
+// виконавець; адміністратор — усі (AC-TASK-06). У рядку — назва шаблону, статус і прогрес «N of M done» (AC-TASK-09);
+// найновіші вгорі (робочі рішення до solomchaak/property-workflows-spec#10 і коментаря в ньому, #12).
 export default async function RunsPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -13,8 +14,8 @@ export default async function RunsPage() {
   }
 
   const { data: runs } = await supabase
-    .from("runs")
-    .select("id, case_name, template_name, status, created_at")
+    .from("run_overview")
+    .select("id, case_name, template_name, status, created_at, done_count, total_count")
     .order("created_at", { ascending: false });
 
   return (
@@ -34,7 +35,8 @@ export default async function RunsPage() {
             <tr>
               <th className="py-2 pr-4 font-normal">Case</th>
               <th className="py-2 pr-4 font-normal">Template</th>
-              <th className="py-2 font-normal">Status</th>
+              <th className="py-2 pr-4 font-normal">Status</th>
+              <th className="py-2 font-normal">Progress</th>
             </tr>
           </thead>
           <tbody>
@@ -46,7 +48,10 @@ export default async function RunsPage() {
                   </Link>
                 </td>
                 <td className="py-2 pr-4">{run.template_name}</td>
-                <td className="py-2">{runStatusLabel(run.status)}</td>
+                <td className="py-2 pr-4">{runStatusLabel(run.status ?? "")}</td>
+                <td className="py-2" data-testid="run-progress">
+                  {formatProgress(run.done_count ?? 0, run.total_count ?? 0)}
+                </td>
               </tr>
             ))}
           </tbody>

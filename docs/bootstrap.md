@@ -111,7 +111,11 @@ Docker не потрібен: локально — лише npm run dev прот
 - [x] **Squash and merge** → прод-деплой Vercel пройшов — PR #1 злито як fast-forward (див. пункт вище), наступні PR —
       Squash and merge, напр. https://github.com/yuriivynar/property-workflows/pull/2; після кожного merge статус Vercel
       на коміті `main` — `success`, https://property-workflows-eta.vercel.app/login відкривається
-- [ ] (З першою задачею, що має міграцію) `db-check` зелений, після merge `db-deploy` застосував її у вашу базу — <!-- посилання на run -->
+- [x] (З першою задачею, що має міграцію) `db-check` зелений, після merge `db-deploy` застосував її у вашу базу — PR #5
+      (https://github.com/yuriivynar/property-workflows/pull/5): `db-check`
+      https://github.com/yuriivynar/property-workflows/actions/runs/39421510002/job/118623330644; після merge `db-deploy`
+      https://github.com/yuriivynar/property-workflows/actions/runs/39422164120 — у лозі `Applying migration
+      20261020115700_roles_manager_admin.sql`, `…_workflow_runs.sql`, `…_workflow_templates_reference_data.sql`
 
 ## 8. Вимоги PM і специфікація
 

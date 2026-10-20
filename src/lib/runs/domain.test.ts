@@ -1,7 +1,7 @@
 // Перевірка назви випадку у формі запуску і тексти повідомлень (openspec/specs/run-launch).
 // Те саме правило в базі — tests/db/run-launch.test.ts.
 import { describe, expect, it } from "vitest";
-import { errorCodeFrom, messageForError, validateCaseName } from "./domain";
+import { canMarkTask, errorCodeFrom, formatProgress, messageForError, validateCaseName } from "./domain";
 
 describe("Назва випадку", () => {
   it("AC-RUN-03: порожня назва або лише пробіли — запуску немає, повідомлення «Enter a case name»", () => {
@@ -54,5 +54,44 @@ describe("Код помилки з адреси сторінки", () => {
       expect(errorCodeFrom(key)).toBeUndefined();
       expect(messageForError(key)).toBe("Something went wrong. Try again.");
     }
+  });
+});
+
+describe("Позначка задачі", () => {
+  const base = { runManagerId: "manager-a", assigneeId: "manager-b", status: "to_do" };
+
+  it("AC-TASK-01: виконавець бачить кнопку позначки своєї задачі", () => {
+    expect(canMarkTask({ ...base, userId: "manager-b", role: "manager" })).toBe(true);
+  });
+
+  it("AC-TASK-02: менеджер запуску бачить кнопку на задачі іншого виконавця", () => {
+    expect(canMarkTask({ ...base, userId: "manager-a", role: "manager" })).toBe(true);
+  });
+
+  it("AC-TASK-07: адміністратор бачить кнопку на будь-якій задачі", () => {
+    expect(canMarkTask({ ...base, userId: "admin", role: "admin" })).toBe(true);
+  });
+
+  it("AC-TASK-03: сторонній менеджер кнопки не бачить; відмова бази NOT_ALLOWED дає текст AC-TASK-03 дослівно", () => {
+    expect(canMarkTask({ ...base, userId: "manager-c", role: "manager" })).toBe(false);
+    expect(errorCodeFrom("NOT_ALLOWED")).toBe("NOT_ALLOWED");
+    expect(messageForError("NOT_ALLOWED")).toBe(
+      "Only the task's assignee, the run manager, or an administrator can mark a task as done",
+    );
+  });
+
+  it("AC-TASK-01: на задачі «done» кнопки немає — позначка остаточна", () => {
+    expect(canMarkTask({ ...base, status: "done", userId: "manager-b", role: "manager" })).toBe(false);
+  });
+});
+
+describe("Прогрес", () => {
+  it("AC-TASK-05: 2 з 5 задач «done» — «2 of 5 done»", () => {
+    expect(formatProgress(2, 5)).toBe("2 of 5 done");
+  });
+
+  it("AC-TASK-09: той самий запис прогресу в рядку списку запусків", () => {
+    expect(formatProgress(2, 5)).toBe("2 of 5 done");
+    expect(formatProgress(5, 5)).toBe("5 of 5 done");
   });
 });
