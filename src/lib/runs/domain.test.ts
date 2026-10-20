@@ -47,3 +47,12 @@ describe("Помилки функцій бази", () => {
     expect(messageForError("INVALID_ASSIGNEE")).toBe("An assignee must be a manager or an administrator");
   });
 });
+
+describe("Код помилки з адреси сторінки", () => {
+  it("AC-RUN-03: службові ключі (__proto__, constructor, toString) — не коди помилок, а загальне повідомлення-рядок", () => {
+    for (const key of ["__proto__", "constructor", "toString", "hasOwnProperty"]) {
+      expect(errorCodeFrom(key)).toBeUndefined();
+      expect(messageForError(key)).toBe("Something went wrong. Try again.");
+    }
+  });
+});

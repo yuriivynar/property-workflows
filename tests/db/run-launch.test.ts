@@ -104,6 +104,31 @@ describe("База: запуск шаблону", () => {
     expect(await countRuns(t, "Anon")).toBe(0);
   });
 
+  it("AC-RUN-01: прямий запис у run_sections і run_tasks заборонено — ні insert, ні update статусу", async () => {
+    const runId = await launch(t, MANAGER_A, "Direct writes check");
+    await expect(
+      t.asUser(MANAGER_A, "insert into public.run_sections (run_id, name, position) values ($1, 'X', 99)", [runId]),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      t.asUser(
+        MANAGER_A,
+        `insert into public.run_tasks (run_id, section_id, name, is_required, position, assignee_id)
+         select run_id, id, 'X', false, 99, $2 from public.run_sections where run_id = $1 limit 1`,
+        [runId, MANAGER_A],
+      ),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      t.asUser(MANAGER_A, "update public.run_tasks set status = 'done' where run_id = $1", [runId]),
+    ).rejects.toThrow(/permission denied/);
+    await expect(
+      t.asUser(MANAGER_A, "update public.runs set status = 'completed' where id = $1", [runId]),
+    ).rejects.toThrow(/permission denied/);
+
+    const tasks = await tasksOf(t, MANAGER_A, runId);
+    expect(tasks).toHaveLength(5);
+    expect(tasks.every((task) => task.status === "to_do")).toBe(true);
+  });
+
   it("AC-RUN-05: адміністратор запускає «Tenant move-in» для «Apartment 14, move-in» → один запуск, менеджер запуску — адміністратор", async () => {
     const runId = await launch(t, ADMIN, "Apartment 14, move-in");
 

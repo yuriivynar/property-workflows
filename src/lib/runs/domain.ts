@@ -36,7 +36,8 @@ const MESSAGE_BY_CODE: Record<RunErrorCode, string> = {
   NOT_ALLOWED: MESSAGES.markNotAllowed,
 };
 
-const isRunErrorCode = (value: string): value is RunErrorCode => value in MESSAGE_BY_CODE;
+// Object.hasOwn, а не `in`: інакше `?error=__proto__` чи `constructor` з URL пройшли б як «код» (ключі прототипу).
+const isRunErrorCode = (value: string): value is RunErrorCode => Object.hasOwn(MESSAGE_BY_CODE, value);
 
 /** Код помилки з тексту помилки Supabase (функції бази кидають винятки з кодом у тексті). */
 export function errorCodeFrom(message: string | null | undefined): RunErrorCode | undefined {
@@ -50,11 +51,11 @@ export function messageForError(code: string | null | undefined): string {
 }
 
 export function runStatusLabel(status: string): string {
-  return status in RUN_STATUS_LABELS ? RUN_STATUS_LABELS[status as keyof typeof RUN_STATUS_LABELS] : status;
+  return Object.hasOwn(RUN_STATUS_LABELS, status) ? RUN_STATUS_LABELS[status as keyof typeof RUN_STATUS_LABELS] : status;
 }
 
 export function taskStatusLabel(status: string): string {
-  return status in TASK_STATUS_LABELS ? TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] : status;
+  return Object.hasOwn(TASK_STATUS_LABELS, status) ? TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] : status;
 }
 
 export function requiredLabel(isRequired: boolean): string {
