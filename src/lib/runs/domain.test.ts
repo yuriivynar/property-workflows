@@ -1,7 +1,7 @@
 // Перевірка назви випадку у формі запуску і тексти повідомлень (openspec/specs/run-launch).
 // Те саме правило в базі — tests/db/run-launch.test.ts.
 import { describe, expect, it } from "vitest";
-import { canMarkTask, errorCodeFrom, formatProgress, messageForError, validateCaseName } from "./domain";
+import { canMarkTask, errorCodeFrom, formatProgress, isUuid, messageForError, validateCaseName } from "./domain";
 
 describe("Назва випадку", () => {
   it("AC-RUN-03: порожня назва або лише пробіли — запуску немає, повідомлення «Enter a case name»", () => {
@@ -93,5 +93,14 @@ describe("Прогрес", () => {
   it("AC-TASK-09: той самий запис прогресу в рядку списку запусків", () => {
     expect(formatProgress(2, 5)).toBe("2 of 5 done");
     expect(formatProgress(5, 5)).toBe("5 of 5 done");
+  });
+});
+
+describe("Ідентифікатори з форми", () => {
+  it("AC-TASK-03: id задачі не у форматі UUID відкидається до запиту до бази", () => {
+    expect(isUuid("10000000-0000-4000-8000-000000000101")).toBe(true);
+    for (const value of ["", "abc", "1; drop table runs", "10000000-0000-4000-8000-00000000010", null, undefined]) {
+      expect(isUuid(value)).toBe(false);
+    }
   });
 });

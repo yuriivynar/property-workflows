@@ -90,3 +90,10 @@ export function staffLabel(person: { full_name: string | null; email: string | n
   const email = person.email ?? "";
   return person.full_name ? `${person.full_name} (${email})` : email;
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Ідентифікатор із форми чи адреси — лише UUID; інше відкидаємо ще до запиту до бази. */
+export function isUuid(value: string | null | undefined): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
