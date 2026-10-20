@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatProgress, runStatusLabel } from "@/lib/runs/domain";
+import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 
 // Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
@@ -21,22 +22,22 @@ export default async function RunsPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Runs</h1>
+        <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
         <Link
           href="/runs/new"
           className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background"
         >
-          Launch a template
+          {LABELS.launchTemplate}
         </Link>
       </div>
       {runs && runs.length > 0 ? (
         <table className="w-full text-left text-sm">
           <thead className="text-zinc-500">
             <tr>
-              <th className="py-2 pr-4 font-normal">Case</th>
-              <th className="py-2 pr-4 font-normal">Template</th>
-              <th className="py-2 pr-4 font-normal">Status</th>
-              <th className="py-2 font-normal">Progress</th>
+              <th className="py-2 pr-4 font-normal">{LABELS.columnCase}</th>
+              <th className="py-2 pr-4 font-normal">{LABELS.columnTemplate}</th>
+              <th className="py-2 pr-4 font-normal">{LABELS.columnStatus}</th>
+              <th className="py-2 font-normal">{LABELS.columnProgress}</th>
             </tr>
           </thead>
           <tbody>
@@ -57,10 +58,10 @@ export default async function RunsPage() {
           </tbody>
         </table>
       ) : (
-        <p className="text-sm text-zinc-500">No runs yet.</p>
+        <p className="text-sm text-zinc-500">{LABELS.noRuns}</p>
       )}
       <Link href="/" className="text-sm underline">
-        Back to profile
+        {LABELS.backToProfile}
       </Link>
     </main>
   );

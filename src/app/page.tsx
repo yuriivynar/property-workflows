@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 
@@ -32,7 +33,7 @@ export default async function Home() {
         <dd data-testid="user-role">{profile?.role ?? "профіль не знайдено"}</dd>
       </dl>
       <Link href="/runs" className="text-sm underline" data-testid="runs-link">
-        Runs
+        {LABELS.runsTitle}
       </Link>
       <form action={signOut}>
         <button
