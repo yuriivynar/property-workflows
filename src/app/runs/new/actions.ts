@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { errorCodeFrom, validateCaseName } from "@/lib/runs/domain";
+import { errorCodeFrom, isUuid, validateCaseName } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
 const ASSIGNEE_FIELD = "assignee:";
@@ -18,6 +18,10 @@ export async function launchRun(formData: FormData) {
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) {
     redirect("/login");
+  }
+
+  if (!isUuid(templateId)) {
+    redirect("/runs/new?error=TEMPLATE_NOT_FOUND");
   }
 
   const check = validateCaseName(String(formData.get("case_name") ?? ""));
