@@ -33,15 +33,15 @@
 
 | AC | Що перевіряє | Код | Тест | Статус |
 |---|---|---|---|---|
-| AC-RUN-01 | запуск шаблону створює рівно один запуск «in progress» з усіма 5 задачами «to do» | — | — | відкладено (чекає реалізації) |
-| AC-RUN-02 | зміна шаблону після запуску не змінює задач запуску | — | — | відкладено (чекає реалізації) |
-| AC-RUN-03 | порожня назва випадку чи лише пробіли — запуску немає, повідомлення «Enter a case name» | — | — | відкладено (чекає реалізації) |
-| AC-RUN-04 | 2 задачі призначено менеджеру B, решта 3 — менеджеру A | — | — | відкладено (чекає реалізації) |
-| AC-RUN-05 | адміністратор запускає шаблон — один запуск, менеджер запуску — адміністратор | — | — | відкладено (чекає реалізації) |
-| AC-RUN-06 | менеджер, який запустив шаблон, — менеджер запуску | — | — | відкладено (чекає реалізації) |
-| AC-RUN-07 | назва випадку з 101 символу — запуску немає, повідомлення «Case name must be at most 100 characters» | — | — | відкладено (чекає реалізації) |
-| AC-RUN-08 | без призначень менеджер A — виконавець усіх 5 задач | — | — | відкладено (чекає реалізації) |
-| AC-RUN-09 | без призначень адміністратор — виконавець усіх 5 задач | — | — | відкладено (чекає реалізації) |
+| AC-RUN-01 | запуск шаблону створює рівно один запуск «in progress» з усіма 5 задачами «to do» | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/actions.ts` | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-02 | зміна шаблону після запуску не змінює задач запуску | `supabase/migrations/20261020115705_workflow_runs.sql` (run_sections, run_tasks) | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-03 | порожня назва випадку чи лише пробіли — запуску немає, повідомлення «Enter a case name» | `src/lib/runs/domain.ts` (validateCaseName), `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `src/lib/runs/domain.test.ts`, `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-04 | 2 задачі призначено менеджеру B, решта 3 — менеджеру A | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/page.tsx` | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-05 | адміністратор запускає шаблон — один запуск, менеджер запуску — адміністратор | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-06 | менеджер, який запустив шаблон, — менеджер запуску | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-07 | назва випадку з 101 символу — запуску немає, повідомлення «Case name must be at most 100 characters» | `src/lib/runs/domain.ts` (validateCaseName), `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `src/lib/runs/domain.test.ts`, `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-08 | без призначень менеджер A — виконавець усіх 5 задач | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/actions.ts` | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-09 | без призначень адміністратор — виконавець усіх 5 задач | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |
 | AC-TASK-01 | виконавець позначає свою задачу — «done» | — | — | відкладено (чекає реалізації) |
 | AC-TASK-02 | менеджер запуску позначає задачу іншого виконавця — «done» | — | — | відкладено (чекає реалізації) |
 | AC-TASK-03 | сторонній менеджер не може позначити задачу — лишається «to do», повідомлення | — | — | відкладено (чекає реалізації) |
