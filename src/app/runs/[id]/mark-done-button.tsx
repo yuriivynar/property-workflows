@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { LABELS } from "@/lib/runs/messages";
 import { markTaskDone } from "./actions";
 
 // Позначка остаточна, тож спершу підтвердження з назвою задачі (робоче рішення до відповіді на
@@ -16,25 +17,23 @@ export function MarkDoneButton({ runId, taskId, taskName }: { runId: string; tas
         onClick={() => setConfirming(true)}
         className="rounded border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700"
       >
-        Mark as done
+        {LABELS.markAsDone}
       </button>
     );
   }
 
   return (
-    <form action={markTaskDone} className="flex flex-wrap items-center gap-2" role="group" aria-label="Confirm mark as done">
+    <form action={markTaskDone} className="flex flex-wrap items-center gap-2" role="group" aria-label={LABELS.confirmGroup}>
       <input type="hidden" name="run_id" value={runId} />
       <input type="hidden" name="task_id" value={taskId} />
-      <span className="text-sm">
-        Mark «{taskName}» as done? This cannot be undone.
-      </span>
+      <span className="text-sm">{LABELS.confirmMarkAsDone(taskName)}</span>
       <ConfirmButton />
       <button
         type="button"
         onClick={() => setConfirming(false)}
         className="rounded border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700"
       >
-        Cancel
+        {LABELS.cancel}
       </button>
     </form>
   );
@@ -48,7 +47,7 @@ function ConfirmButton() {
       disabled={pending}
       className="rounded bg-foreground px-3 py-1 text-sm font-medium text-background disabled:opacity-50"
     >
-      {pending ? "Saving…" : "Confirm"}
+      {pending ? LABELS.saving : LABELS.confirm}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 // Запуск шаблону — правила, які виконує база (функція launch_run, RLS, GRANT), на справжньому Postgres (PGlite)
 // з усіма міграціями. Ці тести покривають AC-RUN-* у docs/conformance.md (специфікація openspec/specs/run-launch).
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
 const TENANT_MOVE_IN = "10000000-0000-4000-8000-000000000001";
@@ -68,6 +68,10 @@ beforeAll(async () => {
   MANAGER_A = t.users["manager.a@example.test"];
   MANAGER_B = t.users["manager.b@example.test"];
 }, 60_000);
+
+afterAll(async () => {
+  await t.db.close();
+});
 
 describe("База: запуск шаблону", () => {
   it("AC-RUN-01: «Tenant move-in» (2 розділи, 5 задач, 3 обов'язкові) → рівно один запуск «in progress» з 5 задачами «to do»", async () => {
@@ -207,12 +211,98 @@ describe("База: назва випадку", () => {
   });
 });
 
+describe("База: назва випадку — пробільні символи Unicode", () => {
+  it("AC-RUN-03: назва лише з нерозривних та інших Unicode-пробілів → CASE_NAME_REQUIRED, як у формі", async () => {
+    for (const blank of ["\u00a0", "\u00a0\u2007\u202f", "\ufeff", "\u3000 \u00a0"]) {
+      expect(await launchError(t, MANAGER_A, blank)).toContain("CASE_NAME_REQUIRED");
+    }
+  });
+
+  it("AC-RUN-03: нерозривні пробіли на краях обрізаються перед збереженням", async () => {
+    const runId = await launch(t, MANAGER_A, "\u00a0Flat 1, move-in\u00a0");
+
+    expect((await runOf(t, MANAGER_A, runId)).case_name).toBe("Flat 1, move-in");
+  });
+
+  it("AC-RUN-03: прямий запис назви з пробілом на краю відхиляє check-обмеження бази", async () => {
+    await expect(
+      t.asService(
+        "insert into public.runs (template_name, case_name, run_manager_id) values ('X', $1, $2)",
+        ["Flat 2\u00a0", MANAGER_A],
+      ),
+    ).rejects.toThrow(/runs_case_name_check/);
+  });
+});
+
+describe("База: цілісність шаблону", () => {
+  it("AC-RUN-04: UUID виконавця у верхньому регістрі теж застосовується", async () => {
+    const [first] = await templateTaskIds(t);
+    const runId = await launch(t, MANAGER_A, "Apartment 20, move-in", { [first.toUpperCase()]: MANAGER_B.toUpperCase() });
+
+    const tasks = await tasksOf(t, MANAGER_A, runId);
+    expect(tasks.filter((task) => task.assignee_id === MANAGER_B)).toHaveLength(1);
+  });
+
+  it("AC-RUN-01: ключі однієї задачі в різному регістрі відхиляються — запуску немає, задача не дублюється", async () => {
+    // Окремий шаблон з UUID, де є літери: у сид-шаблонів ID лише з цифр, і toUpperCase() їх не змінює.
+    const template = "abcdef00-0000-4000-8000-0000000000aa";
+    const section = "abcdef00-0000-4000-8000-0000000000bb";
+    const task = "abcdef00-0000-4000-8000-0000000000cc";
+    await t.asService("insert into public.templates (id, name) values ($1, 'Mixed-case keys')", [template]);
+    await t.asService("insert into public.template_sections (id, template_id, name, position) values ($1, $2, 'Only', 1)", [
+      section,
+      template,
+    ]);
+    await t.asService(
+      "insert into public.template_tasks (id, template_id, section_id, name, is_required, position) values ($1, $2, $3, 'Only task', true, 1)",
+      [task, template, section],
+    );
+
+    const error = await t
+      .asUser(MANAGER_A, "select public.launch_run($1, $2, $3) as id", [
+        template,
+        "Apartment 21, move-in",
+        { [task]: MANAGER_A, [task.toUpperCase()]: MANAGER_B },
+      ])
+      .then(
+        () => "",
+        (e: Error) => e.message,
+      );
+    expect(error).toContain("INVALID_ASSIGNEE");
+    expect(await countRuns(t, "Apartment 21, move-in")).toBe(0);
+
+    // Один ключ у верхньому регістрі — звичайне призначення, задача одна.
+    const [row] = await t.asUser<{ id: string }>(MANAGER_A, "select public.launch_run($1, $2, $3) as id", [
+      template,
+      "Apartment 22, move-in",
+      { [task.toUpperCase()]: MANAGER_B },
+    ]);
+    const tasks = await tasksOf(t, MANAGER_A, row.id);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].assignee_id).toBe(MANAGER_B);
+  });
+
+  it("AC-RUN-01: задача шаблону не може посилатися на розділ іншого шаблону", async () => {
+    await expect(
+      t.asService(
+        `insert into public.template_tasks (template_id, section_id, name, is_required, position)
+         values ($1, '10000000-0000-4000-8000-000000000021', 'Wrong section', false, 9)`,
+        [TENANT_MOVE_IN],
+      ),
+    ).rejects.toThrow(/template_tasks_section_template_fkey/);
+  });
+});
+
 describe("База: незмінність запуску", () => {
   // Окрема база: тест змінює шаблон «Tenant move-in», а решта тестів очікує його в початковому вигляді.
   let isolated: TestDb;
   beforeAll(async () => {
     isolated = await createTestDb();
   }, 60_000);
+
+  afterAll(async () => {
+    await isolated.db.close();
+  });
 
   it("AC-RUN-02: шаблон змінюють (додають шосту задачу, перейменовують першу) → запуск має ті самі 5 задач з початковими назвами", async () => {
     const manager = isolated.users["manager.a@example.test"];

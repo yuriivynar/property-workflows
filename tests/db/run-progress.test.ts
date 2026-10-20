@@ -1,7 +1,7 @@
 // Позначка задач, завершення запуску, прогрес і видимість — правила, які виконує база (mark_task_done, run_overview,
 // RLS), на справжньому Postgres (PGlite) з усіма міграціями. Покривають AC-TASK-* у docs/conformance.md
 // (специфікація openspec/specs/run-progress).
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { formatProgress } from "../../src/lib/runs/domain";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
@@ -74,6 +74,10 @@ beforeAll(async () => {
   MANAGER_B = t.users["manager.b@example.test"];
   MANAGER_C = t.users["manager.c@example.test"];
 }, 60_000);
+
+afterAll(async () => {
+  await t.db.close();
+});
 
 describe("База: позначка задачі виконаною", () => {
   it("AC-TASK-01: виконавець (менеджер B) позначає свою задачу в запуску менеджера A → «done»", async () => {
@@ -215,13 +219,13 @@ describe("База: прогрес і статуси задач", () => {
 });
 
 describe("База: видимість запусків", () => {
-  // Окрема база: у списку мають бути рівно три запуски зі сценарію AC-TASK-06.
+  // Окрема база з рівно трьома запусками зі сценарію AC-TASK-06; їх створює beforeAll, тож кожен тест блоку
+  // перевіряє ці запуски й тоді, коли його запущено окремо.
   let v: TestDb;
+  let firstOfA: string, secondOfA: string, ownOfB: string;
+
   beforeAll(async () => {
     v = await createTestDb();
-  }, 60_000);
-
-  it("AC-TASK-06: менеджер B бачить свій запуск і перший запуск менеджера A, де він виконавець, але не другий", async () => {
     const a = v.users["manager.a@example.test"];
     const b = v.users["manager.b@example.test"];
     const [first] = (
@@ -240,10 +244,17 @@ describe("База: видимість запусків", () => {
         ])
       )[0].id;
 
-    const firstOfA = await launchAs(a, "First run of A", { [first]: b });
-    const secondOfA = await launchAs(a, "Second run of A");
-    const ownOfB = await launchAs(b, "Run of B");
+    firstOfA = await launchAs(a, "First run of A", { [first]: b });
+    secondOfA = await launchAs(a, "Second run of A");
+    ownOfB = await launchAs(b, "Run of B");
+  }, 60_000);
 
+  afterAll(async () => {
+    await v.db.close();
+  });
+
+  it("AC-TASK-06: менеджер B бачить свій запуск і перший запуск менеджера A, де він виконавець, але не другий", async () => {
+    const b = v.users["manager.b@example.test"];
     const visible = (await v.asUser<{ id: string }>(b, "select id from public.run_overview")).map((r) => r.id);
     expect(visible).toHaveLength(2);
     expect(visible).toEqual(expect.arrayContaining([ownOfB, firstOfA]));
@@ -255,9 +266,11 @@ describe("База: видимість запусків", () => {
   });
 
   it("AC-TASK-06: адміністратор бачить усі запуски", async () => {
-    const all = await v.asService<{ n: number }>("select count(*)::int as n from public.runs");
-    const seenByAdmin = await v.asUser(v.users["admin@example.test"], "select id from public.run_overview");
+    const seenByAdmin = (await v.asUser<{ id: string }>(v.users["admin@example.test"], "select id from public.run_overview")).map(
+      (r) => r.id,
+    );
 
-    expect(seenByAdmin).toHaveLength(all[0].n);
+    expect(seenByAdmin).toHaveLength(3);
+    expect(seenByAdmin).toEqual(expect.arrayContaining([firstOfA, secondOfA, ownOfB]));
   });
 });

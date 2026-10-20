@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MESSAGES } from "@/lib/runs/messages";
+import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
   formatProgress,
@@ -39,11 +39,19 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   ]);
 
   if (!run?.id || !run.run_manager_id) {
+    // Той, хто не бачить запуску, теж отримує текст AC-TASK-03, якщо надіслав позначку попри інтерфейс
+    // (стара сторінка, прямий запит): база відповідає NOT_ALLOWED і для чужої, і для відсутньої задачі, тож
+    // повідомлення не підказує, що запуск існує.
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
         <h1 className="text-2xl font-semibold">{MESSAGES.runNotFound}</h1>
+        {message ? (
+          <p role="alert" className="text-sm text-red-600">
+            {message}
+          </p>
+        ) : null}
         <Link href="/runs" className="text-sm underline">
-          Back to runs
+          {LABELS.backToRuns}
         </Link>
       </main>
     );
@@ -71,11 +79,11 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         <p className="text-sm text-zinc-500">{run.template_name}</p>
       </div>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
-        <dt className="text-zinc-500">Run manager</dt>
+        <dt className="text-zinc-500">{LABELS.runManager}</dt>
         <dd data-testid="run-manager">{names.get(runManagerId) ?? "—"}</dd>
-        <dt className="text-zinc-500">Status</dt>
+        <dt className="text-zinc-500">{LABELS.status}</dt>
         <dd data-testid="run-status">{runStatusLabel(run.status ?? "")}</dd>
-        <dt className="text-zinc-500">Progress</dt>
+        <dt className="text-zinc-500">{LABELS.progress}</dt>
         <dd data-testid="run-progress">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</dd>
       </dl>
 
@@ -118,7 +126,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
       ))}
 
       <Link href="/runs" className="text-sm underline">
-        Back to runs
+        {LABELS.backToRuns}
       </Link>
     </main>
   );

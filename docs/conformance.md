@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | AC-RUN-01 | запуск шаблону створює рівно один запуск «in progress» з усіма 5 задачами «to do» | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/actions.ts` | `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-02 | зміна шаблону після запуску не змінює задач запуску | `supabase/migrations/20261020115705_workflow_runs.sql` (run_sections, run_tasks) | `tests/db/run-launch.test.ts` | реалізовано |
-| AC-RUN-03 | порожня назва випадку чи лише пробіли — запуску немає, повідомлення «Enter a case name» | `src/lib/runs/domain.ts` (validateCaseName), `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `src/lib/runs/domain.test.ts`, `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-03 | порожня назва випадку чи лише пробіли — запуску немає, повідомлення «Enter a case name» | `src/lib/runs/domain.ts` (validateCaseName), `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `supabase/migrations/20261020144507_case_name_whitespace_and_template_integrity.sql` (Unicode-пробіли) | `src/lib/runs/domain.test.ts`, `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-04 | 2 задачі призначено менеджеру B, решта 3 — менеджеру A | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/page.tsx` | `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-05 | адміністратор запускає шаблон — один запуск, менеджер запуску — адміністратор | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-06 | менеджер, який запустив шаблон, — менеджер запуску | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |

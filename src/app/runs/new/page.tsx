@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
+import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
@@ -43,11 +44,11 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Launch a template</h1>
+      <h1 className="text-2xl font-semibold">{LABELS.launchTemplate}</h1>
 
       <form action="/runs/new" className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">
-          Template
+          {LABELS.template}
           <select
             name="template"
             defaultValue={selected?.id ?? ""}
@@ -55,7 +56,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
             className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
           >
             <option value="" disabled>
-              Choose a template
+              {MESSAGES.templateNotFound}
             </option>
             {(templates ?? []).map((t) => (
               <option key={t.id} value={t.id}>
@@ -65,7 +66,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
           </select>
         </label>
         <button type="submit" className="rounded border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700">
-          Choose
+          {LABELS.choose}
         </button>
       </form>
 
@@ -79,11 +80,11 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         <form action={launchRun} className="flex flex-col gap-5">
           <input type="hidden" name="template_id" value={selected.id} />
           <label className="flex flex-col gap-1 text-sm">
-            Case name
+            {LABELS.caseName}
             <input
               name="case_name"
               type="text"
-              placeholder="Apartment 12, move-in"
+              placeholder={LABELS.caseNamePlaceholder}
               className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
             />
           </label>
@@ -101,10 +102,10 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
                     <select
                       name={`assignee:${task.id}`}
                       defaultValue=""
-                      aria-label={`Assignee of ${task.name}`}
+                      aria-label={LABELS.assigneeOf(task.name)}
                       className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
                     >
-                      <option value="">Me (run manager)</option>
+                      <option value="">{LABELS.meAsRunManager}</option>
                       {colleagues.map((person) => (
                         <option key={person.id} value={person.id}>
                           {staffLabel(person)}
@@ -122,13 +123,13 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
             </p>
           ) : null}
           <div>
-            <SubmitButton label="Launch" pendingLabel="Launching…" />
+            <SubmitButton label={LABELS.launch} pendingLabel={LABELS.launching} />
           </div>
         </form>
       ) : null}
 
       <Link href="/runs" className="text-sm underline">
-        Back to runs
+        {LABELS.backToRuns}
       </Link>
     </main>
   );
