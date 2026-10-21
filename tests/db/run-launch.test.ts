@@ -307,7 +307,17 @@ describe("База: незмінність запуску", () => {
   it("AC-RUN-02: шаблон змінюють (додають шосту задачу, перейменовують першу) → запуск має ті самі 5 задач з початковими назвами", async () => {
     const manager = isolated.users["manager.a@example.test"];
     const runId = await launch(isolated, manager, "Apartment 12, move-in");
-    const before = (await tasksOf(isolated, manager, runId)).map((task) => task.name);
+    // Повний знімок копії: розділ, назва, позиція й обов'язковість кожної задачі.
+    const snapshot = () =>
+      isolated.asUser<{ section: string; section_position: number; name: string; position: number; is_required: boolean }>(
+        manager,
+        `select s.name as section, s.position as section_position, t.name, t.position, t.is_required
+         from public.run_tasks as t join public.run_sections as s on s.id = t.section_id
+         where t.run_id = $1 order by s.position, t.position`,
+        [runId],
+      );
+    const beforeRows = await snapshot();
+    const before = beforeRows.map((task) => task.name);
 
     await isolated.asService(
       `insert into public.template_tasks (template_id, section_id, name, is_required, position)
@@ -319,8 +329,18 @@ describe("База: незмінність запуску", () => {
       [TENANT_MOVE_IN, before[0]],
     );
 
-    const after = (await tasksOf(isolated, manager, runId)).map((task) => task.name);
-    expect(after).toHaveLength(5);
-    expect(after).toEqual(before);
+    // Ще й змінюємо обов'язковість, порядок і розділ задачі в шаблоні — запуск не має це побачити.
+    await isolated.asService(
+      "update public.template_tasks set is_required = not is_required, position = position + 10 where template_id = $1",
+      [TENANT_MOVE_IN],
+    );
+    await isolated.asService("update public.template_sections set name = name || ' (renamed)' where template_id = $1", [
+      TENANT_MOVE_IN,
+    ]);
+
+    const afterRows = await snapshot();
+    expect(afterRows).toHaveLength(5);
+    expect(afterRows.map((task) => task.name)).toEqual(before);
+    expect(afterRows).toEqual(beforeRows);
   });
 });

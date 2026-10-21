@@ -10,6 +10,7 @@ import {
   needsConfirmation,
   requiredLabel,
   staffLabel,
+  taskBelongsToRun,
   validateCaseName,
 } from "./domain";
 import { LABELS, MESSAGES } from "./messages";
@@ -174,5 +175,13 @@ describe("Уточнення PM: підтвердження, email, сторін
     const base = { runManagerId: "manager-a", status: "to_do", userId: "manager-c", role: "manager" };
     expect(canMarkTask({ ...base, assigneeId: "manager-c" })).toBe(true);
     expect(canMarkTask({ ...base, assigneeId: "manager-b" })).toBe(false);
+  });
+});
+
+describe("Задача й запуск з форми", () => {
+  it("AC-TASK-03: задачу з іншого запуску або невидиму задачу дія не позначає", () => {
+    expect(taskBelongsToRun({ run_id: "run-1" }, "run-1")).toBe(true);
+    expect(taskBelongsToRun({ run_id: "run-2" }, "run-1")).toBe(false);
+    expect(taskBelongsToRun(null, "run-1")).toBe(false);
   });
 });
