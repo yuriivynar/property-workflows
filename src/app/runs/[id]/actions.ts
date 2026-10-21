@@ -26,7 +26,10 @@ export async function markTaskDone(formData: FormData) {
     redirect(`${runPath}?error=NOT_ALLOWED`);
   }
 
-  const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId });
+  // confirmed=true надсилає лише форма підтвердження; останню обов'язкову задачу база без нього не позначить
+  // (AC-TASK-04, AC-TASK-16).
+  const confirmed = formData.get("confirmed") === "true";
+  const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId, p_confirmed: confirmed });
   if (error) {
     redirect(`${runPath}?error=${encodeURIComponent(errorCodeFrom(error.message) ?? "UNEXPECTED")}`);
   }

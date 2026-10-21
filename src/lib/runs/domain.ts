@@ -11,7 +11,8 @@ export type RunErrorCode =
   | "LAUNCH_NOT_ALLOWED"
   | "TEMPLATE_NOT_FOUND"
   | "INVALID_ASSIGNEE"
-  | "NOT_ALLOWED";
+  | "NOT_ALLOWED"
+  | "CONFIRMATION_REQUIRED";
 
 export type CaseNameCheck = { ok: true; caseName: string } | { ok: false; code: RunErrorCode };
 
@@ -34,6 +35,7 @@ const MESSAGE_BY_CODE: Record<RunErrorCode, string> = {
   TEMPLATE_NOT_FOUND: MESSAGES.templateNotFound,
   INVALID_ASSIGNEE: MESSAGES.invalidAssignee,
   NOT_ALLOWED: MESSAGES.markNotAllowed,
+  CONFIRMATION_REQUIRED: MESSAGES.confirmationRequired,
 };
 
 // Object.hasOwn, а не `in`: інакше `?error=__proto__` чи `constructor` з URL пройшли б як «код» (ключі прототипу).
@@ -85,10 +87,23 @@ export function canMarkTask(input: {
   return input.role === "admin" || input.userId === input.runManagerId || input.userId === input.assigneeId;
 }
 
-/** Підпис колеги у виборі виконавця й біля задачі: ім'я та email (робоче рішення solomchaak/property-workflows-spec#5). */
-export function staffLabel(person: { full_name: string | null; email: string | null }): string {
-  const email = person.email ?? "";
-  return person.full_name ? `${person.full_name} (${email})` : email;
+/** Підпис колеги у виборі виконавця й біля задачі — лише email (рішення PM у solomchaak/property-workflows-spec#5; AC-RUN-10, AC-TASK-11). */
+export function staffLabel(person: { email: string | null }): string {
+  return person.email ?? "";
+}
+
+/**
+ * Чи потрібне підтвердження позначки: лише для останньої обов'язкової задачі «to do» — тієї, що завершить запуск
+ * (рішення PM у solomchaak/property-workflows-spec#15; AC-TASK-04, AC-TASK-16). Решту задач позначають одразу
+ * (AC-TASK-01, AC-TASK-02, AC-TASK-07).
+ */
+export function needsConfirmation(
+  tasks: { id: string; is_required: boolean; status: string }[],
+  taskId: string,
+): boolean {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task || !task.is_required || task.status === "done") return false;
+  return tasks.every((t) => t.id === taskId || !t.is_required || t.status === "done");
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -29,7 +29,7 @@ async function launch(userId: string, caseName: string, assignments: Record<stri
 
 /** Позначка так, як її робить server action markTaskDone: supabase.rpc('mark_task_done', …) від імені користувача. */
 const mark = (userId: string, taskId: string) =>
-  t.asUser(userId, "select public.mark_task_done($1)", [taskId]).then(
+  t.asUser(userId, "select public.mark_task_done($1, true)", [taskId]).then(
     () => "",
     (e: Error) => e.message,
   );
@@ -132,7 +132,7 @@ describe("База: відмова в позначці", () => {
   it("AC-TASK-03: відсутня задача — та сама відповідь NOT_ALLOWED; без входу виклик заборонено", async () => {
     expect(await mark(MANAGER_C, "c0000000-0000-0000-0000-000000000000")).toContain("NOT_ALLOWED");
     const { taskOfB } = await runOfAWithTaskForB("AC-TASK-03 anon");
-    await expect(t.asAnon("select public.mark_task_done($1)", [taskOfB.id])).rejects.toThrow(/permission denied/);
+    await expect(t.asAnon("select public.mark_task_done($1, true)", [taskOfB.id])).rejects.toThrow(/permission denied/);
     await expect(t.asUser(MANAGER_C, "update public.run_tasks set status = 'done' where id = $1", [taskOfB.id])).rejects.toThrow(
       /permission denied/,
     );

@@ -5,6 +5,7 @@ import {
   canMarkTask,
   formatProgress,
   messageForError,
+  needsConfirmation,
   requiredLabel,
   runStatusLabel,
   staffLabel,
@@ -117,7 +118,12 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                     assigneeId: task.assignee_id,
                     status: task.status,
                   }) ? (
-                    <MarkDoneButton runId={runId} taskId={task.id} taskName={task.name} />
+                    <MarkDoneButton
+                      runId={runId}
+                      taskId={task.id}
+                      taskName={task.name}
+                      confirm={needsConfirmation(tasks ?? [], task.id)}
+                    />
                   ) : null}
                 </li>
               ))}
