@@ -1,7 +1,18 @@
 // Перевірка назви випадку у формі запуску і тексти повідомлень (openspec/specs/run-launch).
 // Те саме правило в базі — tests/db/run-launch.test.ts.
 import { describe, expect, it } from "vitest";
-import { canMarkTask, errorCodeFrom, formatProgress, isUuid, messageForError, validateCaseName } from "./domain";
+import {
+  canMarkTask,
+  errorCodeFrom,
+  formatProgress,
+  isUuid,
+  messageForError,
+  needsConfirmation,
+  requiredLabel,
+  staffLabel,
+  validateCaseName,
+} from "./domain";
+import { LABELS, MESSAGES } from "./messages";
 
 describe("Назва випадку", () => {
   it("AC-RUN-03: порожня назва або лише пробіли — запуску немає, повідомлення «Enter a case name»", () => {
@@ -102,5 +113,66 @@ describe("Ідентифікатори з форми", () => {
     for (const value of ["", "abc", "1; drop table runs", "10000000-0000-4000-8000-00000000010", null, undefined]) {
       expect(isUuid(value)).toBe(false);
     }
+  });
+});
+
+describe("Уточнення PM: підтвердження, email, сторінка запуску", () => {
+  const run = [
+    { id: "t1", is_required: true, status: "done" },
+    { id: "t2", is_required: true, status: "done" },
+    { id: "t3", is_required: true, status: "to_do" },
+    { id: "t4", is_required: false, status: "to_do" },
+    { id: "t5", is_required: false, status: "to_do" },
+  ];
+  const early = [
+    { id: "t1", is_required: true, status: "to_do" },
+    { id: "t2", is_required: true, status: "to_do" },
+    { id: "t3", is_required: false, status: "to_do" },
+  ];
+
+  it("AC-TASK-01: задачу, яка не є останньою обов'язковою, позначають без підтвердження", () => {
+    expect(needsConfirmation(early, "t1")).toBe(false);
+    expect(needsConfirmation(run, "t4")).toBe(false);
+  });
+
+  it("AC-TASK-02: менеджер запуску позначає не останню обов'язкову задачу без підтвердження", () => {
+    expect(needsConfirmation(early, "t2")).toBe(false);
+  });
+
+  it("AC-TASK-07: адміністратор позначає не останню обов'язкову задачу без підтвердження", () => {
+    expect(needsConfirmation(early, "t1")).toBe(false);
+  });
+
+  it("AC-TASK-04: третю (останню) обов'язкову задачу позначають лише з підтвердженням", () => {
+    expect(needsConfirmation(run, "t3")).toBe(true);
+  });
+
+  it("AC-TASK-16: підтвердження з назвою задачі й «This cannot be undone» — саме для останньої обов'язкової", () => {
+    expect(needsConfirmation(run, "t3")).toBe(true);
+    expect(LABELS.confirmMarkAsDone("Hand over the keys")).toBe(
+      "Mark «Hand over the keys» as done? This cannot be undone.",
+    );
+  });
+
+  it("AC-RUN-10: у виборі виконавця підпис колеги — лише email", () => {
+    expect(staffLabel({ email: "manager.b@example.test" })).toBe("manager.b@example.test");
+  });
+
+  it("AC-TASK-11: біля задачі — email виконавця, без імені", () => {
+    expect(staffLabel({ email: "admin@example.test" })).toBe("admin@example.test");
+  });
+
+  it("AC-TASK-10: стороннім показуємо «Run not found»", () => {
+    expect(MESSAGES.runNotFound).toBe("Run not found");
+  });
+
+  it("AC-TASK-15: позначки «required» і «optional»", () => {
+    expect([requiredLabel(true), requiredLabel(false)]).toEqual(["required", "optional"]);
+  });
+
+  it("AC-TASK-18: співвиконавець C бачить позначку на своїй задачі, а на задачі B — ні", () => {
+    const base = { runManagerId: "manager-a", status: "to_do", userId: "manager-c", role: "manager" };
+    expect(canMarkTask({ ...base, assigneeId: "manager-c" })).toBe(true);
+    expect(canMarkTask({ ...base, assigneeId: "manager-b" })).toBe(false);
   });
 });

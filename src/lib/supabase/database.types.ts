@@ -2,7 +2,7 @@
 // (supabase gen types typescript --local на одноразовій базі); або npm run db:types після npx supabase link на ваш проєкт.
 // Ця версія написана вручну у форматі генератора й описує таблиці й функції міграцій
 // 20261012000000_profiles_and_roles.sql, 20261020115700_roles_manager_admin.sql, 20261020115705_workflow_runs.sql
-// і 20261020120848_run_progress.sql.
+// 20261020120848_run_progress.sql і 20261021081623_staff_directory_emails_only.sql.
 
 export type Json =
   | string
@@ -224,7 +224,6 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: {
           id: string;
-          full_name: string | null;
           email: string | null;
         }[];
       };
