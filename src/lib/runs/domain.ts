@@ -112,3 +112,8 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export function isUuid(value: string | null | undefined): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value);
 }
+
+/** Задача з форми належить саме тому запуску, з якого її позначають (рев'ю PR #6: run_id ↔ task_id). */
+export function taskBelongsToRun(task: { run_id: string } | null | undefined, runId: string): boolean {
+  return Boolean(task) && task!.run_id === runId;
+}

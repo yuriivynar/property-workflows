@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { errorCodeFrom, isUuid } from "@/lib/runs/domain";
+import { errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
 // Позначка задачі виконаною (openspec/specs/run-progress). Хто може позначати і чи завершено запуск, вирішує функція
@@ -23,6 +23,13 @@ export async function markTaskDone(formData: FormData) {
   }
   const runPath = `/runs/${runId}`;
   if (!isUuid(taskId)) {
+    redirect(`${runPath}?error=NOT_ALLOWED`);
+  }
+
+  // Задача має належати саме запуску з форми: інакше дія виконала б позначку в іншому запуску й повернула б на чужу
+  // сторінку. RLS повертає задачу лише тому, хто бачить її запуск.
+  const { data: task } = await supabase.from("run_tasks").select("run_id").eq("id", taskId).maybeSingle();
+  if (!taskBelongsToRun(task, runId)) {
     redirect(`${runPath}?error=NOT_ALLOWED`);
   }
 
