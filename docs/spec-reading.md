@@ -43,14 +43,19 @@
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q1 | AC-RUN-03, AC-RUN-07, AC-TASK-03, AC-TASK-05, AC-TASK-09 (solomchaak/property-workflows-spec#2, solomchaak/property-workflows-spec#3) | Якою мовою інтерфейс і чи показуються тексти з AC дослівно? | A: англійською, дослівно як в AC і глосарії | solomchaak/property-workflows-spec#13 | очікуємо | у специфікації — тексти PM дослівно, питання в Open questions; у реалізації — варіант A, кожен текст в одному місці |
-| Q2 | — (solomchaak/property-workflows-spec#1, матриця прав) | Чи входить керування користувачами й ролями в перший зріз? | A: ні, користувачі й ролі — початкові дані | solomchaak/property-workflows-spec#14 | очікуємо | у специфікації — ролі й права з матриці без екрана керування, питання в Open questions; користувачі — `supabase/demo-users.json` і `npm run users:demo` |
-| Q3 | AC-TASK-01, AC-TASK-02, AC-TASK-07, AC-TASK-04 (solomchaak/property-workflows-spec#3) | Чи підтверджувати позначку «done», якщо її не можна скасувати? | B: завжди підтвердження | solomchaak/property-workflows-spec#15 | очікуємо | у специфікації — текст PM як є (підтвердження не стає правилом), питання в Open questions; у реалізації — підтвердження перед позначкою |
-| Q4 | AC-TASK-06, AC-TASK-09 (solomchaak/property-workflows-spec#3) | Як розрізнити в списку запуски різних шаблонів з однаковою назвою випадку і в якому порядку рядки? | A+: у рядку ще й назва шаблону, найновіші вгорі | https://github.com/solomchaak/property-workflows-spec/issues/10#issuecomment-6288873114 | очікуємо | у реалізації — назва випадку, назва шаблону, статус і прогрес, найновіші вгорі |
+| Q1 | AC-RUN-03, AC-RUN-07, AC-TASK-03, AC-TASK-05, AC-TASK-09 (solomchaak/property-workflows-spec#2, solomchaak/property-workflows-spec#3) | Якою мовою інтерфейс і чи показуються тексти з AC дослівно? | A: англійською, дослівно як в AC і глосарії | solomchaak/property-workflows-spec#13 | A — англійською, дослівно; у «Припущеннях» вимог | лишили як було: тексти в `src/lib/runs/messages.ts` дослівно як в AC; Assumptions зміни `clarify-workflow-runs` |
+| Q2 | — (solomchaak/property-workflows-spec#1, матриця прав) | Чи входить керування користувачами й ролями в перший зріз? | A: ні, користувачі й ролі — початкові дані | solomchaak/property-workflows-spec#14 | A — поза WS6; користувачі й ролі — початкові дані | лишили як було: екрана немає, `supabase/demo-users.json`; Non-goals зміни `clarify-workflow-runs` |
+| Q3 | AC-TASK-01, AC-TASK-02, AC-TASK-07, AC-TASK-04 (solomchaak/property-workflows-spec#3) | Чи підтверджувати позначку «done», якщо її не можна скасувати? | B: завжди підтвердження | solomchaak/property-workflows-spec#15 | **C** — підтвердження лише для останньої обов'язкової задачі; нові AC-TASK-16, змінені AC-TASK-01/02/04/07 | змінили: MODIFIED у `clarify-workflow-runs`; у реалізації кнопка просить підтвердження лише на останній обов'язковій задачі (PR «Реалізація» `task/clarify-workflow-runs`) |
+| Q4 | AC-TASK-06, AC-TASK-09 (solomchaak/property-workflows-spec#3) | Як розрізнити в списку запуски різних шаблонів з однаковою назвою випадку і в якому порядку рядки? | A+: у рядку ще й назва шаблону, найновіші вгорі | https://github.com/solomchaak/property-workflows-spec/issues/10#issuecomment-6288873114 | A+ — назва шаблону в рядку, найновіші вгорі; AC-TASK-13, AC-TASK-14 | лишили як було (так уже зроблено); тести AC-TASK-13/14 — PR «Реалізація» `task/clarify-workflow-runs` |
 
 ### Питання команди, від яких залежить реалізація
 
 Поки PM не відповів, текст PM читаємо буквально і нових правил не додаємо; де текст мовчить — найпростіша поведінка.
+
+**Відповіді PM (20.10, знімок 2026-10-21):** #4 — A (AC-TASK-10, AC-TASK-18); #5 — **E, лише email** (AC-RUN-10,
+AC-TASK-11) — відрізняється від робочого рішення нижче (ім'я та email), змінюємо; #6 — A (AC-RUN-11); #7 — A (AC-RUN-12,
+AC-TASK-12); #8 — A; #9 — A; #10 — A+ (AC-TASK-13, AC-TASK-14); #11 — A (AC-TASK-15); #12 — A. Решта збіглася з
+робочими рішеннями; колонка нижче — історія рішень до відповіді.
 
 | Issue в репо PM | Про що | Робоче рішення до відповіді PM |
 |---|---|---|
