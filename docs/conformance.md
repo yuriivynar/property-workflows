@@ -42,6 +42,9 @@
 | AC-RUN-07 | назва випадку з 101 символу — запуску немає, повідомлення «Case name must be at most 100 characters» | `src/lib/runs/domain.ts` (validateCaseName), `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `src/lib/runs/domain.test.ts`, `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-08 | без призначень менеджер A — виконавець усіх 5 задач | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run), `src/app/runs/new/actions.ts` | `tests/db/run-launch.test.ts` | реалізовано |
 | AC-RUN-09 | без призначень адміністратор — виконавець усіх 5 задач | `supabase/migrations/20261020115705_workflow_runs.sql` (launch_run) | `tests/db/run-launch.test.ts` | реалізовано |
+| AC-RUN-10 | у виборі виконавця менеджер бачить лише email колег, без імен і ролей | — | — | відкладено (чекає реалізації) |
+| AC-RUN-11 | назва зі 100 символів з пробілом попереду — запуск є, збережено 100 символів | — | — | відкладено (чекає реалізації) |
+| AC-RUN-12 | перейменування розділу й перенесення задачі в шаблоні не змінюють розділів запуску (2 і 3 задачі) | — | — | відкладено (чекає реалізації) |
 | AC-TASK-01 | виконавець позначає свою задачу — «done» | `supabase/migrations/20261020120848_run_progress.sql` (mark_task_done), `src/app/runs/[id]/actions.ts`, `src/app/runs/[id]/mark-done-button.tsx` | `tests/db/run-progress.test.ts`, `src/lib/runs/domain.test.ts` | реалізовано |
 | AC-TASK-02 | менеджер запуску позначає задачу іншого виконавця — «done» | `supabase/migrations/20261020120848_run_progress.sql` (mark_task_done), `src/app/runs/[id]/actions.ts` | `tests/db/run-progress.test.ts`, `src/lib/runs/domain.test.ts` | реалізовано |
 | AC-TASK-03 | сторонній менеджер не може позначити задачу — лишається «to do», повідомлення | `supabase/migrations/20261020120848_run_progress.sql` (mark_task_done), `src/lib/runs/domain.ts` (messageForError), `src/app/runs/[id]/page.tsx` | `tests/db/run-progress.test.ts`, `src/lib/runs/domain.test.ts` | реалізовано |
@@ -51,3 +54,12 @@
 | AC-TASK-07 | адміністратор позначає задачу в чужому запуску — «done» | `supabase/migrations/20261020120848_run_progress.sql` (mark_task_done) | `tests/db/run-progress.test.ts`, `src/lib/runs/domain.test.ts` | реалізовано |
 | AC-TASK-08 | на сторінці запуску статус кожної з 5 задач | `supabase/migrations/20261020115705_workflow_runs.sql` (run_tasks_select_visible), `src/app/runs/[id]/page.tsx` | `tests/db/run-progress.test.ts` | реалізовано |
 | AC-TASK-09 | у списку запусків прогрес «2 of 5 done» | `supabase/migrations/20261020120848_run_progress.sql` (run_overview), `src/app/runs/page.tsx` | `tests/db/run-progress.test.ts`, `src/lib/runs/domain.test.ts` | реалізовано |
+| AC-TASK-10 | сторонній менеджер за прямим посиланням — «Run not found», жодної задачі | — | — | відкладено (чекає реалізації) |
+| AC-TASK-11 | біля кожної задачі — email виконавця, без імен і ролей | — | — | відкладено (чекає реалізації) |
+| AC-TASK-12 | задачі двома групами за розділами в порядку шаблону | — | — | відкладено (чекає реалізації) |
+| AC-TASK-13 | у списку і «completed» («4 of 5 done»), і «in progress» запуск | — | — | відкладено (чекає реалізації) |
+| AC-TASK-14 | запуск «Repair» вище за «Tenant move-in»; у рядку назва випадку й шаблону | — | — | відкладено (чекає реалізації) |
+| AC-TASK-15 | 3 задачі «required» і 2 «optional» поруч зі статусом | — | — | відкладено (чекає реалізації) |
+| AC-TASK-16 | скасування підтвердження останньої обов'язкової задачі — задача «to do», запуск «in progress» | — | — | відкладено (чекає реалізації) |
+| AC-TASK-17 | виконавець бачить у списку прогрес «2 of 5 done» | — | — | відкладено (чекає реалізації) |
+| AC-TASK-18 | співвиконавець бачить позначку лише на своїй задачі | — | — | відкладено (чекає реалізації) |
