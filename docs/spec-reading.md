@@ -1,4 +1,23 @@
-# A+ — шаблон у рядку, найновіші вгорі; AC-TASK-13, AC-TASK-14 (solomchaak/property-workflows-spec#10) | лишили як було (так і зроблено); тести AC-TASK-13/14 — PR «Реалізація» || змінили: MODIFIED у `clarify-workflow-runs`; кнопка підтверджує лише останню обов'язкову задачу — PR «Реалізація» після цього || лишили як було: екрана немає, `demo-users.json`; Non-goals у `clarify-workflow-runs` || лишили як було: тексти в `src/lib/runs/messages.ts` дослівно як в AC; зміна `clarify-workflow-runs`, Assumptions |-->
+# Журнал читання вимог
+
+<!--
+Ваш журнал — один файл: скан вимог PM за таксономією, питання до PM і власні припущення. Скіл spec-clarify заповнює його
+за структурою нижче. Комітите в PR «Специфікація» (разом зі зміною специфікації, яку ці питання стосуються).
+Питання до PM — issues у репо вимог PM через вебформу «Питання до вимог»
+(https://github.com/<pm>/<team-slug>-spec/issues/new?template=question.yml; форма ставить мітку question) з повною
+адресою вимоги (issue PM або шлях docs/requirements/… у репо PM) і AC. Тут, у вашому репо, голе #7 — ваш власний issue
+чи PR, тому вимогу пишіть як <pm>/<team-slug>-spec#7 або файлом знімка requirements/7-….md. Перед новим issue
+перегляньте наявні в репо PM: якщо таке питання вже є — коментар із новим випадком там, а не дублікат.
+Для PM це матеріал нотатки «порівняння реалізацій»: де одні вимоги прочитали по-різному.
+-->
+
+Вимоги: solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-20
+
+## Скан за таксономією
+
+<!-- Крок 1 скіла spec-clarify: усі 11 категорій (.claude/skills/spec-clarify/references/ambiguity-taxonomy.md).
+Статус — Ясно / Частково / Немає; «Де» — AC ID або вимога (<pm>/<team-slug>-spec#7 чи requirements/7-….md, не голе
+#7). Після нового /requirements-sync скан замінюється (попередній лишається в історії git). -->
 
 | # | Категорія | Статус | Де |
 |---|---|---|---|
@@ -24,15 +43,19 @@
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q1 | AC-RUN-03, AC-RUN-07, AC-TASK-03, AC-TASK-05, AC-TASK-09 (solomchaak/property-workflows-spec#2, solomchaak/property-workflows-spec#3) | Якою мовою інтерфейс і чи показуються тексти з AC дослівно? | A: англійською, дослівно як в AC і глосарії | solomchaak/property-workflows-spec#13 | очікуємо | у специфікації — тексти PM дослівно, питання в Open questions; у реалізації — варіант A, кожен текст в одному місці |
-| Q2 | — (solomchaak/property-workflows-spec#1, матриця прав) | Чи входить керування користувачами й ролями в перший зріз? | A: ні, користувачі й ролі — початкові дані | solomchaak/property-workflows-spec#14 | очікуємо | у специфікації — ролі й права з матриці без екрана керування, питання в Open questions; користувачі — `supabase/demo-users.json` і `npm run users:demo` |
-| Q3 | AC-TASK-01, AC-TASK-02, AC-TASK-07, AC-TASK-04 (solomchaak/property-workflows-spec#3) | Чи підтверджувати позначку «done», якщо її не можна скасувати? | B: завжди підтвердження | solomchaak/property-workflows-spec#15 | очікуємо | у специфікації — текст PM як є (підтвердження не стає правилом), питання в Open questions; у реалізації — підтвердження перед позначкою |
-| Q4 | AC-TASK-06, AC-TASK-09 (solomchaak/property-workflows-spec#3) | Як розрізнити в списку запуски різних шаблонів з однаковою назвою випадку і в якому порядку рядки? | A+: у рядку ще й назва шаблону, найновіші вгорі | https://github.com/solomchaak/property-workflows-spec/issues/10#issuecomment-6288873114 | очікуємо | у реалізації — назва випадку, назва шаблону, статус і прогрес, найновіші вгорі |
+| Q1 | AC-RUN-03, AC-RUN-07, AC-TASK-03, AC-TASK-05, AC-TASK-09 (solomchaak/property-workflows-spec#2, solomchaak/property-workflows-spec#3) | Якою мовою інтерфейс і чи показуються тексти з AC дослівно? | A: англійською, дослівно як в AC і глосарії | solomchaak/property-workflows-spec#13 | A — англійською, дослівно; у «Припущеннях» вимог | лишили як було: тексти в `src/lib/runs/messages.ts` дослівно як в AC; Assumptions зміни `clarify-workflow-runs` |
+| Q2 | — (solomchaak/property-workflows-spec#1, матриця прав) | Чи входить керування користувачами й ролями в перший зріз? | A: ні, користувачі й ролі — початкові дані | solomchaak/property-workflows-spec#14 | A — поза WS6; користувачі й ролі — початкові дані | лишили як було: екрана немає, `supabase/demo-users.json`; Non-goals зміни `clarify-workflow-runs` |
+| Q3 | AC-TASK-01, AC-TASK-02, AC-TASK-07, AC-TASK-04 (solomchaak/property-workflows-spec#3) | Чи підтверджувати позначку «done», якщо її не можна скасувати? | B: завжди підтвердження | solomchaak/property-workflows-spec#15 | **C** — підтвердження лише для останньої обов'язкової задачі; нові AC-TASK-16, змінені AC-TASK-01/02/04/07 | змінили: MODIFIED у `clarify-workflow-runs`; у реалізації кнопка просить підтвердження лише на останній обов'язковій задачі (PR «Реалізація» `task/clarify-workflow-runs`) |
+| Q4 | AC-TASK-06, AC-TASK-09 (solomchaak/property-workflows-spec#3) | Як розрізнити в списку запуски різних шаблонів з однаковою назвою випадку і в якому порядку рядки? | A+: у рядку ще й назва шаблону, найновіші вгорі | https://github.com/solomchaak/property-workflows-spec/issues/10#issuecomment-6288873114 | A+ — назва шаблону в рядку, найновіші вгорі; AC-TASK-13, AC-TASK-14 | лишили як було (так уже зроблено); тести AC-TASK-13/14 — PR «Реалізація» `task/clarify-workflow-runs` |
 
 ### Питання команди, від яких залежить реалізація
 
 Поки PM не відповів, текст PM читаємо буквально і нових правил не додаємо; де текст мовчить — найпростіша поведінка.
-**Відповіді PM (20.10, знімок 2026-10-21):** #4 — A (AC-TASK-10, AC-TASK-18), #5 — **E: лише email** (AC-RUN-10, AC-TASK-11; у нас було ім'я та email — змінюємо), #6 — A (AC-RUN-11), #7 — A (AC-RUN-12, AC-TASK-12), #8 — A, #9 — A, #10 — A+ (AC-TASK-13, AC-TASK-14), #11 — A (AC-TASK-15), #12 — A. Усі, крім #5, збіглися з робочими рішеннями нижче.
+
+**Відповіді PM (20.10, знімок 2026-10-21):** #4 — A (AC-TASK-10, AC-TASK-18); #5 — **E, лише email** (AC-RUN-10,
+AC-TASK-11) — відрізняється від робочого рішення нижче (ім'я та email), змінюємо; #6 — A (AC-RUN-11); #7 — A (AC-RUN-12,
+AC-TASK-12); #8 — A; #9 — A; #10 — A+ (AC-TASK-13, AC-TASK-14); #11 — A (AC-TASK-15); #12 — A. Решта збіглася з
+робочими рішеннями; колонка нижче — історія рішень до відповіді.
 
 | Issue в репо PM | Про що | Робоче рішення до відповіді PM |
 |---|---|---|
