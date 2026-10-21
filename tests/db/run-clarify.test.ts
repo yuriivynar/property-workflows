@@ -19,7 +19,7 @@ async function launch(userId: string, template: string, caseName: string, assign
   return row.id;
 }
 
-const mark = (userId: string, taskId: string) => t.asUser(userId, "select public.mark_task_done($1)", [taskId]);
+const mark = (userId: string, taskId: string) => t.asUser(userId, "select public.mark_task_done($1, true)", [taskId]);
 
 const tasksOf = (runId: string) =>
   t.asService<{ id: string; is_required: boolean; assignee_id: string; section: string; status: string }>(
@@ -74,10 +74,9 @@ describe("База: запуск — уточнення PM", () => {
     const name = "N".repeat(100);
     const runId = await launch(MANAGER_A, TENANT_MOVE_IN, ` ${name}`);
 
-    const runs = await t.asService<{ id: string; case_name: string }>("select id, case_name from public.runs where case_name = $1", [
-      name,
-    ]);
-    expect(runs).toEqual([{ id: runId, case_name: name }]);
+    const [run] = await t.asService<{ case_name: string }>("select case_name from public.runs where id = $1", [runId]);
+    expect(run.case_name).toBe(name);
+    expect([...run.case_name]).toHaveLength(100);
   });
 
   it("AC-RUN-12: перейменування розділу й перенесення задачі в шаблоні не змінюють розділів запуску (2 і 3 задачі)", async () => {
@@ -145,17 +144,44 @@ describe("База: запуск і задачі — уточнення PM", () 
     expect(flags.filter((f) => !f)).toHaveLength(2);
   });
 
-  it("AC-TASK-16: скасування на підтвердженні не надсилає позначки — задача «to do», запуск «in progress»", async () => {
+  it("AC-TASK-16: без підтвердження (скасування) остання обов'язкова задача лишається «to do», запуск — «in progress»", async () => {
     const runId = await launch(MANAGER_A, TENANT_MOVE_IN, "AC-TASK-16 run");
     const required = (await tasksOf(runId)).filter((r) => r.is_required);
     await mark(MANAGER_A, required[0].id);
     await mark(MANAGER_A, required[1].id);
 
-    // Скасування — це відсутність виклику mark_task_done: стан бази не змінюється.
+    // Позначка без підтвердження — так поводиться і застаріла сторінка, і скасоване підтвердження: база відмовляє.
+    await expect(t.asUser(MANAGER_A, "select public.mark_task_done($1)", [required[2].id])).rejects.toThrow(
+      /CONFIRMATION_REQUIRED/,
+    );
     const [run] = await t.asService<{ status: string }>("select status from public.runs where id = $1", [runId]);
     const [last] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [required[2].id]);
     expect(run.status).toBe("in_progress");
     expect(last.status).toBe("to_do");
+  });
+
+  it("AC-TASK-04: остання обов'язкова задача з підтвердженням — запуск «completed»", async () => {
+    const runId = await launch(MANAGER_A, TENANT_MOVE_IN, "AC-TASK-04 confirmed");
+    const required = (await tasksOf(runId)).filter((r) => r.is_required);
+    for (const task of required) await mark(MANAGER_A, task.id);
+
+    const [run] = await t.asService<{ status: string }>("select status from public.runs where id = $1", [runId]);
+    expect(run.status).toBe("completed");
+  });
+
+  it("AC-TASK-01: задачу, що не є останньою обов'язковою, база позначає без підтвердження", async () => {
+    const runId = await launch(MANAGER_A, TENANT_MOVE_IN, "AC-TASK-01 no confirm");
+    const tasks = await tasksOf(runId);
+    const firstRequired = tasks.find((r) => r.is_required)!;
+    const optional = tasks.find((r) => !r.is_required)!;
+
+    await t.asUser(MANAGER_A, "select public.mark_task_done($1)", [firstRequired.id]);
+    await t.asUser(MANAGER_A, "select public.mark_task_done($1)", [optional.id]);
+    const statuses = await t.asService<{ status: string }>("select status from public.run_tasks where id in ($1, $2)", [
+      firstRequired.id,
+      optional.id,
+    ]);
+    expect(statuses.every((r) => r.status === "done")).toBe(true);
   });
 });
 
@@ -176,7 +202,7 @@ describe("База: список запусків — уточнення PM", ()
       "select id, is_required from public.run_tasks where run_id = $1 order by position",
       [runId],
     );
-  const markIn = (userId: string, taskId: string) => l.asUser(userId, "select public.mark_task_done($1)", [taskId]);
+  const markIn = (userId: string, taskId: string) => l.asUser(userId, "select public.mark_task_done($1, true)", [taskId]);
 
   it("AC-TASK-13: у списку і «completed» (4 of 5 done), і «in progress» запуск, кожен зі статусом і прогресом", async () => {
     const a = l.users["manager.a@example.test"];

@@ -8,6 +8,7 @@ export const MESSAGES = {
   templateNotFound: "Choose a template",
   invalidAssignee: "An assignee must be a manager or an administrator",
   runNotFound: "Run not found",
+  confirmationRequired: "This is the last required task: confirm to mark it as done. This cannot be undone.",
   unexpected: "Something went wrong. Try again.",
 } as const;
 

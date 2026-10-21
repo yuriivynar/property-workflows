@@ -11,7 +11,8 @@ export type RunErrorCode =
   | "LAUNCH_NOT_ALLOWED"
   | "TEMPLATE_NOT_FOUND"
   | "INVALID_ASSIGNEE"
-  | "NOT_ALLOWED";
+  | "NOT_ALLOWED"
+  | "CONFIRMATION_REQUIRED";
 
 export type CaseNameCheck = { ok: true; caseName: string } | { ok: false; code: RunErrorCode };
 
@@ -34,6 +35,7 @@ const MESSAGE_BY_CODE: Record<RunErrorCode, string> = {
   TEMPLATE_NOT_FOUND: MESSAGES.templateNotFound,
   INVALID_ASSIGNEE: MESSAGES.invalidAssignee,
   NOT_ALLOWED: MESSAGES.markNotAllowed,
+  CONFIRMATION_REQUIRED: MESSAGES.confirmationRequired,
 };
 
 // Object.hasOwn, а не `in`: інакше `?error=__proto__` чи `constructor` з URL пройшли б як «код» (ключі прототипу).

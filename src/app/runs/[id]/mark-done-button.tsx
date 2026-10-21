@@ -47,6 +47,7 @@ export function MarkDoneButton({
     <form action={markTaskDone} className="flex flex-wrap items-center gap-2" role="group" aria-label={LABELS.confirmGroup}>
       <input type="hidden" name="run_id" value={runId} />
       <input type="hidden" name="task_id" value={taskId} />
+      <input type="hidden" name="confirmed" value="true" />
       <span className="text-sm">{LABELS.confirmMarkAsDone(taskName)}</span>
       <ConfirmButton />
       <button
