@@ -28,7 +28,14 @@ export async function markTaskDone(formData: FormData) {
 
   // Задача має належати саме запуску з форми: інакше дія виконала б позначку в іншому запуску й повернула б на чужу
   // сторінку. RLS повертає задачу лише тому, хто бачить її запуск.
-  const { data: task } = await supabase.from("run_tasks").select("run_id").eq("id", taskId).maybeSingle();
+  const { data: task, error: taskError } = await supabase
+    .from("run_tasks")
+    .select("run_id")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (taskError) {
+    redirect(`${runPath}?error=UNEXPECTED`);
+  }
   if (!taskBelongsToRun(task, runId)) {
     redirect(`${runPath}?error=NOT_ALLOWED`);
   }
