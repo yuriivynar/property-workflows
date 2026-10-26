@@ -345,3 +345,30 @@ describe("База: запуск зі знімка версії", () => {
     expect(tasks.find((task) => task.name === "Sign the lease")?.assignee_id).toBe(MANAGER_B);
   });
 });
+
+describe("База: права, яких користувач не змінює", () => {
+  it("AC-EDITOR-08: менеджер не робить себе адміністратором — update profiles.role відхилено, роль лишається manager", async () => {
+    // Пастка «update own row + колонка role»: політика profiles_update_own дозволяє оновити свій рядок, але
+    // колонковий GRANT — лише full_name. Без цього менеджер став би адміністратором і змінив шаблон.
+    const error = await errorOf(
+      t.asUser(MANAGER_B, "update public.profiles set role = 'admin' where id = $1", [MANAGER_B]),
+    );
+    expect(error).toMatch(/permission denied/);
+    const [profile] = await t.asService<{ role: string }>("select role from public.profiles where id = $1", [MANAGER_B]);
+    expect(profile.role).toBe("manager");
+  });
+
+  it("AC-DSYS-02: менеджер на редакторі не читає вмісту редактора — шаблон на версії 1 без незбережених змін", async () => {
+    const { template } = await tenantMoveIn("d0200000");
+    // Сторінка редактора для менеджера не запитує даних; навіть прямий запит не повертає вмісту редактора.
+    expect(await t.asUser(MANAGER_B, "select id from public.template_sections where template_id = $1", [template])).toHaveLength(0);
+    expect(await t.asUser(MANAGER_B, "select id from public.template_tasks where template_id = $1", [template])).toHaveLength(0);
+    expect(await stateOf(template)).toEqual({
+      current_version: 1,
+      has_unpublished_changes: false,
+      versions: 1,
+      tasks: 5,
+      sections: 2,
+    });
+  });
+});

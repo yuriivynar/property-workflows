@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Notice } from "@/components/ui/notice";
@@ -41,7 +42,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
     );
   }
 
-  const [{ data: template }, { data: sections }, { data: tasks }] = await Promise.all([
+  const [{ data: template }, { data: sections, error: sectionsError }, { data: tasks, error: tasksError }] = await Promise.all([
     supabase.from("templates").select("id, name, current_version, has_unpublished_changes").eq("id", id).maybeSingle(),
     supabase.from("template_sections").select("id, name, position").eq("template_id", id).order("position"),
     supabase
@@ -55,6 +56,15 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
         <Notice message={TEMPLATE_MESSAGES.templateNotFound} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
+      </main>
+    );
+  }
+
+  // Помилку читання незбережених змін не показуємо як порожній шаблон (рев'ю CodeRabbit, PR #18).
+  if (sectionsError || tasksError) {
+    return (
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+        <Notice message={TEMPLATE_MESSAGES.notLoaded} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
   }
@@ -168,10 +178,12 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                 <Label htmlFor={`new-task-${section.id}`}>New task</Label>
                 <Input id={`new-task-${section.id}`} name="name" required className="w-64" />
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="is_required" className="size-4 accent-primary" />
-                Required
-              </label>
+              <div className="flex items-center gap-2 text-sm">
+                <Checkbox id={`new-task-required-${section.id}`} name="is_required" />
+                <Label htmlFor={`new-task-required-${section.id}`} className="font-normal">
+                  Required
+                </Label>
+              </div>
               <Button type="submit" variant="outline">
                 Add task
               </Button>
