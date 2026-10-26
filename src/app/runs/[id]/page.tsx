@@ -1,5 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { TextLink } from "@/components/ui/text-link";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
@@ -7,9 +10,7 @@ import {
   messageForError,
   needsConfirmation,
   requiredLabel,
-  runStatusLabel,
   staffLabel,
-  taskStatusLabel,
 } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 import { MarkDoneButton } from "./mark-done-button";
@@ -44,16 +45,16 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     // (стара сторінка, прямий запит): база відповідає NOT_ALLOWED і для чужої, і для відсутньої задачі, тож
     // повідомлення не підказує, що запуск існує.
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
         <h1 className="text-2xl font-semibold">{MESSAGES.runNotFound}</h1>
         {message ? (
-          <p role="alert" className="text-sm text-red-600">
-            {message}
-          </p>
+          <Alert variant="destructive">
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
         ) : null}
-        <Link href="/runs" className="text-sm underline">
+        <TextLink href="/runs" className="w-fit text-sm">
           {LABELS.backToRuns}
-        </Link>
+        </TextLink>
       </main>
     );
   }
@@ -72,43 +73,51 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const names = new Map((staff ?? []).map((person) => [person.id, staffLabel(person)]));
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold" data-testid="case-name">
           {run.case_name}
         </h1>
-        <p className="text-sm text-zinc-500">{run.template_name}</p>
+        <p className="text-sm text-muted-foreground">{run.template_name}</p>
       </div>
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
-        <dt className="text-zinc-500">{LABELS.runManager}</dt>
+      <dl className="grid grid-cols-[max-content_1fr] items-center gap-x-4 gap-y-2 text-sm">
+        <dt className="text-muted-foreground">{LABELS.runManager}</dt>
         <dd data-testid="run-manager">{names.get(runManagerId) ?? "—"}</dd>
-        <dt className="text-zinc-500">{LABELS.status}</dt>
-        <dd data-testid="run-status">{runStatusLabel(run.status ?? "")}</dd>
-        <dt className="text-zinc-500">{LABELS.progress}</dt>
-        <dd data-testid="run-progress">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</dd>
+        <dt className="text-muted-foreground">{LABELS.status}</dt>
+        <dd data-testid="run-status">
+          <StatusBadge status={run.status ?? ""} />
+        </dd>
+        <dt className="text-muted-foreground">{LABELS.progress}</dt>
+        <dd className="tabular-nums" data-testid="run-progress">
+          {formatProgress(run.done_count ?? 0, run.total_count ?? 0)}
+        </dd>
       </dl>
 
       {message ? (
-        <p role="alert" className="text-sm text-red-600">
-          {message}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       ) : null}
 
       {(sections ?? []).map((section) => (
         <section key={section.id} className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium">{section.name}</h2>
-          <ul className="flex flex-col divide-y divide-zinc-200 rounded border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+          <h2 className="text-base font-semibold">{section.name}</h2>
+          <Card className="gap-0 py-0">
+            <ul className="flex flex-col divide-y divide-border">
             {(tasks ?? [])
               .filter((task) => task.section_id === section.id)
               .map((task) => (
                 <li key={task.id} data-testid="run-task" className="flex flex-col gap-2 px-4 py-3 text-sm">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <span>
-                      {task.name} <span className="text-zinc-500">({requiredLabel(task.is_required)})</span>
+                      {task.name}{" "}
+                      <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
-                    <span className="flex flex-wrap gap-x-4 text-zinc-600 dark:text-zinc-400">
+                    <span className="flex flex-wrap items-center gap-x-4 text-muted-foreground">
                       <span>{names.get(task.assignee_id) ?? "—"}</span>
-                      <span data-testid="task-status">{taskStatusLabel(task.status)}</span>
+                      <span data-testid="task-status">
+                        <StatusBadge status={task.status} />
+                      </span>
                     </span>
                   </div>
                   {canMarkTask({
@@ -127,13 +136,14 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                   ) : null}
                 </li>
               ))}
-          </ul>
+            </ul>
+          </Card>
         </section>
       ))}
 
-      <Link href="/runs" className="text-sm underline">
+      <TextLink href="/runs" className="w-fit text-sm">
         {LABELS.backToRuns}
-      </Link>
+      </TextLink>
     </main>
   );
 }

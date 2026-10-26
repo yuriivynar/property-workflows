@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { TextLink } from "@/components/ui/text-link";
 import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
@@ -24,24 +25,21 @@ export default async function Home() {
     .maybeSingle();
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
-      <h1 className="text-2xl font-semibold">Проєкт команди</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <h1 className="text-2xl font-semibold">Profile</h1>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
-        <dt className="text-zinc-500">Email</dt>
+        <dt className="text-muted-foreground">Email</dt>
         <dd data-testid="user-email">{profile?.email ?? claims.email ?? "—"}</dd>
-        <dt className="text-zinc-500">Роль</dt>
-        <dd data-testid="user-role">{profile?.role ?? "профіль не знайдено"}</dd>
+        <dt className="text-muted-foreground">Role</dt>
+        <dd data-testid="user-role">{profile?.role ?? "profile not found"}</dd>
       </dl>
-      <Link href="/runs" className="text-sm underline" data-testid="runs-link">
+      <TextLink href="/runs" className="w-fit text-sm" data-testid="runs-link">
         {LABELS.runsTitle}
-      </Link>
+      </TextLink>
       <form action={signOut}>
-        <button
-          type="submit"
-          className="rounded border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
-        >
-          Вийти
-        </button>
+        <Button type="submit" variant="outline">
+          Sign out
+        </Button>
       </form>
     </main>
   );

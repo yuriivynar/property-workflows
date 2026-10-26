@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { formatProgress, runStatusLabel } from "@/lib/runs/domain";
+import { buttonVariants } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TextLink } from "@/components/ui/text-link";
+import { formatProgress } from "@/lib/runs/domain";
 import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 
 // Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
 // виконавець; адміністратор — усі (AC-TASK-06). У рядку — назва шаблону, статус і прогрес «N of M done» (AC-TASK-09);
 // найновіші вгорі (робочі рішення до solomchaak/property-workflows-spec#10 і коментаря в ньому, #12).
+// Таблиця щільна; на вузькому екрані колонка шаблону переходить під назву випадку (DESIGN.md, розділ 4).
 export default async function RunsPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -20,49 +25,47 @@ export default async function RunsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
-        <Link
-          href="/runs/new"
-          className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background"
-        >
+        <Link href="/runs/new" className={buttonVariants({ size: "lg" })}>
           {LABELS.launchTemplate}
         </Link>
       </div>
       {runs && runs.length > 0 ? (
-        <table className="w-full text-left text-sm">
-          <thead className="text-zinc-500">
-            <tr>
-              <th className="py-2 pr-4 font-normal">{LABELS.columnCase}</th>
-              <th className="py-2 pr-4 font-normal">{LABELS.columnTemplate}</th>
-              <th className="py-2 pr-4 font-normal">{LABELS.columnStatus}</th>
-              <th className="py-2 font-normal">{LABELS.columnProgress}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{LABELS.columnCase}</TableHead>
+              <TableHead className="hidden sm:table-cell">{LABELS.columnTemplate}</TableHead>
+              <TableHead>{LABELS.columnStatus}</TableHead>
+              <TableHead>{LABELS.columnProgress}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {runs.map((run) => (
-              <tr key={run.id} data-testid="run-row" className="border-t border-zinc-200 dark:border-zinc-800">
-                <td className="py-2 pr-4">
-                  <Link href={`/runs/${run.id}`} className="underline">
-                    {run.case_name}
-                  </Link>
-                </td>
-                <td className="py-2 pr-4">{run.template_name}</td>
-                <td className="py-2 pr-4">{runStatusLabel(run.status ?? "")}</td>
-                <td className="py-2" data-testid="run-progress">
+              <TableRow key={run.id} data-testid="run-row">
+                <TableCell className="py-2">
+                  <TextLink href={`/runs/${run.id}`}>{run.case_name}</TextLink>
+                  <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
+                </TableCell>
+                <TableCell className="hidden py-2 sm:table-cell">{run.template_name}</TableCell>
+                <TableCell className="py-2">
+                  <StatusBadge status={run.status ?? ""} />
+                </TableCell>
+                <TableCell className="py-2 tabular-nums" data-testid="run-progress">
                   {formatProgress(run.done_count ?? 0, run.total_count ?? 0)}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       ) : (
-        <p className="text-sm text-zinc-500">{LABELS.noRuns}</p>
+        <p className="text-sm text-muted-foreground">{LABELS.noRuns}</p>
       )}
-      <Link href="/" className="text-sm underline">
+      <TextLink href="/" className="w-fit text-sm">
         {LABELS.backToProfile}
-      </Link>
+      </TextLink>
     </main>
   );
 }

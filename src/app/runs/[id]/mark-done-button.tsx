@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
 import { LABELS } from "@/lib/runs/messages";
 import { markTaskDone } from "./actions";
 
 // Підтвердження з назвою задачі й «This cannot be undone» — лише для останньої обов'язкової задачі, яка завершить
 // запуск; скасування нічого не змінює (рішення PM у solomchaak/property-workflows-spec#15; AC-TASK-04, AC-TASK-16).
 // Решту задач позначають одразу (AC-TASK-01, AC-TASK-02, AC-TASK-07).
+// Незворотну дію підтверджують кнопкою destructive (DESIGN.md, розділ 5).
 export function MarkDoneButton({
   runId,
   taskId,
@@ -33,13 +35,11 @@ export function MarkDoneButton({
 
   if (!confirming) {
     return (
-      <button
-        type="button"
-        onClick={() => setConfirming(true)}
-        className="rounded border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700"
-      >
-        {LABELS.markAsDone}
-      </button>
+      <div>
+        <Button type="button" variant="outline" size="sm" onClick={() => setConfirming(true)}>
+          {LABELS.markAsDone}
+        </Button>
+      </div>
     );
   }
 
@@ -50,13 +50,9 @@ export function MarkDoneButton({
       <input type="hidden" name="confirmed" value="true" />
       <span className="text-sm">{LABELS.confirmMarkAsDone(taskName)}</span>
       <ConfirmButton />
-      <button
-        type="button"
-        onClick={() => setConfirming(false)}
-        className="rounded border border-zinc-300 px-3 py-1 text-sm dark:border-zinc-700"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={() => setConfirming(false)}>
         {LABELS.cancel}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -64,25 +60,17 @@ export function MarkDoneButton({
 function MarkNowButton() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-zinc-700"
-    >
+    <Button type="submit" variant="outline" size="sm" disabled={pending}>
       {pending ? LABELS.saving : LABELS.markAsDone}
-    </button>
+    </Button>
   );
 }
 
 function ConfirmButton() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded bg-foreground px-3 py-1 text-sm font-medium text-background disabled:opacity-50"
-    >
+    <Button type="submit" variant="destructive" size="sm" disabled={pending}>
       {pending ? LABELS.saving : LABELS.confirm}
-    </button>
+    </Button>
   );
 }
