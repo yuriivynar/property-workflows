@@ -119,3 +119,8 @@ export function isUuid(value: string | null | undefined): value is string {
 export function taskBelongsToRun(task: { run_id: string } | null | undefined, runId: string): boolean {
   return Boolean(task) && task!.run_id === runId;
 }
+
+/** Список запусків: без жодного видимого запуску — порожній стан із наступною дією, а не порожня таблиця (AC-DSYS-04). */
+export function runsListState(runs: readonly unknown[] | null | undefined): "empty" | "table" {
+  return runs && runs.length > 0 ? "table" : "empty";
+}

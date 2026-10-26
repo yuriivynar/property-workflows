@@ -4,8 +4,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TextLink } from "@/components/ui/text-link";
-import { formatProgress } from "@/lib/runs/domain";
-import { LABELS } from "@/lib/runs/messages";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { formatProgress, runsListState } from "@/lib/runs/domain";
+import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 
 // Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
@@ -19,7 +21,7 @@ export default async function RunsPage() {
     redirect("/login");
   }
 
-  const { data: runs } = await supabase
+  const { data: runs, error: loadError } = await supabase
     .from("run_overview")
     .select("id, case_name, template_name, status, created_at, done_count, total_count")
     .order("created_at", { ascending: false });
@@ -32,7 +34,11 @@ export default async function RunsPage() {
           {LABELS.launchTemplate}
         </Link>
       </div>
-      {runs && runs.length > 0 ? (
+      {loadError ? (
+        <Alert variant="destructive">
+          <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
+        </Alert>
+      ) : runsListState(runs) === "table" && runs ? (
         <Table>
           <TableHeader>
             <TableRow>
@@ -61,7 +67,7 @@ export default async function RunsPage() {
           </TableBody>
         </Table>
       ) : (
-        <p className="text-sm text-muted-foreground">{LABELS.noRuns}</p>
+        <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
       )}
       <TextLink href="/" className="w-fit text-sm">
         {LABELS.backToProfile}

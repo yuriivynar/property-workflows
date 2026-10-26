@@ -3,10 +3,8 @@
 // Cache-Control/Expires/Pragma копіюємо у відповідь, щоб CDN не кешував auth-відповіді.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { signInRedirect } from "@/lib/auth/access";
 import type { Database } from "./database.types";
-
-// Сторінки, доступні без входу.
-const PUBLIC_PATHS = ["/login", "/auth"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -41,11 +39,8 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
 
-  const isPublic = PUBLIC_PATHS.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
-  );
-
-  if (!claims && !isPublic) {
+  // Сторінки, доступні без входу, — src/lib/auth/access.ts (AC-DSYS-03, AC-EDITOR-09).
+  if (signInRedirect(request.nextUrl.pathname, Boolean(claims))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
