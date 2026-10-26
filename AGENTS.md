@@ -29,6 +29,7 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 - `npm run dev` · `npm run build` (має показати `ƒ Proxy (Middleware)`) · `npm run lint` (0 warnings)
 - `npm run typecheck` (`next typegen && tsc --noEmit`) · `npm test` (Vitest)
 - `npm run spec:validate` · `npm run spec:check` · `npm run ac:coverage`
+- `npm run check:design` · `npm run check:boundary` — архітектурні правила (у CI — окремий `.github/workflows/architecture.yml`)
 - `node scripts/check-migration-order.mjs` — нова міграція новіша за `origin/main`, застосовані не змінено (у CI — `db-check`)
 - `npx supabase migration new <назва>` → SQL → PR. Застосовує міграції у вашу базу ЛИШЕ CI (`db-deploy` після merge у `main`)
 - Типи БД: готовий `database.types.ts` — у Summary прогону job `db-check` (Docker не потрібен); або `npm run db:types`
@@ -41,7 +42,7 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 
 ## Структура
 
-- `src/app/` — сторінки й server actions; `src/proxy.ts` — оновлення сесії (НЕ `middleware.ts`)
+- `src/app/` — сторінки й server actions; `src/proxy.ts` — оновлення сесії (НЕ `middleware.ts`); `src/components/ui/` — компоненти дизайн-системи
 - `src/lib/supabase/{client,server,proxy}.ts` — клієнти Supabase; `database.types.ts` — генерується
 - `supabase/migrations/` — схема як код; `supabase/seed.sql` — ідемпотентний сид
 - `requirements/` — знімок вимог PM (лише через `/requirements-sync`): `product.md` і `<N>-<slug>.md`, у кожному
@@ -51,7 +52,7 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
   `openspec/config.yaml` — правила перекладу
 - `product/` — лише списки denylist для `spec:check`; `docs/` — `bootstrap.md` (чекліст дня 0),
   `conformance.md` (ваша матриця; у шапці — звідки й коли знімок вимог), `spec-reading.md` (журнал), `decisions/` (ADR)
-- `.github/` — `ci.yml`, шаблон PR
+- `.github/` — `ci.yml` (ворота ruleset), `workflows/architecture.yml` (архітектурні правила), шаблон PR
 - `scripts/` — перевірки спеки й покриття AC; `tests/` — тести (`tests/fixtures/` — дані тестів скриптів)
 - `.claude/commands/` — наші `requirements-sync.md` і `conformance.md` (у `.cursor/commands/` — посилання на них);
   `.claude/skills/` — наші скіли `spec-clarify` і `spec-review`; Cursor читає їх звідти ж. `openspec-*` і `/opsx*`
@@ -60,6 +61,19 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
   не рахує їх як покриття AC, доки e2e не запускає окремий крок CI — тоді фільтр у `scripts/lib/test-titles.mjs`
   розширюють разом із цим кроком), нові перевірки — окремим workflow у `.github/workflows/`. Jobs `spec`, `app`,
   `conformance`, `db-check`, `db-deploy` у `ci.yml` не перейменовуй і не видаляй: на їхніх назвах тримається ruleset.
+
+## Дизайн-система
+
+- Правила вигляду — `DESIGN.md`. Кольори — лише семантичні утиліти з токенів (`bg-primary`, `text-muted-foreground`,
+  `border-input`, `bg-status-done`…); жодних hex, `bg-[#…]`, сирих палітр (`zinc-500`, `bg-white`) і кольорів в inline style.
+- Компоненти — лише з `@/components/ui` (shadcn/ui, змінюються в цій теці; CLI — `npx shadcn@4.22.1 add …`). Нових
+  кольорів у компонентах не вигадуй і не переноси туди сирі класи сторінок. Статус — лише `StatusBadge` (слово + колір
+  з однієї мапи); посилання — `TextLink`; головна дія екрана — одна `Button` варіанта `default`.
+- Новий токен: `DESIGN.md` (таблиця й контраст) → `:root` і `@media (prefers-color-scheme: dark)` у
+  `src/app/globals.css` → `--color-<назва>` у `@theme inline`. Блоку `.dark` і `@custom-variant dark` не додаємо (тема — за
+  системою); якщо `shadcn add` їх повернув — прибери.
+- Інтерфейс англійською; тексти повідомлень і статусів — дослівно з AC PM.
+- Перевірка: `npm run check:design` (CI: `.github/workflows/architecture.yml`); виняток `design-ok: <причина>` — поодинокий.
 
 ## Процес і ролі
 

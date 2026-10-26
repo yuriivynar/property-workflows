@@ -1,5 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
@@ -43,84 +49,86 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const colleagues = (staffResult?.data ?? []).filter((person) => person.id !== claims.sub);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-semibold">{LABELS.launchTemplate}</h1>
 
       <form action="/runs/new" className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          {LABELS.template}
-          <select
-            name="template"
-            defaultValue={selected?.id ?? ""}
-            required
-            className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          >
-            <option value="" disabled>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="template">{LABELS.template}</Label>
+          <NativeSelect id="template" name="template" defaultValue={selected?.id ?? ""} required>
+            <NativeSelectOption value="" disabled>
               {MESSAGES.templateNotFound}
-            </option>
+            </NativeSelectOption>
             {(templates ?? []).map((t) => (
-              <option key={t.id} value={t.id}>
+              <NativeSelectOption key={t.id} value={t.id}>
                 {t.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-        </label>
-        <button type="submit" className="rounded border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700">
+          </NativeSelect>
+        </div>
+        <Button type="submit" variant="outline">
           {LABELS.choose}
-        </button>
+        </Button>
       </form>
 
       {!selected && message ? (
-        <p role="alert" className="text-sm text-red-600">
-          {message}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       ) : null}
 
       {selected ? (
         <form action={launchRun} className="flex flex-col gap-5">
           <input type="hidden" name="template_id" value={selected.id} />
-          <label className="flex flex-col gap-1 text-sm">
-            {LABELS.caseName}
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="case_name">{LABELS.caseName}</Label>
+            <Input
+              id="case_name"
               name="case_name"
               type="text"
               placeholder={LABELS.caseNamePlaceholder}
-              className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+              aria-describedby={message ? "launch-error" : undefined}
             />
-          </label>
+          </div>
 
           {sections.map((section) => (
-            <fieldset key={section.id} className="flex flex-col gap-3 rounded border border-zinc-200 p-4 dark:border-zinc-800">
-              <legend className="px-1 text-sm font-medium">{section.name}</legend>
-              {tasks
-                .filter((task) => task.section_id === section.id)
-                .map((task) => (
-                  <label key={task.id} className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between">
-                    <span>
-                      {task.name} <span className="text-zinc-500">({requiredLabel(task.is_required)})</span>
-                    </span>
-                    <select
-                      name={`assignee:${task.id}`}
-                      defaultValue=""
-                      aria-label={LABELS.assigneeOf(task.name)}
-                      className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+            <Card key={section.id} className="gap-3 px-4">
+              <fieldset className="flex flex-col gap-3">
+                <legend className="mb-1 text-base font-semibold">{section.name}</legend>
+                {tasks
+                  .filter((task) => task.section_id === section.id)
+                  .map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <option value="">{LABELS.meAsRunManager}</option>
-                      {colleagues.map((person) => (
-                        <option key={person.id} value={person.id}>
-                          {staffLabel(person)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-            </fieldset>
+                      <Label htmlFor={`assignee:${task.id}`} className="font-normal">
+                        {task.name}{" "}
+                        <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
+                      </Label>
+                      <NativeSelect
+                        id={`assignee:${task.id}`}
+                        name={`assignee:${task.id}`}
+                        defaultValue=""
+                        aria-label={LABELS.assigneeOf(task.name)}
+                      >
+                        <NativeSelectOption value="">{LABELS.meAsRunManager}</NativeSelectOption>
+                        {colleagues.map((person) => (
+                          <NativeSelectOption key={person.id} value={person.id}>
+                            {staffLabel(person)}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    </div>
+                  ))}
+              </fieldset>
+            </Card>
           ))}
 
           {message ? (
-            <p role="alert" className="text-sm text-red-600">
-              {message}
-            </p>
+            <Alert variant="destructive" id="launch-error">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
           ) : null}
           <div>
             <SubmitButton label={LABELS.launch} pendingLabel={LABELS.launching} />
@@ -128,9 +136,9 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         </form>
       ) : null}
 
-      <Link href="/runs" className="text-sm underline">
+      <TextLink href="/runs" className="w-fit text-sm">
         {LABELS.backToRuns}
-      </Link>
+      </TextLink>
     </main>
   );
 }
