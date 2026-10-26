@@ -117,7 +117,7 @@ drop policy template_tasks_select_all on public.template_tasks;
 
 create policy template_sections_select_admin
   on public.template_sections for select to authenticated
-  using (true);
+  using ((select private.current_app_role()) = 'admin');
 
 create policy template_sections_insert_admin
   on public.template_sections for insert to authenticated
@@ -134,7 +134,7 @@ create policy template_sections_delete_admin
 
 create policy template_tasks_select_admin
   on public.template_tasks for select to authenticated
-  using (true);
+  using ((select private.current_app_role()) = 'admin');
 
 create policy template_tasks_insert_admin
   on public.template_tasks for insert to authenticated
