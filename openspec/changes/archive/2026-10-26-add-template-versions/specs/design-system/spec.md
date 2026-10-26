@@ -41,13 +41,13 @@ IF відвідувач без входу відкриває сторінку з
 - **THEN** відвідувач бачить сторінку входу в тому самому макеті сторінки, що й інші сторінки
 - **AND** не показано жодних даних запуску
 
-<!--
-ВПРАВА 4 (розробник): перекладіть AC-DSYS-04 з requirements/19-use-one-design-system.md.
-Що потрібно:
-  1) ### Requirement: <назва> — і ОДНЕ речення EARS українською з «WHEN …, the system SHALL …»;
-  2) #### Scenario: AC-DSYS-04 <коротка назва> — рівно чотири решітки, ID на початку;
-  3) кроки - **GIVEN** / - **WHEN** / - **THEN** / - **AND** з «Given / When / Then» PM;
-  4) тексти «No runs yet. Launch a template to start one.» і «Launch a template» — дослівно; «no empty table» — окремим AND.
-Перевірка: npx openspec validate add-template-versions --strict
-Зразок формату — сценарії вище. Після вправи цей коментар видаліть.
--->
+### Requirement: Порожній список запусків
+
+WHEN користувач, у якого немає жодного видимого запуску, відкриває список запусків, the system SHALL показати повідомлення «No runs yet. Launch a template to start one.» і посилання «Launch a template» замість порожньої таблиці.
+
+#### Scenario: AC-DSYS-04 Менеджер без запусків бачить порожній стан
+
+- **GIVEN** менеджер B, у якого немає запусків
+- **WHEN** B відкриває список запусків
+- **THEN** B бачить повідомлення «No runs yet. Launch a template to start one.» і посилання «Launch a template»
+- **AND** порожньої таблиці немає

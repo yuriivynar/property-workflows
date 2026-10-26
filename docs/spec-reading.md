@@ -127,7 +127,7 @@ AC-EDITOR-01…09) і `requirements/19-use-one-design-system.md` (solomchaak/pro
 | Q9 | — (solomchaak/property-workflows-spec#20) | Перейменування шаблону і яку назву показує запуск | B: назва — частина версії | solomchaak/property-workflows-spec#29 | очікуємо | до відповіді — перейменування немає |
 | Q10 | — (solomchaak/property-workflows-spec#20) | Чи можуть два шаблони мати однакову назву? | A: назва унікальна | solomchaak/property-workflows-spec#30 | очікуємо | до відповіді — без перевірки (текст PM) |
 | Q11 | AC-EDITOR-01 (solomchaak/property-workflows-spec#20) | Що бачить адміністратор, якщо автозбереження не вдалося? | A: постійний стан збереження в редакторі | solomchaak/property-workflows-spec#31 | очікуємо | Open questions |
-| Q12 | — (solomchaak/property-workflows-spec#19) | Пропозиція: вибір теми «System / Light / Dark» | A: вибір на кожній сторінці, за замовчуванням System | (пропозиція через форму; номер — після створення) | очікуємо | тема йде за пристроєм, перемикача немає до рішення PM |
+| Q12 | — (solomchaak/property-workflows-spec#19) | Пропозиція: вибір теми «System / Light / Dark» | A: вибір на кожній сторінці, за замовчуванням System | solomchaak/property-workflows-spec#34 | очікуємо | тема йде за пристроєм, перемикача немає до рішення PM |
 
 ### Власні припущення (зріз 2)
 
