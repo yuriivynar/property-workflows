@@ -300,6 +300,27 @@ describe("База: шаблон змінює лише адміністрато�
 });
 
 describe("База: запуск зі знімка версії", () => {
+  it("AC-EDITOR-06: форму відкрито за версією 1, а збережено версію 2 — запуск відхилено, запуску немає", async () => {
+    const { template, moveIn } = await tenantMoveIn("e0620000");
+    await addSixthTask(ADMIN, template, moveIn);
+    await t.saveVersion(template); // поки менеджер заповнював форму версії 1
+
+    const error = await errorOf(
+      t.asUser(MANAGER_A, "select public.launch_run($1, $2, '{}', 1)", [template, "Apartment 16, move-in"]),
+    );
+    expect(error).toContain("TEMPLATE_VERSION_CHANGED");
+    const [{ n }] = await t.asService<{ n: number }>(
+      "select count(*)::int as n from public.runs where case_name = 'Apartment 16, move-in'",
+    );
+    expect(n).toBe(0);
+    // З актуальною версією — запуск є, і в ньому 6 задач версії 2.
+    const [{ id }] = await t.asUser<{ id: string }>(MANAGER_A, "select public.launch_run($1, $2, '{}', 2) as id", [
+      template,
+      "Apartment 16, move-in",
+    ]);
+    expect(await t.asUser(MANAGER_A, "select id from public.run_tasks where run_id = $1", [id])).toHaveLength(6);
+  });
+
   it("AC-EDITOR-06: задачу видалено з незбережених змін — запуск з поточної версії все одно має її й призначення", async () => {
     const { template, before } = await tenantMoveIn("e0610000");
     const [first] = await t.asService<{ id: string }>(

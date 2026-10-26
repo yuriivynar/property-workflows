@@ -37,10 +37,13 @@ export async function launchRun(formData: FormData) {
     }
   }
 
+  // Версія, за якою відкрито форму: якщо її вже замінила нова, база відхилить запуск (TEMPLATE_VERSION_CHANGED).
+  const expected = Number(formData.get("expected_version"));
   const { data: runId, error } = await supabase.rpc("launch_run", {
     p_template_id: templateId,
     p_case_name: check.caseName,
     p_assignments: assignments,
+    ...(Number.isInteger(expected) && expected > 0 ? { p_expected_version: expected } : {}),
   });
   if (error || !runId) {
     return back(errorCodeFrom(error?.message) ?? "UNEXPECTED");

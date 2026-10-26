@@ -255,6 +255,7 @@ export type Database = {
           p_template_id: string;
           p_case_name: string;
           p_assignments?: Json;
+          p_expected_version?: number;
         };
         Returns: string;
       };
