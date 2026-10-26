@@ -68,11 +68,11 @@
 | AC-DSYS-03 | відвідувач без входу на сторінці запуску бачить сторінку входу, без даних запуску | — | — | відкладено (чекає реалізації) |
 | AC-DSYS-04 | менеджер без запусків бачить «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці | — | — | відкладено (чекає реалізації) |
 | AC-EDITOR-01 | незбережені зміни зберігаються автоматично, позначка «Unpublished changes», 6 задач після повернення | — | — | відкладено (чекає реалізації) |
-| AC-EDITOR-02 | менеджер бачить версію 1 з 5 задачами без незбережених змін | — | — | відкладено (чекає реалізації) |
-| AC-EDITOR-03 | збереження створює версію 2 з 6 задачами, позначка зникає | — | — | відкладено (чекає реалізації) |
-| AC-EDITOR-04 | без обов'язкової задачі — «A template needs at least one required task», версії немає, зміни лишаються | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-02 | менеджер бачить версію 1 з 5 задачами без незбережених змін | `supabase/migrations/20261026133459_template_versions.sql` (RLS template_sections / template_tasks / template_versions / templates), `src/app/runs/new/page.tsx` | `tests/db/template-versions.test.ts` | реалізовано |
+| AC-EDITOR-03 | збереження створює версію 2 з 6 задачами, позначка зникає | `supabase/migrations/20261026133459_template_versions.sql` (save_template_version) | `tests/db/template-versions.test.ts` | реалізовано |
+| AC-EDITOR-04 | без обов'язкової задачі — «A template needs at least one required task», версії немає, зміни лишаються | `supabase/migrations/20261026133459_template_versions.sql` (save_template_version: TEMPLATE_NEEDS_REQUIRED_TASK) | `tests/db/template-versions.test.ts` | реалізовано |
 | AC-EDITOR-05 | список версій: найновіша перша, «DD.MM.YYYY HH:MM» за Києвом і email автора | — | — | відкладено (чекає реалізації) |
-| AC-EDITOR-06 | запуск показує «Template version 1» і 5 задач версії 1 при поточній версії 2 | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-06 | запуск показує «Template version 1» і 5 задач версії 1 при поточній версії 2 | `supabase/migrations/20261026133459_template_versions.sql` (launch_run, runs.template_version), `src/app/runs/[id]/page.tsx`, `src/lib/templates/version.ts` | `tests/db/template-versions.test.ts`, `src/lib/templates/version.test.ts` | реалізовано |
 | AC-EDITOR-07 | менеджер на списку версій за прямим посиланням бачить «Not enough rights», без версій | — | — | відкладено (чекає реалізації) |
-| AC-EDITOR-08 | прямий запит менеджера не змінює шаблон: версія 1, 5 задач, без незбережених змін | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-08 | прямий запит менеджера не змінює шаблон: версія 1, 5 задач, без незбережених змін | `supabase/migrations/20261026133459_template_versions.sql` (RLS на кожну операцію, колонкові GRANT, save_template_version і move_template_item — NOT_ALLOWED) | `tests/db/template-versions.test.ts` | реалізовано |
 | AC-EDITOR-09 | відвідувач без входу на редакторі бачить сторінку входу, без вмісту шаблону | — | — | відкладено (чекає реалізації) |
