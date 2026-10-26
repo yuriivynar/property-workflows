@@ -48,8 +48,10 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
       ])
     : [null, null];
   // Знімок не прочитано — форму не показуємо: інакше приховані задачі дісталися б менеджеру запуску мовчки.
-  const versionMissing = Boolean(selected) && (Boolean(versionResult?.error) || !versionResult?.data?.content);
   const sections = parseVersionContent(versionResult?.data?.content).sections;
+  // Знімок без розділів (невідомий формат) — теж «не прочитано» (рев'ю CodeRabbit, PR #17).
+  const versionMissing =
+    Boolean(selected) && (Boolean(versionResult?.error) || !versionResult?.data?.content || sections.length === 0);
   const colleagues = (staffResult?.data ?? []).filter((person) => person.id !== claims.sub);
 
   return (
