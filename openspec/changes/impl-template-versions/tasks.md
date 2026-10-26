@@ -13,7 +13,9 @@
   (розділ 3), `revoke all … from anon, authenticated`, явні `grant` і колонкові `grant update`; тригер
   `private.mark_unpublished`; перенесення наявних шаблонів у версію 1 і запусків — `template_version = 1`.
 - [ ] 1.2 Функції `save_template_version` (роль першим рядком, `TEMPLATE_NEEDS_REQUIRED_TASK`, `NO_UNPUBLISHED_CHANGES`)
-  і нова `launch_run` — з поточної версії, із записом `runs.template_version`; `move_template_item`.
+  і нова `launch_run` — з поточної версії, із записом `runs.template_version`; `move_template_item` (роль `admin`
+  першим рядком, обгортка `security invoker`, `execute` лише `authenticated`); тест: менеджер викликає обидві RPC
+  напряму — `NOT_ALLOWED`, шаблон і позиції без змін.
 - [ ] 1.3 Форма запуску `/runs/new` читає задачі поточної версії (знімок), сторінка запуску показує
   «Template version N»; `database.types.ts`; регрес тестів AC-RUN-* і AC-TASK-*.
 - [ ] 1.4 Тести бази `tests/db/template-versions.test.ts` на AC нижче (відмова + незмінні дані) і мутаційна перевірка:

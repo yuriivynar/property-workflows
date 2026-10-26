@@ -92,8 +92,15 @@
 - `private.launch_run` (нова версія функції): бере розділи й задачі **з поточної версії** (`content` знімка), а не з
   робочої копії; записує `runs.template_version`; шаблон без поточної версії → `TEMPLATE_NOT_FOUND` (робоче рішення
   до solomchaak/property-workflows-spec#21). Ключі призначень — id задач зі знімка. Поведінка AC-RUN-01…12 та сама.
-- `private.move_template_item(p_kind, p_id, p_direction)` + обгортка — перестановка розділу чи задачі на одну позицію
-  в одній транзакції (унікальність `(template_id, position)` не дає поміняти місцями двома окремими `update`).
+- `private.move_template_item(p_kind, p_id, p_direction)` (`security definer`, `set search_path = ''`) + тонка обгортка
+  `public.move_template_item` (`security invoker`) — перестановка розділу чи задачі на одну позицію в одній
+  транзакції (унікальність `(template_id, position)` не дає поміняти місцями двома окремими `update`). `security
+  definer` обходить RLS, тому функція **першим рядком** перевіряє роль: не `admin` → `NOT_ALLOWED` (42501) до
+  будь-якого запису (AC-EDITOR-08) — `requireAdmin()` у server action цього не замінює, бо RPC можна викликати
+  напряму з публічним ключем.
+- Для всіх функцій зрізу (`save_template_version`, `launch_run`, `move_template_item`, `mark_unpublished`): `revoke
+  execute … from public, anon`, `grant execute … to authenticated` — і для `private.*`, і для обгорток; тригерна
+  `private.mark_unpublished` не має обгортки в `public`.
 
 ### 5. Міграція даних (одна міграція `…_template_versions.sql`)
 
@@ -151,7 +158,7 @@
   з 6 задачами, позначка `false`), AC-EDITOR-04 (виняток, версії немає, 1 розділ і 3 задачі лишились, позначка
   `true`), AC-EDITOR-05 (порядок і автор), AC-EDITOR-06 (запуск з версії 1 після версії 2 — 5 задач, номер 1),
   AC-EDITOR-07 (менеджер не читає версій, крім поточної), AC-EDITOR-08 (менеджер: `insert` / `update` / `delete`
-  робочої копії й `save_template_version` — відмова, шаблон без змін), AC-EDITOR-09 і AC-DSYS-03 (`asAnon`: жодного
+  робочої копії, `save_template_version` і `move_template_item` — `NOT_ALLOWED`, шаблон і позиції без змін), AC-EDITOR-09 і AC-DSYS-03 (`asAnon`: жодного
   рядка шаблону й запуску). Кожен відмовний тест перевіряє і відмову, і незмінні дані (`asService`).
 - **Домен і дії:** `formatVersionDate` (AC-EDITOR-05), `templatePageAccess` (AC-DSYS-02, AC-EDITOR-07),
   `runsListState` (AC-DSYS-04), мапа `StatusBadge` (AC-DSYS-01), `requireAdmin` у діях — менеджер отримує помилку до
