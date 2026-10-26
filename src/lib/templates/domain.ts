@@ -1,0 +1,100 @@
+import type { AppRole } from "@/lib/auth/require-role";
+
+// Чисті правила екранів шаблонів (без Supabase) — тестуються окремо (src/lib/templates/domain.test.ts).
+
+/** Тексти екранів шаблонів — дослівно з AC і глосарію PM; робочі рішення — з посиланням на питання PM. */
+export const TEMPLATE_MESSAGES = {
+  unpublished: "Unpublished changes", // AC-EDITOR-01, глосарій
+  needsRequiredTask: "A template needs at least one required task", // AC-EDITOR-04
+  notEnoughRights: "Not enough rights", // AC-DSYS-02, AC-EDITOR-07
+  backToTemplates: "Back to templates", // AC-DSYS-02
+  templateNotFound: "Template not found", // робоче рішення до solomchaak/property-workflows-spec#26
+  noChanges: "There are no unpublished changes to save", // робоче рішення до solomchaak/property-workflows-spec#22
+  nameRequired: "Enter a name", // робоче рішення до solomchaak/property-workflows-spec#28
+  nameTaken: "A template with this name already exists", // робоче рішення до solomchaak/property-workflows-spec#30
+  changeNotKept: "Your last change was not kept. Try again.", // робоче рішення до solomchaak/property-workflows-spec#31
+  notLoaded: "The data could not be loaded. Try again.",
+  noTemplates: "No templates yet.", // робоче рішення до solomchaak/property-workflows-spec#27
+  noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
+  versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх
+  version: (n: number) => `Version ${n}`,
+} as const;
+
+/** Коди помилок функцій бази й дій → текст для людини. Невідомий код — загальна помилка без деталей. */
+export function messageForTemplateError(code: string): string {
+  switch (code) {
+    case "TEMPLATE_NEEDS_REQUIRED_TASK":
+      return TEMPLATE_MESSAGES.needsRequiredTask;
+    case "NO_UNPUBLISHED_CHANGES":
+      return TEMPLATE_MESSAGES.noChanges;
+    case "NOT_ALLOWED":
+      return TEMPLATE_MESSAGES.notEnoughRights;
+    case "NAME_REQUIRED":
+      return TEMPLATE_MESSAGES.nameRequired;
+    case "NAME_TAKEN":
+      return TEMPLATE_MESSAGES.nameTaken;
+    case "TEMPLATE_NOT_FOUND":
+    case "TEMPLATE_ITEM_NOT_FOUND":
+      return TEMPLATE_MESSAGES.templateNotFound;
+    default:
+      return TEMPLATE_MESSAGES.changeNotKept;
+  }
+}
+
+/** Код помилки з тексту винятку Postgres (raise exception 'CODE') або з коду Postgres. */
+export function templateErrorCode(error: { message?: string; code?: string } | null | undefined): string {
+  if (!error) return "";
+  const known = [
+    "TEMPLATE_NEEDS_REQUIRED_TASK",
+    "NO_UNPUBLISHED_CHANGES",
+    "NOT_ALLOWED",
+    "TEMPLATE_NOT_FOUND",
+    "TEMPLATE_ITEM_NOT_FOUND",
+  ];
+  const found = known.find((code) => error.message?.includes(code));
+  if (found) return found;
+  // За назвою обмеження, а не лише за кодом: інший unique / check не має перетворюватись на «назва зайнята».
+  const message = error.message ?? "";
+  if (error.code === "23505" && message.includes("templates_name_key")) return "NAME_TAKEN";
+  if (error.code === "23514" && /_name_not_blank/.test(message)) return "NAME_REQUIRED";
+  if (error.code === "42501") return "NOT_ALLOWED";
+  return "UNEXPECTED";
+}
+
+export type TemplatePage = "view" | "edit" | "versions";
+
+/**
+ * Хто бачить сторінку шаблону: редактор і список версій — лише адміністратор; менеджер бачить «Not enough rights» і
+ * жодних даних (AC-DSYS-02, AC-EDITOR-07). Поточну версію бачать обидві ролі (AC-EDITOR-02).
+ */
+export function templatePageAccess(role: AppRole, page: TemplatePage): "ok" | "not-enough-rights" {
+  if (page === "view") return "ok";
+  return role === "admin" ? "ok" : "not-enough-rights";
+}
+
+const KYIV = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Kyiv",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** Дата й час збереження версії за Києвом у форматі DD.MM.YYYY HH:MM, до хвилини (AC-EDITOR-05). */
+export function formatVersionDate(iso: string): string {
+  const parts = Object.fromEntries(KYIV.formatToParts(new Date(iso)).map((p) => [p.type, p.value]));
+  return `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
+}
+
+/** Порядок списку версій: найновіша перша (AC-EDITOR-05). */
+export function newestFirst<T extends { number: number }>(versions: T[]): T[] {
+  return [...versions].sort((a, b) => b.number - a.number);
+}
+
+/** Назва з форми: обрізані пробіли; порожня — null (форма покаже «Enter a name»). */
+export function cleanName(value: FormDataEntryValue | null): string | null {
+  const name = typeof value === "string" ? value.trim() : "";
+  return name === "" ? null : name;
+}

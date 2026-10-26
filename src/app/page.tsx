@@ -33,9 +33,14 @@ export default async function Home() {
         <dt className="text-muted-foreground">Role</dt>
         <dd data-testid="user-role">{profile?.role ?? "profile not found"}</dd>
       </dl>
-      <TextLink href="/runs" className="w-fit text-sm" data-testid="runs-link">
-        {LABELS.runsTitle}
-      </TextLink>
+      <p className="flex gap-4 text-sm">
+        <TextLink href="/templates" data-testid="templates-link">
+          Templates
+        </TextLink>
+        <TextLink href="/runs" data-testid="runs-link">
+          {LABELS.runsTitle}
+        </TextLink>
+      </p>
       <form action={signOut}>
         <Button type="submit" variant="outline">
           Sign out
