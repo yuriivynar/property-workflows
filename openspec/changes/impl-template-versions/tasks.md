@@ -41,11 +41,11 @@
 
 ## 3. Однакові стани сторінок (`task/design-system-states`)
 
-- [ ] 3.1 `PageShell` (спільний макет, зокрема `/login`), `Notice`, `EmptyState` у `src/components/ui`; `DESIGN.md`,
+- [x] 3.1 `PageShell` (спільний макет, зокрема `/login`), `Notice`, `EmptyState` у `src/components/ui`; `DESIGN.md`,
   розділи 5–6.
-- [ ] 3.2 `/runs`: `runsListState` — «No runs yet. Launch a template to start one.» + «Launch a template», без таблиці;
+- [x] 3.2 `/runs`: `runsListState` — «No runs yet. Launch a template to start one.» + «Launch a template», без таблиці;
   статуси лише через `StatusBadge` (тест мапи); відвідувач без входу на сторінці запуску — сторінка входу, без даних.
-- [ ] 3.3 ADR (версії — `jsonb`-знімок; перевірка в дії + RLS, без admin-клієнта) і правило
+- [x] 3.3 ADR (версії — `jsonb`-знімок; перевірка в дії + RLS, без admin-клієнта) і правило
   `scripts/check-actions-claims.mjs` в `architecture.yml` з доказом, що воно ловить порушення (червоний прогін або
   вивід скрипта в PR).
 - [ ] 3.4 Скріни за ролями (`docs/img/ws7-role-*`), рядки `docs/conformance.md`, `npx openspec archive

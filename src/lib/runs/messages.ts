@@ -31,7 +31,7 @@ export const REQUIRED_LABELS = {
 export const LABELS = {
   runsTitle: "Runs",
   launchTemplate: "Launch a template",
-  noRuns: "No runs yet.",
+  noRuns: "No runs yet. Launch a template to start one.", // AC-DSYS-04, дослівно
   backToProfile: "Back to profile",
   backToRuns: "Back to runs",
   columnCase: "Case",

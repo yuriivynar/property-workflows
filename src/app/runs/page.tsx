@@ -4,7 +4,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TextLink } from "@/components/ui/text-link";
-import { formatProgress } from "@/lib/runs/domain";
+import { EmptyState } from "@/components/ui/empty-state";
+import { formatProgress, runsListState } from "@/lib/runs/domain";
 import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,7 +33,7 @@ export default async function RunsPage() {
           {LABELS.launchTemplate}
         </Link>
       </div>
-      {runs && runs.length > 0 ? (
+      {runsListState(runs) === "table" && runs ? (
         <Table>
           <TableHeader>
             <TableRow>
@@ -61,7 +62,7 @@ export default async function RunsPage() {
           </TableBody>
         </Table>
       ) : (
-        <p className="text-sm text-muted-foreground">{LABELS.noRuns}</p>
+        <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
       )}
       <TextLink href="/" className="w-fit text-sm">
         {LABELS.backToProfile}
