@@ -19,7 +19,9 @@
   (RLS на кожну операцію). Позначка — `templates.has_unpublished_changes` (тригер `private.mark_unpublished`).
 - **Версія** — рядок `template_versions` з `content jsonb` (розділи й задачі зі своїми id), `number`
   (`unique (template_id, number)`), `created_by`, `created_at`. Створює лише `private.save_template_version`
-  (`security definer`, роль першим рядком); `authenticated` має лише `select`, `update`/`delete` — нікому.
+  (`security definer`, роль першим рядком); `authenticated` має лише `select`, без `insert` / `update` / `delete`.
+  `service_role` має повні права як довірений технічний виняток (Dashboard, перевірки в CI): він і так обходить RLS,
+  у застосунку не використовується (admin-клієнта немає, ADR 0003), а зміна версії ним — ручне втручання поза продуктом.
 - `templates.current_version` — номер поточної версії; `launch_run` бере розділи й задачі **зі знімка** поточної версії
   й записує `runs.template_version` (копія номера, як `template_name`).
 

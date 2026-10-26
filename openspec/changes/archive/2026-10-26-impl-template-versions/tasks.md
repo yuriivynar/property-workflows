@@ -48,7 +48,7 @@
 - [x] 3.3 ADR (версії — `jsonb`-знімок; перевірка в дії + RLS, без admin-клієнта) і правило
   `scripts/check-actions-claims.mjs` в `architecture.yml` з доказом, що воно ловить порушення (червоний прогін або
   вивід скрипта в PR).
-- [ ] 3.4 Скріни за ролями (`docs/img/ws7-role-*`), рядки `docs/conformance.md`, `npx openspec archive
+- [x] 3.4 Скріни за ролями (`docs/img/ws7-role-*`), рядки `docs/conformance.md`, `npx openspec archive
   impl-template-versions -y` (останній PR зрізу).
   Done when: AC-DSYS-01, AC-DSYS-03, AC-DSYS-04 — однакові слова й колір статусів у списку й на сторінці запуску;
   відвідувач без входу бачить сторінку входу в тому самому макеті без даних запуску; менеджер без запусків бачить

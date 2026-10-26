@@ -44,9 +44,28 @@ function stripNoise(code) {
     .replace(/'(?:\\.|[^'\\\n])*'/g, "''");
 }
 
-/** Тіла функцій файлу: { name, exported, body }. Тіло — від першої «{» після сигнатури до парної «}». */
+/** Тіло стрілкової функції: блок «{…}» або вираз до кінця оператора. */
+function arrowBody(code, from) {
+  let i = from;
+  while (/\s/.test(code[i])) i++;
+  if (code[i] !== "{") return code.slice(i, code.indexOf(";", i) > 0 ? code.indexOf(";", i) : code.length);
+  let braces = 0;
+  let k = i;
+  for (; k < code.length; k++) {
+    if (code[k] === "{") braces++;
+    else if (code[k] === "}" && --braces === 0) break;
+  }
+  return code.slice(i, k + 1);
+}
+
+/** Тіла функцій файлу: { name, exported, body } — оголошення function і стрілкові const name = async (…) => …. */
 function functionsOf(code) {
   const result = [];
+  const arrows = /(export\s+)?const\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z0-9_$]+)\s*(?::[^=]+)?=>/g;
+  let arrow;
+  while ((arrow = arrows.exec(code))) {
+    result.push({ name: arrow[2], exported: Boolean(arrow[1]), body: arrowBody(code, arrows.lastIndex) });
+  }
   const re = /(export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g;
   let match;
   while ((match = re.exec(code))) {
@@ -79,7 +98,7 @@ for (const file of files) {
   const rel = path.relative(root, file);
   const code = stripNoise(readFileSync(file, "utf8"));
 
-  if (code.includes("getSession(")) {
+  if (/\bgetSession\s*\(/.test(code)) {
     violations.push(`${rel}  [no-getSession]  getSession( — для авторизації лише getClaims()`);
   }
 
