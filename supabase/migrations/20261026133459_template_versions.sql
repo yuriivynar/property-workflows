@@ -205,10 +205,6 @@ declare
   v_changed  boolean;
   v_number   integer;
 begin
-  -- Першим рядком — роль: security definer обходить RLS, тож без цієї перевірки менеджер зберіг би версію прямим RPC.
-  if (select private.current_app_role()) is distinct from 'admin' then
-    raise exception 'NOT_ALLOWED' using errcode = '42501';                    -- AC-EDITOR-08
-  end if;
 
   select t.current_version, t.has_unpublished_changes into v_current, v_changed
   from public.templates as t
