@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { TextLink } from "@/components/ui/text-link";
 import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
@@ -33,9 +33,9 @@ export default async function Home() {
         <dt className="text-muted-foreground">Role</dt>
         <dd data-testid="user-role">{profile?.role ?? "profile not found"}</dd>
       </dl>
-      <Link href="/runs" className="text-sm text-primary underline-offset-4 hover:underline" data-testid="runs-link">
+      <TextLink href="/runs" className="w-fit text-sm" data-testid="runs-link">
         {LABELS.runsTitle}
-      </Link>
+      </TextLink>
       <form action={signOut}>
         <Button type="submit" variant="outline">
           Sign out
