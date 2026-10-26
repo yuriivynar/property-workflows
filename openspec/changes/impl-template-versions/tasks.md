@@ -26,15 +26,15 @@
 
 ## 2. Редактор шаблону (`task/template-editor`)
 
-- [ ] 2.1 `requireAdmin()` / `requireUser()` (`src/lib/auth/require-role.ts`): `getClaims()` + роль з `profiles` до
+- [x] 2.1 `requireAdmin()` / `requireUser()` (`src/lib/auth/require-role.ts`): `getClaims()` + роль з `profiles` до
   запису; тест: менеджер отримує помилку до запису.
-- [ ] 2.2 Сторінки `/templates` (список, «Create a template», `StatusBadge` «Unpublished changes»),
+- [x] 2.2 Сторінки `/templates` (список, «Create a template», `StatusBadge` «Unpublished changes»),
   `/templates/[id]` (поточна версія лише для читання), `/templates/[id]/edit` (розділи й задачі: додати,
   перейменувати, порядок, видалити, «required»; «Save»; `Alert` з помилкою), `/templates/[id]/versions` (номер,
   `formatVersionDate`, email автора); server actions з автозбереженням; посилання «Templates» у навігації.
-- [ ] 2.3 `templatePageAccess`: менеджер на редакторі й списку версій — `Notice` «Not enough rights» (+ «Back to
+- [x] 2.3 `templatePageAccess`: менеджер на редакторі й списку версій — `Notice` «Not enough rights» (+ «Back to
   templates» на редакторі), дані не запитуються; відвідувач без входу — сторінка входу.
-- [ ] 2.4 Тести бази й домену на AC нижче, мутаційна перевірка, рядки `docs/conformance.md`.
+- [x] 2.4 Тести бази й домену на AC нижче, мутаційна перевірка, рядки `docs/conformance.md`.
   Done when: AC-EDITOR-01, AC-EDITOR-05, AC-EDITOR-07, AC-EDITOR-09, AC-DSYS-02 — зміна лишається після виходу з
   позначкою «Unpublished changes»; версії від найновішої з «DD.MM.YYYY HH:MM» і email; менеджер бачить «Not enough
   rights» без версій і без редактора («Back to templates»); відвідувач без входу бачить сторінку входу.
