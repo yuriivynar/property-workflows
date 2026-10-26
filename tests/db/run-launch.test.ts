@@ -75,11 +75,16 @@ afterAll(async () => {
 
 describe("База: запуск шаблону", () => {
   it("AC-RUN-01: «Tenant move-in» (2 розділи, 5 задач, 3 обов'язкові) → рівно один запуск «in progress» з 5 задачами «to do»", async () => {
+    // Менеджер бачить шаблон лише як поточну версію (зріз 2, AC-EDITOR-02) — форму шаблону перевіряємо в ній.
     const [shape] = await t.asUser<{ sections: number; tasks: number; required: number }>(
       MANAGER_A,
-      `select (select count(*)::int from public.template_sections where template_id = $1) as sections,
-              (select count(*)::int from public.template_tasks where template_id = $1) as tasks,
-              (select count(*)::int from public.template_tasks where template_id = $1 and is_required) as required`,
+      `select jsonb_array_length(v.content -> 'sections') as sections,
+              (select count(*)::int from jsonb_array_elements(v.content -> 'sections') as s,
+                 jsonb_array_elements(s -> 'tasks')) as tasks,
+              (select count(*)::int from jsonb_array_elements(v.content -> 'sections') as s,
+                 jsonb_array_elements(s -> 'tasks') as task where (task ->> 'is_required')::boolean) as required
+       from public.template_versions as v join public.templates as t on t.id = v.template_id
+       where v.template_id = $1 and v.number = t.current_version`,
       [TENANT_MOVE_IN],
     );
     expect(shape).toEqual({ sections: 2, tasks: 5, required: 3 });
@@ -257,6 +262,7 @@ describe("База: цілісність шаблону", () => {
       "insert into public.template_tasks (id, template_id, section_id, name, is_required, position) values ($1, $2, $3, 'Only task', true, 1)",
       [task, template, section],
     );
+    await t.saveVersion(template); // запуск — лише з поточної версії (зріз 2)
 
     const error = await t
       .asUser(MANAGER_A, "select public.launch_run($1, $2, $3) as id", [

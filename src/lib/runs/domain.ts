@@ -10,6 +10,7 @@ export type RunErrorCode =
   | "CASE_NAME_TOO_LONG"
   | "LAUNCH_NOT_ALLOWED"
   | "TEMPLATE_NOT_FOUND"
+  | "TEMPLATE_VERSION_CHANGED"
   | "INVALID_ASSIGNEE"
   | "NOT_ALLOWED"
   | "CONFIRMATION_REQUIRED";
@@ -33,6 +34,7 @@ const MESSAGE_BY_CODE: Record<RunErrorCode, string> = {
   CASE_NAME_TOO_LONG: MESSAGES.caseNameTooLong,
   LAUNCH_NOT_ALLOWED: MESSAGES.launchNotAllowed,
   TEMPLATE_NOT_FOUND: MESSAGES.templateNotFound,
+  TEMPLATE_VERSION_CHANGED: MESSAGES.templateVersionChanged,
   INVALID_ASSIGNEE: MESSAGES.invalidAssignee,
   NOT_ALLOWED: MESSAGES.markNotAllowed,
   CONFIRMATION_REQUIRED: MESSAGES.confirmationRequired,

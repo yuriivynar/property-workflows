@@ -13,6 +13,7 @@ import {
   staffLabel,
 } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
+import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
 
 // Сторінка запуску: прогрес «N of M done», задачі за розділами з виконавцем, позначкою обов'язковості й статусом
@@ -61,7 +62,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const runId = run.id;
   const runManagerId = run.run_manager_id;
 
-  const [{ data: sections }, { data: tasks }, { data: staff }] = await Promise.all([
+  // Номер версії — у runs (копія на момент запуску), а не у view run_overview (AC-EDITOR-06).
+  const [{ data: sections }, { data: tasks }, { data: staff }, { data: version }] = await Promise.all([
     supabase.from("run_sections").select("id, name, position").eq("run_id", runId).order("position"),
     supabase
       .from("run_tasks")
@@ -69,6 +71,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
       .eq("run_id", runId)
       .order("position"),
     supabase.rpc("staff_directory"),
+    supabase.from("runs").select("template_version").eq("id", runId).maybeSingle(),
   ]);
   const names = new Map((staff ?? []).map((person) => [person.id, staffLabel(person)]));
 
@@ -78,7 +81,12 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         <h1 className="text-2xl font-semibold" data-testid="case-name">
           {run.case_name}
         </h1>
-        <p className="text-sm text-muted-foreground">{run.template_name}</p>
+        <p className="text-sm text-muted-foreground">
+          {run.template_name}
+          {version?.template_version ? (
+            <span data-testid="template-version"> · {templateVersionLabel(version.template_version)}</span>
+          ) : null}
+        </p>
       </div>
       <dl className="grid grid-cols-[max-content_1fr] items-center gap-x-4 gap-y-2 text-sm">
         <dt className="text-muted-foreground">{LABELS.runManager}</dt>

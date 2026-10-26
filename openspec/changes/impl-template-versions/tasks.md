@@ -7,18 +7,18 @@
 
 ## 1. Версії шаблонів у базі (`task/template-versions-db`)
 
-- [ ] 1.1 Міграція `…_template_versions.sql`: `templates.current_version`, `templates.has_unpublished_changes`
+- [x] 1.1 Міграція `…_template_versions.sql`: `templates.current_version`, `templates.has_unpublished_changes`
   (default `true`, наявні → `false`); таблиця `template_versions` (`unique (template_id, number)`, `jsonb` знімок,
   `created_by`, `created_at`); `runs.template_version`; RLS і політики на кожну операцію за таблицею design.md
   (розділ 3), `revoke all … from anon, authenticated`, явні `grant` і колонкові `grant update`; тригер
   `private.mark_unpublished`; перенесення наявних шаблонів у версію 1 і запусків — `template_version = 1`.
-- [ ] 1.2 Функції `save_template_version` (роль першим рядком, `TEMPLATE_NEEDS_REQUIRED_TASK`, `NO_UNPUBLISHED_CHANGES`)
+- [x] 1.2 Функції `save_template_version` (роль першим рядком, `TEMPLATE_NEEDS_REQUIRED_TASK`, `NO_UNPUBLISHED_CHANGES`)
   і нова `launch_run` — з поточної версії, із записом `runs.template_version`; `move_template_item` (роль `admin`
   першим рядком, обгортка `security invoker`, `execute` лише `authenticated`); тест: менеджер викликає обидві RPC
   напряму — `NOT_ALLOWED`, шаблон і позиції без змін.
-- [ ] 1.3 Форма запуску `/runs/new` читає задачі поточної версії (знімок), сторінка запуску показує
+- [x] 1.3 Форма запуску `/runs/new` читає задачі поточної версії (знімок), сторінка запуску показує
   «Template version N»; `database.types.ts`; регрес тестів AC-RUN-* і AC-TASK-*.
-- [ ] 1.4 Тести бази `tests/db/template-versions.test.ts` на AC нижче (відмова + незмінні дані) і мутаційна перевірка:
+- [x] 1.4 Тести бази `tests/db/template-versions.test.ts` на AC нижче (відмова + незмінні дані) і мутаційна перевірка:
   таблиця в PR, щонайменше два червоні прогони CI (`mutation: …` + revert); рядки `docs/conformance.md`.
   Done when: AC-EDITOR-02, AC-EDITOR-03, AC-EDITOR-04, AC-EDITOR-06, AC-EDITOR-08 — менеджер бачить лише поточну
   версію без незбережених змін; збереження створює версію 2 з 6 задачами; без обов'язкової задачі — повідомлення й
