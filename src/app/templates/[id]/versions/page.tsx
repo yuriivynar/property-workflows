@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,7 +25,7 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
     );
   }
 
-  const [{ data: template }, { data: versions }] = await Promise.all([
+  const [{ data: template }, { data: versions, error: versionsError }] = await Promise.all([
     supabase.from("templates").select("id, name").eq("id", id).maybeSingle(),
     supabase.from("template_versions").select("id, number, created_at, created_by").eq("template_id", id),
   ]);
@@ -51,7 +52,11 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
         <p className="text-sm text-muted-foreground">{template.name}</p>
       </div>
 
-      {versions && versions.length > 0 ? (
+      {versionsError ? (
+        <Alert variant="destructive">
+          <AlertDescription>{TEMPLATE_MESSAGES.notLoaded}</AlertDescription>
+        </Alert>
+      ) : versions && versions.length > 0 ? (
         <Table>
           <TableHeader>
             <TableRow>

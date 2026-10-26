@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { Notice } from "@/components/ui/notice";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -35,14 +36,14 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
     );
   }
 
-  const { data: version } = template.current_version
+  const { data: version, error: versionError } = template.current_version
     ? await supabase
         .from("template_versions")
         .select("content")
         .eq("template_id", template.id)
         .eq("number", template.current_version)
         .maybeSingle()
-    : { data: null };
+    : { data: null, error: null };
   const sections = parseVersionContent(version?.content).sections;
 
   return (
@@ -67,6 +68,12 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
           <TextLink href={`/templates/${template.id}/edit`}>Edit</TextLink>
           <TextLink href={`/templates/${template.id}/versions`}>Versions</TextLink>
         </p>
+      ) : null}
+
+      {versionError || (template.current_version && !version) ? (
+        <Alert variant="destructive">
+          <AlertDescription>{TEMPLATE_MESSAGES.notLoaded}</AlertDescription>
+        </Alert>
       ) : null}
 
       {sections.map((section) => (
