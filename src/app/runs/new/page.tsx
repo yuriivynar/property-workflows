@@ -9,6 +9,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
+import { parseVersionContent } from "@/lib/templates/version";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
 
@@ -26,26 +27,27 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
     redirect("/login");
   }
 
-  const { data: templates } = await supabase.from("templates").select("id, name").order("name");
+  // Запускають лише збережені шаблони: задачі — з поточної версії (знімка), а не з незбережених змін
+  // (AC-EDITOR-02, AC-EDITOR-06; робоче рішення до solomchaak/property-workflows-spec#21).
+  const { data: templates } = await supabase
+    .from("templates")
+    .select("id, name, current_version")
+    .not("current_version", "is", null)
+    .order("name");
   const selected = templates?.find((t) => t.id === templateId);
 
-  const [sectionsResult, tasksResult, staffResult] = selected
+  const [versionResult, staffResult] = selected
     ? await Promise.all([
         supabase
-          .from("template_sections")
-          .select("id, name, position")
+          .from("template_versions")
+          .select("content")
           .eq("template_id", selected.id)
-          .order("position"),
-        supabase
-          .from("template_tasks")
-          .select("id, section_id, name, is_required, position")
-          .eq("template_id", selected.id)
-          .order("position"),
+          .eq("number", selected.current_version ?? 0)
+          .maybeSingle(),
         supabase.rpc("staff_directory"),
       ])
-    : [null, null, null];
-  const sections = sectionsResult?.data ?? [];
-  const tasks = tasksResult?.data ?? [];
+    : [null, null];
+  const sections = parseVersionContent(versionResult?.data?.content).sections;
   const colleagues = (staffResult?.data ?? []).filter((person) => person.id !== claims.sub);
 
   return (
@@ -95,8 +97,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
             <Card key={section.id} className="gap-3 px-4">
               <fieldset className="flex flex-col gap-3">
                 <legend className="mb-1 text-base font-semibold">{section.name}</legend>
-                {tasks
-                  .filter((task) => task.section_id === section.id)
+                {section.tasks
                   .map((task) => (
                     <div
                       key={task.id}

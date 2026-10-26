@@ -45,6 +45,7 @@ async function templateTwoThree(prefix: string) {
        ($1, $3, 'Hand over the keys', true, 1), ($1, $3, 'Record meter readings', false, 2), ($1, $3, 'Order cleaning', false, 3)`,
     [template, before, moveIn],
   );
+  await t.saveVersion(template); // запуск — лише з поточної версії (зріз 2)
   return { template, before, moveIn };
 }
 

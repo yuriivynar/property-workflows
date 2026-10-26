@@ -44,6 +44,8 @@ export interface TestDb {
   asAnon<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>;
   /** SQL в обхід RLS (як Dashboard / service_role) — для підготовки й перевірки результату. */
   asService<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>;
+  /** Зберегти шаблон, підготовлений у робочій копії, як нову версію — від імені admin@example.test (як редактор). */
+  saveVersion(templateId: string): Promise<number>;
 }
 
 async function inTransaction<T>(db: PGlite, role: string, userId: string | null, sql: string, params: unknown[]) {
@@ -95,5 +97,15 @@ export async function createTestDb(): Promise<TestDb> {
       inTransaction<T>(db, "authenticated", userId, sql, params),
     asAnon: <T,>(sql: string, params: unknown[] = []) => inTransaction<T>(db, "anon", null, sql, params),
     asService: <T,>(sql: string, params: unknown[] = []) => inTransaction<T>(db, "service_role", null, sql, params),
+    saveVersion: async (templateId: string) => {
+      const [row] = await inTransaction<{ number: number }>(
+        db,
+        "authenticated",
+        users["admin@example.test"],
+        "select public.save_template_version($1) as number",
+        [templateId],
+      );
+      return row.number;
+    },
   };
 }

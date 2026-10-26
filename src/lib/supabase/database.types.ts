@@ -45,15 +45,48 @@ export type Database = {
           id: string;
           name: string;
           created_at: string;
+          current_version: number | null;
+          has_unpublished_changes: boolean;
         };
         Insert: {
           id?: string;
           name: string;
           created_at?: string;
+          current_version?: number | null;
+          has_unpublished_changes?: boolean;
         };
         Update: {
           id?: string;
           name?: string;
+          created_at?: string;
+          current_version?: number | null;
+          has_unpublished_changes?: boolean;
+        };
+        Relationships: [];
+      };
+      template_versions: {
+        Row: {
+          id: string;
+          template_id: string;
+          number: number;
+          content: Json;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          number: number;
+          content: Json;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          number?: number;
+          content?: Json;
+          created_by?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -111,6 +144,7 @@ export type Database = {
           id: string;
           template_id: string | null;
           template_name: string;
+          template_version: number | null;
           case_name: string;
           run_manager_id: string;
           status: string;
@@ -120,6 +154,7 @@ export type Database = {
           id?: string;
           template_id?: string | null;
           template_name: string;
+          template_version?: number | null;
           case_name: string;
           run_manager_id: string;
           status?: string;
@@ -129,6 +164,7 @@ export type Database = {
           id?: string;
           template_id?: string | null;
           template_name?: string;
+          template_version?: number | null;
           case_name?: string;
           run_manager_id?: string;
           status?: string;
@@ -221,6 +257,20 @@ export type Database = {
           p_assignments?: Json;
         };
         Returns: string;
+      };
+      save_template_version: {
+        Args: {
+          p_template_id: string;
+        };
+        Returns: number;
+      };
+      move_template_item: {
+        Args: {
+          p_kind: string;
+          p_id: string;
+          p_direction: number;
+        };
+        Returns: undefined;
       };
       staff_directory: {
         Args: Record<PropertyKey, never>;
