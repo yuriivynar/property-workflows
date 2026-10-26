@@ -21,7 +21,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   if (!user.ok) redirect("/login");
   const isAdmin = user.role === "admin";
 
-  const { data: templates } = await supabase
+  const { data: templates, error: loadError } = await supabase
     .from("templates")
     .select("id, name, current_version, has_unpublished_changes")
     .order("name");
@@ -48,7 +48,11 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
         </Alert>
       ) : null}
 
-      {templates && templates.length > 0 ? (
+      {loadError ? (
+        <Alert variant="destructive">
+          <AlertDescription>{TEMPLATE_MESSAGES.notLoaded}</AlertDescription>
+        </Alert>
+      ) : templates && templates.length > 0 ? (
         <Table>
           <TableHeader>
             <TableRow>

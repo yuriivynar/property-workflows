@@ -13,6 +13,7 @@ export const TEMPLATE_MESSAGES = {
   nameRequired: "Enter a name", // робоче рішення до solomchaak/property-workflows-spec#28
   nameTaken: "A template with this name already exists", // робоче рішення до solomchaak/property-workflows-spec#30
   changeNotKept: "Your last change was not kept. Try again.", // робоче рішення до solomchaak/property-workflows-spec#31
+  notLoaded: "The data could not be loaded. Try again.",
   noTemplates: "No templates yet.", // робоче рішення до solomchaak/property-workflows-spec#27
   noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
   versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх
@@ -52,8 +53,10 @@ export function templateErrorCode(error: { message?: string; code?: string } | n
   ];
   const found = known.find((code) => error.message?.includes(code));
   if (found) return found;
-  if (error.code === "23505") return "NAME_TAKEN"; // unique (name)
-  if (error.code === "23514") return "NAME_REQUIRED"; // check (char_length(btrim(name)) > 0)
+  // За назвою обмеження, а не лише за кодом: інший unique / check не має перетворюватись на «назва зайнята».
+  const message = error.message ?? "";
+  if (error.code === "23505" && message.includes("templates_name_key")) return "NAME_TAKEN";
+  if (error.code === "23514" && /_name_not_blank/.test(message)) return "NAME_REQUIRED";
   if (error.code === "42501") return "NOT_ALLOWED";
   return "UNEXPECTED";
 }

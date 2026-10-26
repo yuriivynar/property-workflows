@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/require-role";
+import { isUuid } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 import { cleanName, templateErrorCode } from "@/lib/templates/domain";
 
@@ -13,9 +14,10 @@ import { cleanName, templateErrorCode } from "@/lib/templates/domain";
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 const editPath = (templateId: string) => `/templates/${templateId}/edit`;
+// Ідентифікатори з форми — лише UUID; інше — як відсутнє значення (дія поверне на список шаблонів без запису).
 const id = (form: FormData, key: string) => {
   const value = form.get(key);
-  return typeof value === "string" && value !== "" ? value : null;
+  return typeof value === "string" && isUuid(value) ? value : null;
 };
 
 /** Перевірка адміністратора; інакше — на сторінку, яка покаже «Not enough rights» (і нічого не записано). */

@@ -36,7 +36,13 @@ describe("Шаблони: правила екранів", () => {
     const code = templateErrorCode({ message: 'TEMPLATE_NEEDS_REQUIRED_TASK' });
     expect(code).toBe("TEMPLATE_NEEDS_REQUIRED_TASK");
     expect(messageForTemplateError(code)).toBe("A template needs at least one required task");
-    expect(templateErrorCode({ message: "duplicate key", code: "23505" })).toBe("NAME_TAKEN");
+    expect(
+      templateErrorCode({ message: 'duplicate key value violates unique constraint "templates_name_key"', code: "23505" }),
+    ).toBe("NAME_TAKEN");
+    // Інше обмеження з тим самим кодом — не «назва зайнята».
+    expect(templateErrorCode({ message: 'violates unique constraint "template_sections_position_key"', code: "23505" })).toBe(
+      "UNEXPECTED",
+    );
     expect(messageForTemplateError("SOMETHING_ELSE")).toBe("Your last change was not kept. Try again.");
   });
 });
