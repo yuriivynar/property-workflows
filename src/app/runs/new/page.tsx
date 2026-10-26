@@ -47,6 +47,8 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         supabase.rpc("staff_directory"),
       ])
     : [null, null];
+  // Знімок не прочитано — форму не показуємо: інакше приховані задачі дісталися б менеджеру запуску мовчки.
+  const versionMissing = Boolean(selected) && (Boolean(versionResult?.error) || !versionResult?.data?.content);
   const sections = parseVersionContent(versionResult?.data?.content).sections;
   const colleagues = (staffResult?.data ?? []).filter((person) => person.id !== claims.sub);
 
@@ -79,9 +81,16 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         </Alert>
       ) : null}
 
-      {selected ? (
+      {selected && versionMissing ? (
+        <Alert variant="destructive">
+          <AlertDescription>{MESSAGES.templateNotLoaded}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {selected && !versionMissing ? (
         <form action={launchRun} className="flex flex-col gap-5">
           <input type="hidden" name="template_id" value={selected.id} />
+          <input type="hidden" name="expected_version" value={selected.current_version ?? ""} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="case_name">{LABELS.caseName}</Label>
             <Input

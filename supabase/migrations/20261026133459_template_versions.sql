@@ -176,9 +176,12 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- Без фільтра «and not has_unpublished_changes»: тригер завжди бере блокування рядка шаблону й стає в чергу за
+  -- save_template_version (for update) — інакше одночасне збереження могло б зняти позначку зі зміни, якої немає
+  -- в знімку (рев'ю CodeRabbit, PR #17).
   update public.templates
   set has_unpublished_changes = true
-  where id = coalesce(new.template_id, old.template_id) and not has_unpublished_changes;
+  where id = coalesce(new.template_id, old.template_id);
   return null;
 end;
 $$;
@@ -340,10 +343,17 @@ revoke execute on function public.move_template_item(text, uuid, integer) from p
 grant execute on function public.move_template_item(text, uuid, integer) to authenticated;
 
 -- ── Запуск — з поточної версії (design.md, розділ 4; AC-EDITOR-06, AC-RUN-01…12) ──
-create or replace function private.launch_run(
-  p_template_id uuid,
-  p_case_name   text,
-  p_assignments jsonb default '{}'::jsonb
+-- Новий параметр p_expected_version — версія, за якою відкрито форму запуску: якщо поки менеджер заповнював форму,
+-- збережено нову версію, запуск відхиляється (TEMPLATE_VERSION_CHANGED), а не бере інший набір задач, ніж бачив
+-- менеджер (рев'ю CodeRabbit, PR #17). Стару сигнатуру (uuid, text, jsonb) видаляємо, щоб виклик не був неоднозначним.
+drop function public.launch_run(uuid, text, jsonb);
+drop function private.launch_run(uuid, text, jsonb);
+
+create function private.launch_run(
+  p_template_id      uuid,
+  p_case_name        text,
+  p_assignments      jsonb default '{}'::jsonb,
+  p_expected_version integer default null
 )
 returns uuid
 language plpgsql
@@ -379,6 +389,10 @@ begin
   from public.templates as t where t.id = p_template_id;
   if not found or v_version is null then
     raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
+  end if;
+
+  if p_expected_version is not null and p_expected_version <> v_version then
+    raise exception 'TEMPLATE_VERSION_CHANGED' using errcode = '22023';
   end if;
 
   select v.content into v_content
@@ -432,5 +446,22 @@ begin
 end;
 $$;
 
-revoke execute on function private.launch_run(uuid, text, jsonb) from public, anon;
-grant execute on function private.launch_run(uuid, text, jsonb) to authenticated;
+revoke execute on function private.launch_run(uuid, text, jsonb, integer) from public, anon;
+grant execute on function private.launch_run(uuid, text, jsonb, integer) to authenticated;
+
+create function public.launch_run(
+  p_template_id      uuid,
+  p_case_name        text,
+  p_assignments      jsonb default '{}'::jsonb,
+  p_expected_version integer default null
+)
+returns uuid
+language sql
+security invoker
+set search_path = ''
+as $$
+  select private.launch_run(p_template_id, p_case_name, p_assignments, p_expected_version);
+$$;
+
+revoke execute on function public.launch_run(uuid, text, jsonb, integer) from public, anon;
+grant execute on function public.launch_run(uuid, text, jsonb, integer) to authenticated;

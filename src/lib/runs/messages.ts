@@ -10,6 +10,9 @@ export const MESSAGES = {
   runNotFound: "Run not found",
   confirmationRequired: "This is the last required task: confirm to mark it as done. This cannot be undone.",
   unexpected: "Something went wrong. Try again.",
+  // Робоче рішення (рев'ю PR #17): версію шаблону змінили, поки заповнювали форму запуску.
+  templateVersionChanged: "The template has a new version. Review the tasks and launch again.",
+  templateNotLoaded: "The template could not be loaded. Try again.",
 } as const;
 
 export const RUN_STATUS_LABELS = {
