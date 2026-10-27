@@ -20,6 +20,8 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
   const isAdmin = user.role === "admin";
+  // Помилка назви пов'язана з полем (DESIGN.md, розділ 7; рев'ю CodeRabbit, PR #23).
+  const nameError = error === "TEMPLATE_NAME_REQUIRED" || error === "NAME_TAKEN";
 
   const { data: templates, error: loadError } = await supabase
     .from("templates")
@@ -35,7 +37,14 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
         <form action={createTemplate} noValidate className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="new-template-name">Template name</Label>
-            <Input id="new-template-name" name="name" required className="w-72" />
+            <Input
+              id="new-template-name"
+              name="name"
+              required
+              className="w-72"
+              aria-invalid={nameError || undefined}
+              aria-describedby={nameError ? "template-error" : undefined}
+            />
           </div>
           <Button type="submit" size="lg">
             Create a template
@@ -44,7 +53,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
       ) : null}
 
       {typeof error === "string" ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" id="template-error">
           <AlertDescription>{messageForTemplateError(error)}</AlertDescription>
         </Alert>
       ) : null}
