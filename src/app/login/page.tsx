@@ -12,7 +12,7 @@ const ERRORS: Record<string, string> = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const message = typeof error === "string" ? ERRORS[error] : undefined;
 
   return (
@@ -25,6 +25,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </CardHeader>
         <CardContent>
           <form action={login} className="flex flex-col gap-4">
+            {typeof next === "string" ? <input type="hidden" name="next" value={next} /> : null}
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" autoComplete="email" required />
