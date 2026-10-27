@@ -44,6 +44,25 @@
 `save_template_version` під блокуванням рядка шаблону, а індекс `templates_name_normalized_key` лишається другою
 лінією захисту.
 
+**Уточнення під час підготовки задачі 1 — де зберігати робочу назву.** Колонка в `templates` не годиться. На
+`templates` діє `grant select` на всю таблицю, а RLS обмежує рядки, не колонки. Тож менеджер прочитав би незбережену
+назву будь-якого збереженого шаблону, всупереч AC-EDITOR-02 і AC-EDITOR-29. Тому робоча назва живе в окремій таблиці
+`template_draft_names (template_id primary key, name)`, як решта робочої копії:
+- RLS лише для `admin`, окрема політика на кожну операцію;
+- `revoke all … from anon, authenticated`;
+- колонкові `grant` на `name`;
+- `check (char_length(btrim(name)) > 0)`.
+
+Запис у цю таблицю ставить «Unpublished changes» тим самим тригером `private.mark_unpublished`. Під час збереження
+`save_template_version`:
+1. бере назву з `template_draft_names` або `templates.name`;
+2. перевіряє її унікальність (`NAME_TAKEN`) — до будь-якого запису;
+3. переносить назву в `templates.name` і в знімок (`content ->> 'name'`);
+4. видаляє рядок робочої назви.
+
+`launch_run` не змінюється: `templates.name` завжди є назвою поточної версії, тож `runs.template_name` отримує назву
+своєї версії (AC-EDITOR-22).
+
 ### 2. Порожня назва в незбережених змінах (AC-EDITOR-20)
 
 AC-EDITOR-20 починається зі стану «незбережені зміни мають задачу з очищеною назвою», а повідомлення
