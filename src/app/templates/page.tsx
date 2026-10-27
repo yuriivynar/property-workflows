@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
-import { messageForTemplateError, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
+import { emptyTemplatesMessage, messageForTemplateError, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
 import { createTemplate } from "./actions";
 
 // Список шаблонів. Що видно, вирішує RLS: admin — усі шаблони з позначкою «Unpublished changes»; manager — лише
@@ -80,7 +80,11 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
           </TableBody>
         </Table>
       ) : (
-        <EmptyState message={TEMPLATE_MESSAGES.noTemplates} />
+        <EmptyState
+          message={emptyTemplatesMessage(user.role)}
+          actionHref={isAdmin ? "#new-template-name" : undefined}
+          actionLabel={isAdmin ? TEMPLATE_MESSAGES.createTemplate : undefined}
+        />
       )}
 
       <TextLink href="/runs" className="w-fit text-sm">

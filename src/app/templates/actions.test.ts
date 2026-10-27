@@ -93,4 +93,26 @@ describe("Дії редактора шаблону", () => {
     );
     expect(state.writes).toEqual(["rpc:save_template_version"]);
   });
+
+  it("AC-EDITOR-19: адміністратор створює шаблон з порожньою назвою чи лише з пробілів — без запису, «Enter a template name»", async () => {
+    state.role = "admin";
+    for (const name of ["", "   "]) {
+      expect(await redirectOf(actions.createTemplate(form({ name })))).toBe(
+        "REDIRECT:/templates?error=TEMPLATE_NAME_REQUIRED",
+      );
+    }
+    expect(state.writes).toEqual([]);
+  });
+
+  it("AC-EDITOR-26: відвідувач без входу змінює шаблон чи зберігає версію напряму — на сторінку входу, без запису", async () => {
+    state.claims = null;
+    const calls: Promise<unknown>[] = [
+      actions.createTemplate(form({ name: "Tenant move-in" })),
+      actions.addTask(form({ template_id: TEMPLATE, section_id: SECTION, name: "Sign handover act" })),
+      actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION })),
+      actions.saveVersion(form({ template_id: TEMPLATE })),
+    ];
+    for (const call of calls) expect(await redirectOf(call)).toBe("REDIRECT:/login");
+    expect(state.writes).toEqual([]);
+  });
 });

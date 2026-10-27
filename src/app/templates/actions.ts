@@ -39,7 +39,7 @@ function done(templateId: string, error?: { message?: string; code?: string } | 
 export async function createTemplate(form: FormData) {
   const supabase = await adminClient("/templates");
   const name = cleanName(form.get("name"));
-  if (!name) redirect("/templates?error=NAME_REQUIRED");
+  if (!name) redirect("/templates?error=TEMPLATE_NAME_REQUIRED"); // AC-EDITOR-19
   const { data, error } = await supabase.from("templates").insert({ name }).select("id").single();
   if (error || !data) redirect(`/templates?error=${templateErrorCode(error)}`);
   revalidatePath("/templates");

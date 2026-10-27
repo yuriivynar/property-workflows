@@ -9,6 +9,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
+import { launchOptions } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
@@ -32,9 +33,9 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const { data: templates } = await supabase
     .from("templates")
     .select("id, name, current_version")
-    .not("current_version", "is", null)
     .order("name");
-  const selected = templates?.find((t) => t.id === templateId);
+  // Незбережений шаблон адміністратор бачить недоступним (AC-EDITOR-10); обрати й запустити його не можна (AC-EDITOR-11).
+  const selected = templates?.find((t) => t.id === templateId && t.current_version);
 
   const [versionResult, staffResult] = selected
     ? await Promise.all([
@@ -65,9 +66,9 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
             <NativeSelectOption value="" disabled>
               {MESSAGES.templateNotFound}
             </NativeSelectOption>
-            {(templates ?? []).map((t) => (
-              <NativeSelectOption key={t.id} value={t.id}>
-                {t.name}
+            {launchOptions(templates ?? []).map((option) => (
+              <NativeSelectOption key={option.id} value={option.id} disabled={option.disabled}>
+                {option.label}
               </NativeSelectOption>
             ))}
           </NativeSelect>

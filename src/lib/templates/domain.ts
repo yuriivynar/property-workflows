@@ -14,7 +14,13 @@ export const TEMPLATE_MESSAGES = {
   nameTaken: "A template with this name already exists", // робоче рішення до solomchaak/property-workflows-spec#30
   changeNotKept: "Your last change was not kept. Try again.", // робоче рішення до solomchaak/property-workflows-spec#31
   notLoaded: "The data could not be loaded. Try again.",
-  noTemplates: "No templates yet.", // робоче рішення до solomchaak/property-workflows-spec#27
+  noTemplates: "No templates yet.", // загальний випадок; за роллю — нижче (AC-EDITOR-17)
+  noTemplatesManager: "No templates yet. An administrator creates them.", // AC-EDITOR-17
+  noTemplatesAdmin: "No templates yet. Create a template to start.", // «Припущення» PM, solomchaak/property-workflows-spec#27
+  createTemplate: "Create a template",
+  templateNameRequired: "Enter a template name", // AC-EDITOR-19
+  sectionEmpty: "Every section needs at least one task", // AC-EDITOR-15
+  launchUnavailable: "Save the template to launch it", // AC-EDITOR-10
   noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
   versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх
   version: (n: number) => `Version ${n}`,
@@ -31,6 +37,10 @@ export function messageForTemplateError(code: string): string {
       return TEMPLATE_MESSAGES.notEnoughRights;
     case "NAME_REQUIRED":
       return TEMPLATE_MESSAGES.nameRequired;
+    case "TEMPLATE_NAME_REQUIRED":
+      return TEMPLATE_MESSAGES.templateNameRequired;
+    case "TEMPLATE_SECTION_EMPTY":
+      return TEMPLATE_MESSAGES.sectionEmpty;
     case "NAME_TAKEN":
       return TEMPLATE_MESSAGES.nameTaken;
     case "TEMPLATE_NOT_FOUND":
@@ -45,6 +55,7 @@ export function messageForTemplateError(code: string): string {
 export function templateErrorCode(error: { message?: string; code?: string } | null | undefined): string {
   if (!error) return "";
   const known = [
+    "TEMPLATE_SECTION_EMPTY",
     "TEMPLATE_NEEDS_REQUIRED_TASK",
     "NO_UNPUBLISHED_CHANGES",
     "NOT_ALLOWED",
@@ -55,7 +66,7 @@ export function templateErrorCode(error: { message?: string; code?: string } | n
   if (found) return found;
   // За назвою обмеження, а не лише за кодом: інший unique / check не має перетворюватись на «назва зайнята».
   const message = error.message ?? "";
-  if (error.code === "23505" && message.includes("templates_name_key")) return "NAME_TAKEN";
+  if (error.code === "23505" && /templates_name(_normalized)?_key/.test(message)) return "NAME_TAKEN"; // AC-EDITOR-23
   if (error.code === "23514" && /_name_not_blank/.test(message)) return "NAME_REQUIRED";
   if (error.code === "42501") return "NOT_ALLOWED";
   return "UNEXPECTED";
@@ -97,4 +108,21 @@ export function newestFirst<T extends { number: number }>(versions: T[]): T[] {
 export function cleanName(value: FormDataEntryValue | null): string | null {
   const name = typeof value === "string" ? value.trim() : "";
   return name === "" ? null : name;
+}
+
+/** Порожній список шаблонів — текст за роллю (AC-EDITOR-17; адміністратору — з «Припущень» PM). */
+export function emptyTemplatesMessage(role: AppRole): string {
+  return role === "admin" ? TEMPLATE_MESSAGES.noTemplatesAdmin : TEMPLATE_MESSAGES.noTemplatesManager;
+}
+
+/**
+ * Пункти вибору шаблону у формі запуску: збережений шаблон — доступний; незбережений бачить лише адміністратор —
+ * недоступним із приміткою «Save the template to launch it»; менеджеру RLS його не повертає (AC-EDITOR-10).
+ */
+export function launchOptions(templates: { id: string; name: string; current_version: number | null }[]) {
+  return templates.map((t) =>
+    t.current_version
+      ? { id: t.id, label: t.name, disabled: false }
+      : { id: t.id, label: `${t.name} — ${TEMPLATE_MESSAGES.launchUnavailable}`, disabled: true },
+  );
 }
