@@ -21,7 +21,12 @@ const ORIGIN = "http://same-origin.invalid";
  */
 export function safeNextPath(value: unknown): string {
   if (typeof value !== "string" || !value.startsWith("/")) return "/";
-  const url = new URL(value, ORIGIN);
+  let url: URL;
+  try {
+    url = new URL(value, ORIGIN);
+  } catch {
+    return "/"; // некоректна адреса («//[», «/\[») — не зриваємо вхід, а ведемо на головну (рев'ю CodeRabbit, PR #24)
+  }
   if (url.origin !== ORIGIN || isPublicPath(url.pathname)) return "/";
   // Після нормалізації «/a/..//host» стає «//host» — браузер прочитав би це як чужий сайт (рев'ю CodeRabbit, PR #24).
   if (url.pathname.startsWith("//")) return "/";
