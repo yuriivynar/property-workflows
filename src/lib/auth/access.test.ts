@@ -29,7 +29,7 @@ describe("Вхід: що бачить відвідувач без входу", (
   });
 
   it("AC-DSYS-08: повернення лише на сторінку застосунку — чужа адреса чи сторінка входу ведуть на головну", () => {
-    for (const value of ["https://evil.example", "//evil.example", "/\\evil.example", "/\t/evil.example", "/login", "", null]) {
+    for (const value of ["https://evil.example", "//evil.example", "/\\evil.example", "/\t/evil.example", "/a/..//evil.example", "/login", "", null]) {
       expect(safeNextPath(value)).toBe("/");
     }
     expect(signInUrl("/")).toBe("/login");
