@@ -88,8 +88,8 @@ export async function renameSection(form: FormData) {
   const sectionId = id(form, "section_id");
   if (!templateId || !sectionId) redirect("/templates");
   const supabase = await adminClient(editPath(templateId));
-  const name = cleanName(form.get("name"));
-  if (!name) redirect(`${editPath(templateId)}?error=NAME_REQUIRED`);
+  // Очищена назва лишається в незбережених змінах; зберегти версію з нею не можна (AC-EDITOR-20).
+  const name = cleanName(form.get("name")) ?? "";
   const { error } = await supabase.from("template_sections").update({ name }).eq("id", sectionId);
   done(templateId, error);
 }
@@ -132,8 +132,8 @@ export async function renameTask(form: FormData) {
   const taskId = id(form, "task_id");
   if (!templateId || !taskId) redirect("/templates");
   const supabase = await adminClient(editPath(templateId));
-  const name = cleanName(form.get("name"));
-  if (!name) redirect(`${editPath(templateId)}?error=NAME_REQUIRED`);
+  // Очищена назва лишається в незбережених змінах; зберегти версію з нею не можна (AC-EDITOR-20).
+  const name = cleanName(form.get("name")) ?? "";
   const { error } = await supabase.from("template_tasks").update({ name }).eq("id", taskId);
   done(templateId, error);
 }

@@ -20,6 +20,7 @@ export const TEMPLATE_MESSAGES = {
   createTemplate: "Create a template",
   templateNameRequired: "Enter a template name", // AC-EDITOR-19
   sectionEmpty: "Every section needs at least one task", // AC-EDITOR-15
+  nameMissing: "Every section and task needs a name", // AC-EDITOR-20
   launchUnavailable: "Save the template to launch it", // AC-EDITOR-10
   noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
   versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх
@@ -41,6 +42,8 @@ export function messageForTemplateError(code: string): string {
       return TEMPLATE_MESSAGES.templateNameRequired;
     case "TEMPLATE_SECTION_EMPTY":
       return TEMPLATE_MESSAGES.sectionEmpty;
+    case "TEMPLATE_NAME_MISSING":
+      return TEMPLATE_MESSAGES.nameMissing;
     case "NAME_TAKEN":
       return TEMPLATE_MESSAGES.nameTaken;
     case "TEMPLATE_NOT_FOUND":
@@ -57,6 +60,7 @@ export function templateErrorCode(error: { message?: string; code?: string } | n
   const known = [
     "NAME_TAKEN", // AC-EDITOR-24: save_template_version перевіряє назву під час збереження
     "TEMPLATE_SECTION_EMPTY",
+    "TEMPLATE_NAME_MISSING",
     "TEMPLATE_NEEDS_REQUIRED_TASK",
     "NO_UNPUBLISHED_CHANGES",
     "NOT_ALLOWED",
