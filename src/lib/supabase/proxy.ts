@@ -3,7 +3,7 @@
 // Cache-Control/Expires/Pragma копіюємо у відповідь, щоб CDN не кешував auth-відповіді.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { signInRedirect } from "@/lib/auth/access";
+import { signInRedirect, signInUrl } from "@/lib/auth/access";
 import type { Database } from "./database.types";
 
 export async function updateSession(request: NextRequest) {
@@ -41,9 +41,8 @@ export async function updateSession(request: NextRequest) {
 
   // Сторінки, доступні без входу, — src/lib/auth/access.ts (AC-DSYS-03, AC-EDITOR-09).
   if (signInRedirect(request.nextUrl.pathname, Boolean(claims))) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    // Після входу — назад на запитану сторінку (AC-DSYS-08).
+    return NextResponse.redirect(new URL(signInUrl(request.nextUrl.pathname, request.nextUrl.search), request.url));
   }
 
   // Повертаємо саме supabaseResponse: у ньому оновлені cookie сесії.

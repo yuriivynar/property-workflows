@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicPath, signInRedirect } from "./access";
+import { isPublicPath, safeNextPath, signInRedirect, signInUrl } from "./access";
 
 describe("Вхід: що бачить відвідувач без входу", () => {
   it("AC-DSYS-03: відвідувач без входу за прямим посиланням на запуск — на сторінку входу", () => {
@@ -19,5 +19,19 @@ describe("Вхід: що бачить відвідувач без входу", (
     expect(isPublicPath("/auth/confirm")).toBe(true);
     expect(isPublicPath("/loginx")).toBe(false);
     expect(signInRedirect("/login", false)).toBeNull();
+  });
+
+  it("AC-DSYS-08: відвідувач за прямим посиланням на запуск — на вхід з поверненням саме на цей запуск", () => {
+    const run = "/runs/10000000-0000-4000-8000-0000000000a1";
+    expect(signInUrl(run)).toBe(`/login?next=${encodeURIComponent(run)}`);
+    expect(safeNextPath(run)).toBe(run);
+    expect(safeNextPath("/runs?status=done")).toBe("/runs?status=done");
+  });
+
+  it("AC-DSYS-08: повернення лише на сторінку застосунку — чужа адреса чи сторінка входу ведуть на головну", () => {
+    for (const value of ["https://evil.example", "//evil.example", "/\\evil.example", "/\t/evil.example", "/login", "", null]) {
+      expect(safeNextPath(value)).toBe("/");
+    }
+    expect(signInUrl("/")).toBe("/login");
   });
 });

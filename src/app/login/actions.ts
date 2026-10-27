@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { safeNextPath } from "@/lib/auth/access";
 import { createClient } from "@/lib/supabase/server";
 
 // Вхід email + пароль. Реєстрації в шаблоні немає: користувачів створює
@@ -10,9 +11,12 @@ import { createClient } from "@/lib/supabase/server";
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  // Сторінка, з якої відвідувача відправили на вхід (AC-DSYS-08); лише шлях цього застосунку.
+  const next = safeNextPath(formData.get("next"));
+  const back = next === "/" ? "" : `&next=${encodeURIComponent(next)}`;
 
   if (!email || !password) {
-    redirect("/login?error=missing");
+    redirect(`/login?error=missing${back}`);
   }
 
   const supabase = await createClient();
@@ -20,11 +24,11 @@ export async function login(formData: FormData) {
 
   if (error) {
     // Не показуємо текст помилки Auth: він може підказати, чи існує email.
-    redirect("/login?error=invalid");
+    redirect(`/login?error=invalid${back}`);
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(next);
 }
 
 export async function signOut() {
