@@ -115,4 +115,23 @@ describe("Дії редактора шаблону", () => {
     for (const call of calls) expect(await redirectOf(call)).toBe("REDIRECT:/login");
     expect(state.writes).toEqual([]);
   });
+
+  it("AC-EDITOR-21: перейменування пише лише робочу назву (template_draft_names), не назву поточної версії", async () => {
+    state.role = "admin";
+    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2026)" })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes.length).toBeGreaterThan(0);
+    expect(state.writes.every((w) => w.endsWith(":template_draft_names"))).toBe(true);
+
+    state.writes = [];
+    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "  " })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit?error=TEMPLATE_NAME_REQUIRED`,
+    );
+    state.role = "manager";
+    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Hacked" })))).toMatch(
+      /error=NOT_ALLOWED/,
+    );
+    expect(state.writes).toEqual([]);
+  });
 });

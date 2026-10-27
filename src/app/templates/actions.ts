@@ -46,6 +46,24 @@ export async function createTemplate(form: FormData) {
   redirect(editPath(data.id));
 }
 
+// Перейменування — у робочу назву (template_draft_names): менеджер бачить нову назву лише з новою версією, а зайнята
+// назва відхиляється під час збереження (AC-EDITOR-21, AC-EDITOR-24).
+export async function renameTemplate(form: FormData) {
+  const templateId = id(form, "template_id");
+  if (!templateId) redirect("/templates");
+  const supabase = await adminClient(editPath(templateId));
+  const name = cleanName(form.get("name"));
+  if (!name) redirect(`${editPath(templateId)}?error=TEMPLATE_NAME_REQUIRED`);
+  const { data: updated, error } = await supabase
+    .from("template_draft_names")
+    .update({ name })
+    .eq("template_id", templateId)
+    .select("template_id");
+  if (error || (updated && updated.length > 0)) done(templateId, error);
+  const { error: insertError } = await supabase.from("template_draft_names").insert({ template_id: templateId, name });
+  done(templateId, insertError);
+}
+
 export async function addSection(form: FormData) {
   const templateId = id(form, "template_id");
   if (!templateId) redirect("/templates");
