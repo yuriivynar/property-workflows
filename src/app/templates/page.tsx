@@ -30,8 +30,9 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-semibold">Templates</h1>
 
+      {/* noValidate: порожню назву перевіряє дія й показує «Enter a template name» (AC-EDITOR-19), а не підказка браузера. */}
       {isAdmin ? (
-        <form action={createTemplate} className="flex flex-wrap items-end gap-3">
+        <form action={createTemplate} noValidate className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="new-template-name">Template name</Label>
             <Input id="new-template-name" name="name" required className="w-72" />
