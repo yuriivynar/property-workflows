@@ -39,26 +39,32 @@
   `template_versions.content ->> 'name'`. Плюс: одне джерело правди для версії. Мінус: кожна сторінка менеджера
   читає знімок, а унікальність перевіряється на робочих назвах ще до збереження, всупереч AC-EDITOR-24.
 
-**Рішення: A.** Менеджер і далі бачить `templates.name`, тобто назву поточної версії, тож сторінки менеджера не
-змінюються. «Назва зайнята» з'являється саме під час збереження (AC-EDITOR-24). Унікальність `draft_name` перевіряє
-`save_template_version` під блокуванням рядка шаблону, а індекс `templates_name_normalized_key` лишається другою
-лінією захисту.
+**Рішення: A — робоча назва окремо від назви поточної версії; місце зберігання — таблиця `template_draft_names`
+(уточнення нижче замінює колонку `templates.draft_name`).** Менеджер і далі бачить `templates.name`, тобто назву
+поточної версії, тож сторінки менеджера не змінюються. «Назва зайнята» з'являється саме під час збереження
+(AC-EDITOR-24). Унікальність робочої назви перевіряє `save_template_version` під блокуванням рядка шаблону, а індекс
+`templates_name_normalized_key` лишається другою лінією захисту.
 
 **Уточнення під час підготовки задачі 1 — де зберігати робочу назву.** Колонка в `templates` не годиться. На
 `templates` діє `grant select` на всю таблицю, а RLS обмежує рядки, не колонки. Тож менеджер прочитав би незбережену
 назву будь-якого збереженого шаблону, всупереч AC-EDITOR-02 і AC-EDITOR-29. Тому робоча назва живе в окремій таблиці
 `template_draft_names (template_id primary key, name)`, як решта робочої копії:
-- RLS лише для `admin`, окрема політика на кожну операцію;
+- прямий доступ дією `renameTemplate` (без окремого RPC: запис один, перевірки й запис разом не потрібні);
+- RLS увімкнено; політики `select`, `insert`, `update`, `delete` окремо, `to authenticated`, кожна з
+  `(select private.current_app_role()) = 'admin'`;
 - `revoke all … from anon, authenticated`;
-- колонкові `grant` на `name`;
-- `check (char_length(btrim(name)) > 0)`.
+- `grant select`, `grant insert (template_id, name)`, `grant update (name)` (шаблон рядка після створення не
+  змінюється), `grant delete` — для `authenticated`; `service_role` — усе;
+- `check (char_length(btrim(name)) > 0)`; `template_id` — `primary key` з `on delete cascade`.
 
-Запис у цю таблицю ставить «Unpublished changes» тим самим тригером `private.mark_unpublished`. Під час збереження
-`save_template_version`:
+Тригер `private.mark_unpublished` — `after insert or update or delete … for each row`: будь-яка зміна робочої назви
+ставить «Unpublished changes». Під час збереження `save_template_version`:
 1. бере назву з `template_draft_names` або `templates.name`;
 2. перевіряє її унікальність (`NAME_TAKEN`) — до будь-якого запису;
-3. переносить назву в `templates.name` і в знімок (`content ->> 'name'`);
-4. видаляє рядок робочої назви.
+3. записує версію зі знімком, що містить назву (`content ->> 'name'`);
+4. видаляє рядок робочої назви (його тригер ставить позначку);
+5. **після** цього одним `update` записує `templates.name`, `current_version` і `has_unpublished_changes = false`.
+   Тест: після успішного перейменування й збереження позначки немає.
 
 `launch_run` не змінюється: `templates.name` завжди є назвою поточної версії, тож `runs.template_name` отримує назву
 своєї версії (AC-EDITOR-22).
