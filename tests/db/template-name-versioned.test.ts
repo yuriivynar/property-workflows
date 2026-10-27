@@ -126,4 +126,29 @@ describe("База: назва шаблону — частина версії", 
     }
     expect(await stateOf(template)).toMatchObject({ name: "Tenant move-in e29", draft: "Draft name e29" });
   });
+
+  it("AC-EDITOR-22: запуск з версії 1 показує «Tenant move-in e22», запуск з версії 2 — «Tenant move-in e22 (2026)»", async () => {
+    const template = await savedTemplate("e2200000", "Tenant move-in e22");
+    const launch = (caseName: string, version: number) =>
+      t.asUser<{ id: string }>(MANAGER_B, "select public.launch_run($1, $2, '{}'::jsonb, $3) as id", [
+        template,
+        caseName,
+        version,
+      ]);
+    const [{ id: runV1 }] = await launch("Apartment 12, move-in", 1);
+    await renameAsAdmin(template, "Tenant move-in e22 (2026)");
+    expect(await t.saveVersion(template)).toBe(2);
+    const [{ id: runV2 }] = await launch("Apartment 14, move-in", 2);
+
+    // Назва з AC зайнята тестом AC-EDITOR-21 у цій самій базі, тому — з суфіксом.
+    // launch_run не змінювали: templates.name — завжди назва поточної версії, і запуск копіює її в template_name.
+    const rows = await t.asUser<{ id: string; template_name: string; template_version: number }>(
+      MANAGER_B,
+      "select id, template_name, template_version from public.runs where id in ($1, $2)",
+      [runV1, runV2],
+    );
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
+    expect(byId[runV1]).toMatchObject({ template_name: "Tenant move-in e22", template_version: 1 });
+    expect(byId[runV2]).toMatchObject({ template_name: "Tenant move-in e22 (2026)", template_version: 2 });
+  });
 });
