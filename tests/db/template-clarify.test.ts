@@ -151,16 +151,19 @@ describe("База: правила шаблонів після уточнень 
   it("AC-EDITOR-26: відвідувач без входу напряму не змінює шаблон і не зберігає версію — версія 1, 5 задач, без змін", async () => {
     const { template, moveIn } = await tenantMoveIn("e2600000");
 
-    const attempts = [
-      t.asAnon(
+    // Послідовно й кожна — власною відмовою в правах (42501), а не наслідком попередньої помилки (рев'ю CodeRabbit, PR #23).
+    const attempts: [string, unknown[]][] = [
+      [
         "insert into public.template_tasks (template_id, section_id, name, is_required, position) values ($1, $2, 'Sign handover act', false, 4)",
         [template, moveIn],
-      ),
-      t.asAnon("update public.templates set name = 'Hacked' where id = $1", [template]),
-      t.asAnon("delete from public.template_tasks where template_id = $1", [template]),
-      t.asAnon("select public.save_template_version($1)", [template]),
+      ],
+      ["update public.templates set name = 'Hacked' where id = $1", [template]],
+      ["delete from public.template_tasks where template_id = $1", [template]],
+      ["select public.save_template_version($1)", [template]],
     ];
-    for (const attempt of attempts) expect(await errorOf(attempt)).not.toBeNull();
+    for (const [sql, params] of attempts) {
+      expect((await errorOf(t.asAnon(sql, params)))?.code, sql).toBe("42501");
+    }
 
     // Нічого про шаблон не показано.
     expect(await t.asAnon("select id from public.templates where id = $1", [template]).catch(() => [])).toHaveLength(0);

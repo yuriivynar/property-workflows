@@ -71,6 +71,7 @@ export async function createTestDb(options: { stopBefore?: string } = {}): Promi
     .filter((f) => f.endsWith(".sql"))
     .sort();
   const stop = options.stopBefore;
+  if (stop && !migrations.includes(stop)) throw new Error(`stopBefore: файлу ${stop} немає в supabase/migrations/`);
   const later = stop ? migrations.filter((f) => f >= stop) : [];
   for (const file of migrations.filter((f) => !later.includes(f))) await db.exec(read(`supabase/migrations/${file}`));
   await db.exec(read("supabase/seed.sql"));
