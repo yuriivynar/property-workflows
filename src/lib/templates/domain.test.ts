@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { requiredLabel } from "@/lib/runs/domain";
 import {
+  cleanName,
+  emptyTemplatesMessage,
   formatVersionDate,
+  launchOptions,
   messageForTemplateError,
   newestFirst,
   templateErrorCode,
+  TEMPLATE_MESSAGES,
   templatePageAccess,
 } from "./domain";
 
@@ -44,5 +49,59 @@ describe("Шаблони: правила екранів", () => {
       "UNEXPECTED",
     );
     expect(messageForTemplateError("SOMETHING_ELSE")).toBe("Your last change was not kept. Try again.");
+  });
+
+  it("AC-EDITOR-10: незбережений «Repair» у формі запуску — недоступний з приміткою «Save the template to launch it»", () => {
+    const options = launchOptions([
+      { id: "r", name: "Repair", current_version: null },
+      { id: "t", name: "Tenant move-in", current_version: 1 },
+    ]);
+    expect(options).toEqual([
+      { id: "r", label: "Repair — Save the template to launch it", disabled: true },
+      { id: "t", label: "Tenant move-in", disabled: false },
+    ]);
+  });
+
+  it("AC-EDITOR-17: порожній список шаблонів — менеджеру «No templates yet. An administrator creates them.»", () => {
+    expect(emptyTemplatesMessage("manager")).toBe("No templates yet. An administrator creates them.");
+    // Адміністратору — з наступною дією (Припущення PM), не текст менеджера.
+    expect(emptyTemplatesMessage("admin")).toBe("No templates yet. Create a template to start.");
+  });
+
+  it("AC-EDITOR-18: порожній список версій — «No versions yet. Save the template to create version 1.»", () => {
+    expect(TEMPLATE_MESSAGES.noVersions).toBe("No versions yet. Save the template to create version 1.");
+  });
+
+  it("AC-EDITOR-19: назва порожня або лише з пробілів — шаблон не створюється, «Enter a template name»", () => {
+    expect(cleanName("")).toBeNull();
+    expect(cleanName("   ")).toBeNull();
+    expect(messageForTemplateError("TEMPLATE_NAME_REQUIRED")).toBe("Enter a template name");
+  });
+
+  it("AC-EDITOR-15: помилка функції збереження про порожній розділ → «Every section needs at least one task»", () => {
+    const code = templateErrorCode({ message: "TEMPLATE_SECTION_EMPTY" });
+    expect(code).toBe("TEMPLATE_SECTION_EMPTY");
+    expect(messageForTemplateError(code)).toBe("Every section needs at least one task");
+  });
+
+  it("AC-EDITOR-23: порушення унікальної назви без урахування регістру → «A template with this name already exists»", () => {
+    const code = templateErrorCode({
+      message: 'duplicate key value violates unique constraint "templates_name_normalized_key"',
+      code: "23505",
+    });
+    expect(code).toBe("NAME_TAKEN");
+    expect(messageForTemplateError(code)).toBe("A template with this name already exists");
+  });
+
+  it("AC-EDITOR-16: незбережений шаблон за прямим посиланням → «Template not found»", () => {
+    expect(messageForTemplateError("TEMPLATE_NOT_FOUND")).toBe("Template not found");
+  });
+
+  it("AC-EDITOR-03: після збереження — «Version 2 saved»", () => {
+    expect(TEMPLATE_MESSAGES.versionSaved(2)).toBe("Version 2 saved");
+  });
+
+  it("AC-EDITOR-02: задачі поточної версії на сторінці шаблону — з позначкою «required» або «optional»", () => {
+    expect([requiredLabel(true), requiredLabel(false)]).toEqual(["required", "optional"]);
   });
 });

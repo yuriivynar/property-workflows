@@ -46,6 +46,8 @@ export interface TestDb {
   asService<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>;
   /** Зберегти шаблон, підготовлений у робочій копії, як нову версію — від імені admin@example.test (як редактор). */
   saveVersion(templateId: string): Promise<number>;
+  /** Застосувати міграції, пропущені через `stopBefore` (дані «до міграції» → перевірка перенесення даних). */
+  migrateRest(): Promise<void>;
 }
 
 async function inTransaction<T>(db: PGlite, role: string, userId: string | null, sql: string, params: unknown[]) {
@@ -61,13 +63,17 @@ async function inTransaction<T>(db: PGlite, role: string, userId: string | null,
   }
 }
 
-export async function createTestDb(): Promise<TestDb> {
+/** `stopBefore` — ім'я файлу міграції, з якої зупинитись: решту застосовує migrateRest(). */
+export async function createTestDb(options: { stopBefore?: string } = {}): Promise<TestDb> {
   const db = new PGlite();
   await db.exec(SUPABASE_SHIM);
   const migrations = readdirSync(new URL("supabase/migrations/", root))
     .filter((f) => f.endsWith(".sql"))
     .sort();
-  for (const file of migrations) await db.exec(read(`supabase/migrations/${file}`));
+  const stop = options.stopBefore;
+  if (stop && !migrations.includes(stop)) throw new Error(`stopBefore: файлу ${stop} немає в supabase/migrations/`);
+  const later = stop ? migrations.filter((f) => f >= stop) : [];
+  for (const file of migrations.filter((f) => !later.includes(f))) await db.exec(read(`supabase/migrations/${file}`));
   await db.exec(read("supabase/seed.sql"));
 
   // Як scripts/create-demo-users.mjs: користувач Auth → тригер створює профіль → service_role ставить роль.
@@ -106,6 +112,9 @@ export async function createTestDb(): Promise<TestDb> {
         [templateId],
       );
       return row.number;
+    },
+    migrateRest: async () => {
+      for (const file of later.splice(0)) await db.exec(read(`supabase/migrations/${file}`));
     },
   };
 }

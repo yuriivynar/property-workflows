@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
-import { messageForTemplateError, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
+import { emptyTemplatesMessage, messageForTemplateError, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
 import { createTemplate } from "./actions";
 
 // Список шаблонів. Що видно, вирішує RLS: admin — усі шаблони з позначкою «Unpublished changes»; manager — лише
@@ -20,6 +20,8 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
   const isAdmin = user.role === "admin";
+  // Помилка назви пов'язана з полем (DESIGN.md, розділ 7; рев'ю CodeRabbit, PR #23).
+  const nameError = error === "TEMPLATE_NAME_REQUIRED" || error === "NAME_TAKEN";
 
   const { data: templates, error: loadError } = await supabase
     .from("templates")
@@ -30,11 +32,19 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
       <h1 className="text-2xl font-semibold">Templates</h1>
 
+      {/* noValidate: порожню назву перевіряє дія й показує «Enter a template name» (AC-EDITOR-19), а не підказка браузера. */}
       {isAdmin ? (
-        <form action={createTemplate} className="flex flex-wrap items-end gap-3">
+        <form action={createTemplate} noValidate className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="new-template-name">Template name</Label>
-            <Input id="new-template-name" name="name" required className="w-72" />
+            <Input
+              id="new-template-name"
+              name="name"
+              required
+              className="w-72"
+              aria-invalid={nameError || undefined}
+              aria-describedby={nameError ? "template-error" : undefined}
+            />
           </div>
           <Button type="submit" size="lg">
             Create a template
@@ -43,7 +53,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
       ) : null}
 
       {typeof error === "string" ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" id="template-error">
           <AlertDescription>{messageForTemplateError(error)}</AlertDescription>
         </Alert>
       ) : null}
@@ -80,7 +90,11 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
           </TableBody>
         </Table>
       ) : (
-        <EmptyState message={TEMPLATE_MESSAGES.noTemplates} />
+        <EmptyState
+          message={emptyTemplatesMessage(user.role)}
+          actionHref={isAdmin ? "#new-template-name" : undefined}
+          actionLabel={isAdmin ? TEMPLATE_MESSAGES.createTemplate : undefined}
+        />
       )}
 
       <TextLink href="/runs" className="w-fit text-sm">
