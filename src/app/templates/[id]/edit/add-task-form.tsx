@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -7,22 +8,35 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { addTaskFormState, type AddTaskEvent, type AddTaskFormState } from "@/lib/templates/domain";
+import {
+  addTaskFormState,
+  addTaskNeedsSignIn,
+  type AddTaskEvent,
+  type AddTaskFormState,
+} from "@/lib/templates/domain";
 import { addTaskInline } from "../../actions";
 
 // «New task» у розділі редактора. Якщо зміну не збережено — дія повернула помилку або зв'язок утрачено, — повідомлення
-// з'являється над полем кольором помилки, а назва лишається в полі (AC-EDITOR-25; design.md, рішення 5).
+// з'являється над полем кольором помилки, а назва й «Required» лишаються (AC-EDITOR-25; design.md, рішення 5).
+// Поля керовані: після action React скидає некеровані поля форми, і введене зникло б разом із невдачею.
 export function AddTaskForm({ templateId, sectionId }: { templateId: string; sectionId: string }) {
-  const [state, setState] = useState<AddTaskFormState>({ name: "", message: null });
+  const router = useRouter();
+  const [state, setState] = useState<AddTaskFormState>({ name: "", required: false, message: null });
   const errorId = `new-task-error-${sectionId}`;
 
   async function submit(formData: FormData) {
+    const submitted = String(formData.get("name") ?? "");
     let event: AddTaskEvent;
     try {
       const result = await addTaskInline(formData);
-      event = result.ok ? { type: "saved" } : { type: "rejected", code: result.code };
+      event = result.ok ? { type: "saved", name: submitted } : { type: "rejected", code: result.code };
     } catch {
       event = { type: "unreachable" };
+    }
+    // Сесія скінчилась — на сторінку входу; навігація в обробнику — через useRouter (документація redirect).
+    if (addTaskNeedsSignIn(event)) {
+      router.push("/login");
+      return;
     }
     setState((current) => addTaskFormState(current, event));
   }
@@ -43,14 +57,19 @@ export function AddTaskForm({ templateId, sectionId }: { templateId: string; sec
             id={`new-task-${sectionId}`}
             name="name"
             value={state.name}
-            onChange={(e) => setState({ ...state, name: e.target.value })}
+            onChange={(e) => setState((current) => ({ ...current, name: e.target.value }))}
             className="w-64"
             aria-invalid={state.message ? true : undefined}
             aria-describedby={state.message ? errorId : undefined}
           />
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <Checkbox id={`new-task-required-${sectionId}`} name="is_required" />
+          <Checkbox
+            id={`new-task-required-${sectionId}`}
+            name="is_required"
+            checked={state.required}
+            onChange={(e) => setState((current) => ({ ...current, required: e.target.checked }))}
+          />
           <Label htmlFor={`new-task-required-${sectionId}`} className="font-normal">
             Required
           </Label>
