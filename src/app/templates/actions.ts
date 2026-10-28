@@ -172,6 +172,18 @@ export async function moveItem(form: FormData) {
   done(templateId, error);
 }
 
+// Перенесення задачі в інший розділ того самого шаблону — функцією бази (роль, розділ і позиція в одній транзакції;
+// AC-EDITOR-28).
+export async function moveTaskToSection(form: FormData) {
+  const templateId = id(form, "template_id");
+  const taskId = id(form, "task_id");
+  const sectionId = id(form, "section_id");
+  if (!templateId || !taskId || !sectionId) redirect("/templates");
+  const supabase = await adminClient(editPath(templateId));
+  const { error } = await supabase.rpc("move_template_task_to_section", { p_task: taskId, p_section: sectionId });
+  done(templateId, error);
+}
+
 export async function saveVersion(form: FormData) {
   const templateId = id(form, "template_id");
   if (!templateId) redirect("/templates");

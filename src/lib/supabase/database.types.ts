@@ -288,6 +288,13 @@ export type Database = {
         };
         Returns: undefined;
       };
+      move_template_task_to_section: {
+        Args: {
+          p_task: string;
+          p_section: string;
+        };
+        Returns: undefined;
+      };
       staff_directory: {
         Args: Record<PropertyKey, never>;
         Returns: {

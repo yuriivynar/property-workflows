@@ -155,4 +155,13 @@ describe("Дії редактора шаблону", () => {
     await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION, confirmed: "true" })));
     expect(state.writes).toEqual(["delete:template_sections"]);
   });
+
+  it("AC-EDITOR-28: перенесення задачі — функцією бази; менеджер — «Not enough rights» без запису", async () => {
+    const move = () => actions.moveTaskToSection(form({ template_id: TEMPLATE, task_id: SECTION, section_id: SECTION }));
+    expect(await redirectOf(move())).toMatch(/error=NOT_ALLOWED/);
+    expect(state.writes).toEqual([]);
+    state.role = "admin";
+    expect(await redirectOf(move())).toBe(`REDIRECT:/templates/${TEMPLATE}/edit`);
+    expect(state.writes).toEqual(["rpc:move_template_task_to_section"]);
+  });
 });
