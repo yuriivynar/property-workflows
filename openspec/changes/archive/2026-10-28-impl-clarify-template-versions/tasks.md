@@ -61,12 +61,12 @@
   (розділ 2 і «Як додати токен») і правило в `AGENTS.md`.
 - [x] 6.2 Токени в `globals.css` для `System`, `Light` і `Dark`; вибір «Theme» у `PageShell`; запам'ятовування на
   пристрої; без спалаху іншої теми під час завантаження.
-- [ ] 6.3 Тести вибору (типово `System`; збережений вибір читається; невідоме значення → `System`), знімки сторінок у
+- [x] 6.3 Тести вибору (типово `System`; збережений вибір читається; невідоме значення → `System`), знімки сторінок у
   трьох режимах, рядки `docs/conformance.md`.
   Done when: AC-DSYS-05, AC-DSYS-06 — без вибору тема йде за пристроєм, а «Theme» показує «System»; обране «Light»
   при темному пристрої лишається після перезапуску браузера, а «Theme» показує «Light».
 
 ## 7. Завершення
 
-- [ ] 7.1 В останньому PR задачі: `npx openspec archive impl-clarify-template-versions -y`, у `docs/conformance.md`
+- [x] 7.1 В останньому PR задачі: `npx openspec archive impl-clarify-template-versions -y`, у `docs/conformance.md`
   більше немає «відкладено» для AC уточнень.

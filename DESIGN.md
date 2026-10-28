@@ -165,3 +165,6 @@ AC-DSYS-06). Темні значення — у двох однакових бл
 - Виняток — коментар `design-ok: <причина>` у тому самому рядку; кожен виняток — з реальною причиною.
 - Візуально: знімки ключових сторінок у світлій і темній темі (`docs/img/ws7-before-*`, `docs/img/ws7-after-*`),
   Tab по формі, контраст.
+- Вибір теми (ADR 0004): знімки в трьох режимах — `docs/img/ws8-theme-system-dark-device.png` (System на темному
+  пристрої), `docs/img/ws8-theme-light-on-dark-device.png` (Light переважає темний пристрій),
+  `docs/img/ws8-theme-dark-on-light-device.png` (Dark переважає світлий пристрій).
