@@ -55,7 +55,7 @@
 - `revoke all … from anon, authenticated`;
 - `grant select`, `grant insert (template_id, name)`, `grant update (name)` (шаблон рядка після створення не
   змінюється), `grant delete` — для `authenticated`; `service_role` — усе;
-- `check (char_length(btrim(name)) > 0)`; `template_id` — `primary key` з `on delete cascade`.
+- `name text not null` з `check (char_length(btrim(name)) > 0)`; `template_id` — `primary key` з `on delete cascade`.
 
 Тригер `private.mark_unpublished` — `after insert or update or delete … for each row`: будь-яка зміна робочої назви
 ставить «Unpublished changes». Під час збереження `save_template_version`:
