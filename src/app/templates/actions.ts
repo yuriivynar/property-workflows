@@ -99,6 +99,8 @@ export async function removeSection(form: FormData) {
   const sectionId = id(form, "section_id");
   if (!templateId || !sectionId) redirect("/templates");
   const supabase = await adminClient(editPath(templateId));
+  // Без підтвердження (зокрема прямий POST) нічого не видаляємо (AC-EDITOR-13).
+  if (form.get("confirmed") !== "true") redirect(editPath(templateId));
   const { error } = await supabase.from("template_sections").delete().eq("id", sectionId);
   done(templateId, error);
 }

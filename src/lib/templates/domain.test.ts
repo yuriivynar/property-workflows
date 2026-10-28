@@ -104,4 +104,10 @@ describe("Шаблони: правила екранів", () => {
   it("AC-EDITOR-02: задачі поточної версії на сторінці шаблону — з позначкою «required» або «optional»", () => {
     expect([requiredLabel(true), requiredLabel(false)]).toEqual(["required", "optional"]);
   });
+
+  it("AC-EDITOR-13: підтвердження видалення показує назву розділу «Move-in day» і «This cannot be undone»", () => {
+    const text = TEMPLATE_MESSAGES.confirmRemoveSection("Move-in day");
+    expect(text).toContain("«Move-in day»");
+    expect(text).toContain("This cannot be undone");
+  });
 });

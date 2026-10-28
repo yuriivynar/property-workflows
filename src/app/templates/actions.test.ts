@@ -173,6 +173,17 @@ describe("Дії редактора шаблону", () => {
     expect(state.payloads).toEqual([{ name: "" }, { name: "" }]);
   });
 
+  it("AC-EDITOR-13: видалення розділу без підтвердження (скасування чи прямий запит) нічого не видаляє", async () => {
+    state.role = "admin";
+    expect(await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes).toEqual([]);
+    await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION, confirmed: "true" })));
+    expect(state.writes).toEqual(["delete:template_sections"]);
+    expect(state.filters).toContainEqual(["id", SECTION]);
+  });
+
   it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
     state.role = "admin";
     state.updatedRows = [{ template_id: TEMPLATE }];
