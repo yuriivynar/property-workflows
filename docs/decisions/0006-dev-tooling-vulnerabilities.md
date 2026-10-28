@@ -47,8 +47,9 @@
 
 - `npm audit --json` → `metadata.vulnerabilities`: `critical: 0`, `high: 0`, `low: 3`. Усі три low — `deepmerge`,
   `@shadcn/registry` і `shadcn`, тобто один ланцюжок; будь-яка інша знахідка означає, що ADR застарів.
-- Після `npm run build`: `find .next -name '*.nft.json' -exec grep -l 'deepmerge' {} +` нічого не повертає
-  (28.10: 15 файлів трасування, 0 входжень `deepmerge`, `node_modules/shadcn`, `node_modules/zod`). Додатково:
-  `grep -rl deepmerge .next/static .next/server` теж порожній.
+- Після `npm run build` кількість файлів трасування зі збігами має бути **0**:
+  `find .next -name '*.nft.json' -exec grep -lE 'deepmerge|node_modules/(shadcn|zod)/' {} + | wc -l`.
+  Контроль методу: та сама команда з `node_modules/next/` має знаходити файли. 28.10: 0 збігів для трьох пакетів і
+  15 із 15 файлів для `next`. Додатково `grep -rl deepmerge .next/static .next/server` теж порожній.
 - `npx openspec --version` (1.14.1), `npm run spec:validate`, `npm run lint`, `npx shadcn@4.22.1 --version` працюють
   із `zod` 4.6.7; `npm run build` — `ƒ Proxy (Middleware)`.
