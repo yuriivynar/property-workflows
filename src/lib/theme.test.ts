@@ -21,4 +21,11 @@ describe("Вибір теми", () => {
     expect(themeAttribute(parseTheme(value))).toBe("light");
     expect(THEME_LABELS[parseTheme(value)]).toBe("Light");
   });
+
+  it("AC-DSYS-06: обране «Dark» зберігається без змін — data-theme=\"dark\", «Theme» показує «Dark»", () => {
+    expect(parseTheme("dark")).toBe("dark");
+    expect(themeAttribute("dark")).toBe("dark");
+    expect(THEME_LABELS.dark).toBe("Dark");
+    expect(themeCookie("dark")).toMatch(/^theme=dark;/);
+  });
 });
