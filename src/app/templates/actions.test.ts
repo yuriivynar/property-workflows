@@ -160,6 +160,19 @@ describe("Дії редактора шаблону", () => {
     expect(state.writes).toEqual([]);
   });
 
+  it("AC-EDITOR-20: адміністратор очищує назву задачі чи розділу — зміна записується в незбережені зміни, без відмови", async () => {
+    state.role = "admin";
+    expect(await redirectOf(actions.renameTask(form({ template_id: TEMPLATE, task_id: SECTION, name: "  " })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(await redirectOf(actions.renameSection(form({ template_id: TEMPLATE, section_id: SECTION, name: " 	 " })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes).toEqual(["update:template_tasks", "update:template_sections"]);
+    // Очищена назва записується саме порожнім рядком, а не пробілами.
+    expect(state.payloads).toEqual([{ name: "" }, { name: "" }]);
+  });
+
   it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
     state.role = "admin";
     state.updatedRows = [{ template_id: TEMPLATE }];

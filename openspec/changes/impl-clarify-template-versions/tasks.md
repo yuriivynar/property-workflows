@@ -19,10 +19,10 @@
 
 ## 2. Порожні назви не дають зберегти версію (`task/blank-names-on-save`)
 
-- [ ] 2.1 Міграція за `design.md`, рішення 2: порожня назва розділу чи задачі можлива в незбережених змінах;
+- [x] 2.1 Міграція за `design.md`, рішення 2: порожня назва розділу чи задачі можлива в незбережених змінах;
   `save_template_version` відхиляє збереження (`TEMPLATE_NAME_MISSING`).
-- [ ] 2.2 Дії `renameSection` / `renameTask` приймають очищену назву; текст «Every section and task needs a name».
-- [ ] 2.3 Тести, мутаційна перевірка, рядки `docs/conformance.md`.
+- [x] 2.2 Дії `renameSection` / `renameTask` приймають очищену назву; текст «Every section and task needs a name».
+- [x] 2.3 Тести, мутаційна перевірка, рядки `docs/conformance.md`.
   Done when: AC-EDITOR-20 — задача з очищеною назвою: повідомлення «Every section and task needs a name», версії 2
   немає, незбережені зміни й позначка лишаються.
 
