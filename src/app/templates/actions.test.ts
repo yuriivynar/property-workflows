@@ -181,6 +181,7 @@ describe("Дії редактора шаблону", () => {
     expect(state.writes).toEqual([]);
     await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION, confirmed: "true" })));
     expect(state.writes).toEqual(["delete:template_sections"]);
+    expect(state.filters).toContainEqual(["id", SECTION]);
   });
 
   it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
