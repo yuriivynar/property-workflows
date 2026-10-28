@@ -9,6 +9,11 @@ const state = vi.hoisted(() => ({
   claims: { sub: "user-1" } as { sub: string } | null,
   role: "manager" as string | null,
   writes: [] as string[],
+  // Рядки, які повертає update(…).select(…): порожньо — рядка ще немає (дія вставить його).
+  updatedRows: [] as unknown[],
+  // Аргументи запису й фільтри — щоб перевірити, що саме й куди пише дія.
+  payloads: [] as unknown[],
+  filters: [] as [string, unknown][],
 }));
 
 vi.mock("next/navigation", () => ({
@@ -21,22 +26,34 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: state.claims ? { claims: state.claims } : null }) },
     from: (table: string) => {
+      let lastOp = "";
       const write = (op: string) => {
+        lastOp = op;
         state.writes.push(`${op}:${table}`);
         return chain;
       };
       const chain: Record<string, unknown> = {
         select: () => chain,
-        eq: () => chain,
+        eq: (column: string, value: unknown) => {
+          state.filters.push([column, value]);
+          return chain;
+        },
         order: () => chain,
         limit: () => chain,
         in: () => chain,
         single: async () => ({ data: { id: TEMPLATE }, error: null }),
         maybeSingle: async () => ({ data: table === "profiles" ? { role: state.role } : null, error: null }),
-        insert: () => write("insert"),
-        update: () => write("update"),
+        insert: (values: unknown) => {
+          state.payloads.push(values);
+          return write("insert");
+        },
+        update: (values: unknown) => {
+          state.payloads.push(values);
+          return write("update");
+        },
         delete: () => write("delete"),
-        then: (resolve: (v: unknown) => void) => resolve({ data: null, error: null }),
+        then: (resolve: (v: unknown) => void) =>
+          resolve({ data: lastOp === "update" ? state.updatedRows : null, error: null }),
       };
       return chain;
     },
@@ -64,6 +81,9 @@ beforeEach(() => {
   state.claims = { sub: "user-1" };
   state.role = "manager";
   state.writes = [];
+  state.updatedRows = [];
+  state.payloads = [];
+  state.filters = [];
 });
 
 describe("Дії редактора шаблону", () => {
@@ -124,8 +144,13 @@ describe("Дії редактора шаблону", () => {
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2026)" })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
-    expect(state.writes.length).toBeGreaterThan(0);
-    expect(state.writes.every((w) => w.endsWith(":template_draft_names"))).toBe(true);
+    // Робочої назви ще немає: update не змінив жодного рядка, тож дія вставляє її. templates не чіпаємо.
+    expect(state.writes).toEqual(["update:template_draft_names", "insert:template_draft_names"]);
+    expect(state.payloads).toEqual([
+      { name: "Tenant move-in (2026)" },
+      { template_id: TEMPLATE, name: "Tenant move-in (2026)" },
+    ]);
+    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
 
     state.writes = [];
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "  " })))).toBe(
@@ -177,5 +202,16 @@ describe("Дії редактора шаблону", () => {
     expect(state.writes).toEqual([]);
     expect(await add("Sign handover act")).toEqual({ ok: true });
     expect(state.writes).toEqual(["insert:template_tasks"]);
+  });
+
+  it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
+    state.role = "admin";
+    state.updatedRows = [{ template_id: TEMPLATE }];
+    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2027)" })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes).toEqual(["update:template_draft_names"]);
+    expect(state.payloads).toEqual([{ name: "Tenant move-in (2027)" }]);
+    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
   });
 });
