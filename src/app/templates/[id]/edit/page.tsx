@@ -135,12 +135,12 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
         <section key={section.id} className="flex flex-col gap-2">
           <Card className="gap-4 px-4">
             <div className="flex flex-wrap items-end gap-2">
-              <form action={renameSection} className="flex flex-wrap items-end gap-2">
+              <form action={renameSection} noValidate className="flex flex-wrap items-end gap-2">
                 {hidden}
                 <input type="hidden" name="section_id" value={section.id} />
                 <div className="flex flex-col gap-2">
                   <Label htmlFor={`section-${section.id}`}>Section</Label>
-                  <Input id={`section-${section.id}`} name="name" defaultValue={section.name} required className="w-64" />
+                  <Input id={`section-${section.id}`} name="name" defaultValue={section.name} className="w-64" />
                 </div>
                 <Button type="submit" variant="outline">
                   Rename
@@ -155,14 +155,14 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                 .filter((task) => task.section_id === section.id)
                 .map((task, taskIndex, sectionTasks) => (
                   <li key={task.id} data-testid="editor-task" className="flex flex-wrap items-end gap-2 py-3 text-sm">
-                    <form action={renameTask} className="flex flex-wrap items-end gap-2">
+                    <form action={renameTask} noValidate className="flex flex-wrap items-end gap-2">
                       {hidden}
                       <input type="hidden" name="task_id" value={task.id} />
                       <div className="flex flex-col gap-2">
                         <Label htmlFor={`task-${task.id}`} className="font-normal">
                           Task <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                         </Label>
-                        <Input id={`task-${task.id}`} name="name" defaultValue={task.name} required className="w-64" />
+                        <Input id={`task-${task.id}`} name="name" defaultValue={task.name} className="w-64" />
                       </div>
                       <Button type="submit" variant="outline">
                         Rename
