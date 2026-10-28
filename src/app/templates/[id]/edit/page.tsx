@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Notice } from "@/components/ui/notice";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
@@ -16,6 +17,7 @@ import {
   addSection,
   addTask,
   moveItem,
+  moveTaskToSection,
   removeTask,
   renameSection,
   renameTemplate,
@@ -183,6 +185,27 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                       first={taskIndex === 0}
                       last={taskIndex === sectionTasks.length - 1}
                     />
+                    {(sections ?? []).length > 1 ? (
+                      <form action={moveTaskToSection} className="flex flex-wrap items-end gap-2">
+                        {hidden}
+                        <input type="hidden" name="task_id" value={task.id} />
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor={`move-${task.id}`} className="font-normal">
+                            Section
+                          </Label>
+                          <NativeSelect id={`move-${task.id}`} name="section_id" defaultValue={section.id}>
+                            {(sections ?? []).map((target) => (
+                              <NativeSelectOption key={target.id} value={target.id}>
+                                {target.name}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        </div>
+                        <Button type="submit" variant="outline">
+                          Move
+                        </Button>
+                      </form>
+                    ) : null}
                     <form action={removeTask}>
                       {hidden}
                       <input type="hidden" name="task_id" value={task.id} />

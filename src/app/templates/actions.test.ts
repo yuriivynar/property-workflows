@@ -184,6 +184,15 @@ describe("Дії редактора шаблону", () => {
     expect(state.filters).toContainEqual(["id", SECTION]);
   });
 
+  it("AC-EDITOR-28: перенесення задачі — функцією бази; менеджер — «Not enough rights» без запису", async () => {
+    const move = () => actions.moveTaskToSection(form({ template_id: TEMPLATE, task_id: SECTION, section_id: SECTION }));
+    expect(await redirectOf(move())).toMatch(/error=NOT_ALLOWED/);
+    expect(state.writes).toEqual([]);
+    state.role = "admin";
+    expect(await redirectOf(move())).toBe(`REDIRECT:/templates/${TEMPLATE}/edit`);
+    expect(state.writes).toEqual(["rpc:move_template_task_to_section"]);
+  });
+
   it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
     state.role = "admin";
     state.updatedRows = [{ template_id: TEMPLATE }];
