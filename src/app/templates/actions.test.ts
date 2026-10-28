@@ -9,6 +9,8 @@ const state = vi.hoisted(() => ({
   claims: { sub: "user-1" } as { sub: string } | null,
   role: "manager" as string | null,
   writes: [] as string[],
+  // Рядки, які повертає update(…).select(…): порожньо — рядка ще немає (дія вставить його).
+  updatedRows: [] as unknown[],
 }));
 
 vi.mock("next/navigation", () => ({
@@ -21,7 +23,9 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: state.claims ? { claims: state.claims } : null }) },
     from: (table: string) => {
+      let lastOp = "";
       const write = (op: string) => {
+        lastOp = op;
         state.writes.push(`${op}:${table}`);
         return chain;
       };
@@ -36,7 +40,8 @@ vi.mock("@/lib/supabase/server", () => ({
         insert: () => write("insert"),
         update: () => write("update"),
         delete: () => write("delete"),
-        then: (resolve: (v: unknown) => void) => resolve({ data: null, error: null }),
+        then: (resolve: (v: unknown) => void) =>
+          resolve({ data: lastOp === "update" ? state.updatedRows : null, error: null }),
       };
       return chain;
     },
@@ -64,6 +69,7 @@ beforeEach(() => {
   state.claims = { sub: "user-1" };
   state.role = "manager";
   state.writes = [];
+  state.updatedRows = [];
 });
 
 describe("Дії редактора шаблону", () => {
@@ -121,8 +127,8 @@ describe("Дії редактора шаблону", () => {
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2026)" })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
-    expect(state.writes.length).toBeGreaterThan(0);
-    expect(state.writes.every((w) => w.endsWith(":template_draft_names"))).toBe(true);
+    // Робочої назви ще немає: update не змінив жодного рядка, тож дія вставляє її. templates не чіпаємо.
+    expect(state.writes).toEqual(["update:template_draft_names", "insert:template_draft_names"]);
 
     state.writes = [];
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "  " })))).toBe(
@@ -133,5 +139,14 @@ describe("Дії редактора шаблону", () => {
       /error=NOT_ALLOWED/,
     );
     expect(state.writes).toEqual([]);
+  });
+
+  it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
+    state.role = "admin";
+    state.updatedRows = [{ template_id: TEMPLATE }];
+    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2027)" })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes).toEqual(["update:template_draft_names"]);
   });
 });
