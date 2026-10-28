@@ -13,6 +13,9 @@ import { cleanName, templateErrorCode } from "@/lib/templates/domain";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
+/** Результат дії для клієнтської форми: успіх або код помилки (тексти — messageForTemplateError). */
+type InlineResult = { ok: true } | { ok: false; code: string };
+
 const editPath = (templateId: string) => `/templates/${templateId}/edit`;
 // Ідентифікатори з форми — лише UUID; інше — як відсутнє значення (дія поверне на список шаблонів без запису).
 const id = (form: FormData, key: string) => {
@@ -105,13 +108,19 @@ export async function removeSection(form: FormData) {
   done(templateId, error);
 }
 
-export async function addTask(form: FormData) {
+/**
+ * Додавання задачі з клієнтської форми редактора: результат — значенням, без redirect, щоб форма показала невдачу на
+ * тому самому місці й лишила назву в полі (AC-EDITOR-25). Роль — першим кроком, як у кожній дії (AC-EDITOR-08).
+ */
+export async function addTaskInline(form: FormData): Promise<InlineResult> {
+  const supabase = await createClient();
+  const check = await requireAdmin(supabase);
+  if (!check.ok) return { ok: false, code: check.reason };
   const templateId = id(form, "template_id");
   const sectionId = id(form, "section_id");
-  if (!templateId || !sectionId) redirect("/templates");
-  const supabase = await adminClient(editPath(templateId));
+  if (!templateId || !sectionId) return { ok: false, code: "TEMPLATE_NOT_FOUND" };
   const name = cleanName(form.get("name"));
-  if (!name) redirect(`${editPath(templateId)}?error=NAME_REQUIRED`);
+  if (!name) return { ok: false, code: "NAME_REQUIRED" };
   const { data: last } = await supabase
     .from("template_tasks")
     .select("position")
@@ -126,7 +135,10 @@ export async function addTask(form: FormData) {
     is_required: form.get("is_required") === "on",
     position: (last?.position ?? 0) + 1,
   });
-  done(templateId, error);
+  if (error) return { ok: false, code: templateErrorCode(error) };
+  revalidatePath(editPath(templateId));
+  revalidatePath("/templates");
+  return { ok: true };
 }
 
 export async function renameTask(form: FormData) {

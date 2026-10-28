@@ -136,3 +136,29 @@ export function launchOptions(templates: { id: string; name: string; current_ver
       : { id: t.id, label: `${t.name} — ${TEMPLATE_MESSAGES.launchUnavailable}`, disabled: true },
   );
 }
+
+/** Стан форми «New task»: введена назва й повідомлення над полем (AC-EDITOR-25). */
+export type AddTaskFormState = { name: string; message: string | null };
+
+/**
+ * Подія відправлення форми «New task»:
+ * - saved — задачу записано;
+ * - rejected — дія повернула помилку (підтверджена невдача);
+ * - unreachable — відповіді немає, бо зв'язок утрачено (результат невідомий; design.md, рішення 5).
+ */
+export type AddTaskEvent = { type: "saved" } | { type: "rejected"; code: string } | { type: "unreachable" };
+
+/**
+ * Переходи стану форми. Невдача лишає назву в полі й показує повідомлення на тому самому місці: невідомий код і втрата
+ * зв'язку — «Your last change was not kept. Try again.» (AC-EDITOR-25), відома відмова — її текст.
+ */
+export function addTaskFormState(state: AddTaskFormState, event: AddTaskEvent): AddTaskFormState {
+  switch (event.type) {
+    case "saved":
+      return { name: "", message: null };
+    case "rejected":
+      return { name: state.name, message: messageForTemplateError(event.code) };
+    case "unreachable":
+      return { name: state.name, message: TEMPLATE_MESSAGES.changeNotKept };
+  }
+}

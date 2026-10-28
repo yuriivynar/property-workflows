@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { requiredLabel } from "@/lib/runs/domain";
 import {
+  addTaskFormState,
   cleanName,
   emptyTemplatesMessage,
   formatVersionDate,
@@ -109,5 +110,29 @@ describe("Шаблони: правила екранів", () => {
     const text = TEMPLATE_MESSAGES.confirmRemoveSection("Move-in day");
     expect(text).toContain("«Move-in day»");
     expect(text).toContain("This cannot be undone");
+  });
+
+  it("AC-EDITOR-25: дія повернула помилку — «Your last change was not kept. Try again.», задача «Sign handover act» лишається в полі", () => {
+    const typed = { name: "Sign handover act", message: null };
+    expect(addTaskFormState(typed, { type: "rejected", code: "UNEXPECTED" })).toEqual({
+      name: "Sign handover act",
+      message: "Your last change was not kept. Try again.",
+    });
+  });
+
+  it("AC-EDITOR-25: зв'язок утрачено (відповіді немає) — те саме повідомлення на тому самому місці, назва лишається", () => {
+    const typed = { name: "Sign handover act", message: null };
+    expect(addTaskFormState(typed, { type: "unreachable" })).toEqual({
+      name: "Sign handover act",
+      message: "Your last change was not kept. Try again.",
+    });
+  });
+
+  it("AC-EDITOR-25: зміну збережено — поле порожнє, повідомлення немає; відома відмова показує свій текст", () => {
+    const failed = { name: "Sign handover act", message: "Your last change was not kept. Try again." };
+    expect(addTaskFormState(failed, { type: "saved" })).toEqual({ name: "", message: null });
+    expect(addTaskFormState({ name: "", message: null }, { type: "rejected", code: "NAME_REQUIRED" }).message).toBe(
+      "Enter a name",
+    );
   });
 });

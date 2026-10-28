@@ -70,12 +70,16 @@ describe("Дії редактора шаблону", () => {
   it("AC-EDITOR-08: менеджер викликає дії напряму — «Not enough rights», жодного запису", async () => {
     const calls: Promise<unknown>[] = [
       actions.createTemplate(form({ name: "Hacked" })),
-      actions.addTask(form({ template_id: TEMPLATE, section_id: SECTION, name: "Hacked" })),
       actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION })),
       actions.moveItem(form({ template_id: TEMPLATE, item_id: SECTION, kind: "section", direction: "up" })),
       actions.saveVersion(form({ template_id: TEMPLATE })),
     ];
     for (const call of calls) expect(await redirectOf(call)).toMatch(/error=NOT_ALLOWED/);
+    // Форма «New task» викликає дію, що повертає результат значенням (AC-EDITOR-25).
+    expect(await actions.addTaskInline(form({ template_id: TEMPLATE, section_id: SECTION, name: "Hacked" }))).toEqual({
+      ok: false,
+      code: "NOT_ALLOWED",
+    });
     expect(state.writes).toEqual([]);
   });
 
@@ -108,7 +112,6 @@ describe("Дії редактора шаблону", () => {
     state.claims = null;
     const calls: Promise<unknown>[] = [
       actions.createTemplate(form({ name: "Tenant move-in" })),
-      actions.addTask(form({ template_id: TEMPLATE, section_id: SECTION, name: "Sign handover act" })),
       actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION })),
       actions.saveVersion(form({ template_id: TEMPLATE })),
     ];
@@ -163,5 +166,16 @@ describe("Дії редактора шаблону", () => {
     state.role = "admin";
     expect(await redirectOf(move())).toBe(`REDIRECT:/templates/${TEMPLATE}/edit`);
     expect(state.writes).toEqual(["rpc:move_template_task_to_section"]);
+  });
+
+  it("AC-EDITOR-25: дія для форми «New task» повертає результат значенням — успіх, відмову ролі чи порожню назву, без redirect", async () => {
+    const add = (name: string) => actions.addTaskInline(form({ template_id: TEMPLATE, section_id: SECTION, name }));
+    expect(await add("Sign handover act")).toEqual({ ok: false, code: "NOT_ALLOWED" });
+    expect(state.writes).toEqual([]);
+    state.role = "admin";
+    expect(await add("  ")).toEqual({ ok: false, code: "NAME_REQUIRED" });
+    expect(state.writes).toEqual([]);
+    expect(await add("Sign handover act")).toEqual({ ok: true });
+    expect(state.writes).toEqual(["insert:template_tasks"]);
   });
 });
