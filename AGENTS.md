@@ -69,9 +69,10 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 - Компоненти — лише з `@/components/ui` (shadcn/ui, змінюються в цій теці; CLI — `npx shadcn@4.22.1 add …`). Нових
   кольорів у компонентах не вигадуй і не переноси туди сирі класи сторінок. Статус — лише `StatusBadge` (слово + колір
   з однієї мапи); посилання — `TextLink`; головна дія екрана — одна `Button` варіанта `default`.
-- Новий токен: `DESIGN.md` (таблиця й контраст) → `:root` і `@media (prefers-color-scheme: dark)` у
-  `src/app/globals.css` → `--color-<назва>` у `@theme inline`. Блоку `.dark` і `@custom-variant dark` не додаємо (тема — за
-  системою); якщо `shadcn add` їх повернув — прибери.
+- Новий токен: `DESIGN.md` (таблиця й контраст) → `:root` і обидва темні блоки в `src/app/globals.css`
+  (`@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }` і `:root[data-theme="dark"]`, однакові
+  значення) → `--color-<назва>` у `@theme inline`. Тема — за вибором «Theme» (ADR 0004): `data-theme` на `<html>`,
+  `@custom-variant dark` — за тією самою умовою. Блоку `.dark` не додаємо; якщо `shadcn add` його повернув — прибери.
 - Інтерфейс англійською; тексти повідомлень і статусів — дослівно з AC PM.
 - Перевірка: `npm run check:design` (CI: `.github/workflows/architecture.yml`); виняток `design-ok: <причина>` — поодинокий.
 
