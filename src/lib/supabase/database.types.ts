@@ -91,6 +91,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      template_draft_names: {
+        Row: {
+          template_id: string;
+          name: string;
+        };
+        Insert: {
+          template_id: string;
+          name: string;
+        };
+        Update: {
+          template_id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
       template_sections: {
         Row: {
           id: string;

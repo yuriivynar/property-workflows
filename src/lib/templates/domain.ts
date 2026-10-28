@@ -55,6 +55,7 @@ export function messageForTemplateError(code: string): string {
 export function templateErrorCode(error: { message?: string; code?: string } | null | undefined): string {
   if (!error) return "";
   const known = [
+    "NAME_TAKEN", // AC-EDITOR-24: save_template_version перевіряє назву під час збереження
     "TEMPLATE_SECTION_EMPTY",
     "TEMPLATE_NEEDS_REQUIRED_TASK",
     "NO_UNPUBLISHED_CHANGES",
