@@ -22,8 +22,12 @@
   Найновіші `shadcn` 4.23.0 і `@shadcn/registry` 0.2.1 так само вимагають `deepmerge ^4.3.1`. Пропозицію аудиту
   `shadcn@1.0.0` відкидаємо: це відкат на три мажорні версії зі зміною CLI. `shadcn` стоїть у `dependencies`, бо
   `src/app/globals.css` імпортує `shadcn/tailwind.css`. Але застосунок бере з пакета лише цей CSS, а код CLI з
-  `deepmerge` у збірку не потрапляє: після `npm run build` у `.next/static` і `.next/server` немає жодного входження
-  `deepmerge` чи `isMergeableObject`. Ризик стосується лише ручного запуску CLI `shadcn add` розробником.
+  `deepmerge` у збірку не потрапляє. Output-file tracing Next.js (усі 15 файлів `*.nft.json` після `npm run build`)
+  не містить `deepmerge`, `shadcn` чи `zod` — це файли, потрібні серверу під час роботи.
+- **Межа довіри для CLI.** Ризик лишається лише під час ручного запуску `npx shadcn@4.22.1 add <назва>` розробником.
+  `deepmerge` зливає дані registry, тож CLI запускаємо лише з офіційним registry shadcn (типовим), без сторонніх
+  registry чи URL компонентів. Результат — звичайні файли в `src/components/ui/`, які проходять рев'ю в PR і
+  `check:design`.
 
 ## Розглянуті варіанти
 
@@ -41,7 +45,10 @@
 
 ## Як перевіряємо
 
-- `npm audit --json` → `metadata.vulnerabilities`: `high: 0`, `critical: 0`.
-- Після `npm run build` у `.next/static` і `.next/server` немає `deepmerge` / `isMergeableObject`.
+- `npm audit --json` → `metadata.vulnerabilities`: `critical: 0`, `high: 0`, `low: 3`. Усі три low — `deepmerge`,
+  `@shadcn/registry` і `shadcn`, тобто один ланцюжок; будь-яка інша знахідка означає, що ADR застарів.
+- Після `npm run build`: `find .next -name '*.nft.json' -exec grep -l 'deepmerge' {} +` нічого не повертає
+  (28.10: 15 файлів трасування, 0 входжень `deepmerge`, `node_modules/shadcn`, `node_modules/zod`). Додатково:
+  `grep -rl deepmerge .next/static .next/server` теж порожній.
 - `npx openspec --version` (1.14.1), `npm run spec:validate`, `npm run lint`, `npx shadcn@4.22.1 --version` працюють
   із `zod` 4.6.7; `npm run build` — `ƒ Proxy (Middleware)`.
