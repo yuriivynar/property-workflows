@@ -169,6 +169,8 @@ describe("Дії редактора шаблону", () => {
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
     expect(state.writes).toEqual(["update:template_tasks", "update:template_sections"]);
+    // Очищена назва записується саме порожнім рядком, а не пробілами.
+    expect(state.payloads).toEqual([{ name: "" }, { name: "" }]);
   });
 
   it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
