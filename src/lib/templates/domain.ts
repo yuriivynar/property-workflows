@@ -136,3 +136,38 @@ export function launchOptions(templates: { id: string; name: string; current_ver
       : { id: t.id, label: `${t.name} — ${TEMPLATE_MESSAGES.launchUnavailable}`, disabled: true },
   );
 }
+
+/** Стан форми «New task»: введена назва, прапорець «Required» і повідомлення над полем (AC-EDITOR-25). */
+export type AddTaskFormState = { name: string; required: boolean; message: string | null };
+
+/**
+ * Подія відправлення форми «New task»:
+ * - saved — задачу записано (name — надіслана назва);
+ * - rejected — дія повернула помилку (підтверджена невдача);
+ * - unreachable — відповіді немає, бо зв'язок утрачено (результат невідомий; design.md, рішення 5).
+ */
+export type AddTaskEvent =
+  | { type: "saved"; name: string }
+  | { type: "rejected"; code: string }
+  | { type: "unreachable" };
+
+/**
+ * Переходи стану форми. Невдача лишає назву й «Required» у полі та показує повідомлення на тому самому місці: невідомий
+ * код і втрата зв'язку — «Your last change was not kept. Try again.» (AC-EDITOR-25), відома відмова — її текст.
+ * Успіх очищує поле, лише якщо в ньому досі надіслана назва: нове введення під час відправлення лишається.
+ */
+export function addTaskFormState(state: AddTaskFormState, event: AddTaskEvent): AddTaskFormState {
+  switch (event.type) {
+    case "saved":
+      return state.name === event.name ? { name: "", required: false, message: null } : { ...state, message: null };
+    case "rejected":
+      return { ...state, message: messageForTemplateError(event.code) };
+    case "unreachable":
+      return { ...state, message: TEMPLATE_MESSAGES.changeNotKept };
+  }
+}
+
+/** Сесія скінчилась — форма веде на сторінку входу, а не показує «not kept» (AC-EDITOR-09, AC-EDITOR-26). */
+export function addTaskNeedsSignIn(event: AddTaskEvent): boolean {
+  return event.type === "rejected" && event.code === "NOT_SIGNED_IN";
+}

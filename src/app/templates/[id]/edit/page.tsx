@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -15,7 +14,6 @@ import { createClient } from "@/lib/supabase/server";
 import { messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import {
   addSection,
-  addTask,
   moveItem,
   moveTaskToSection,
   removeTask,
@@ -25,6 +23,7 @@ import {
   saveVersion,
   setTaskRequired,
 } from "../../actions";
+import { AddTaskForm } from "./add-task-form";
 import { RemoveSectionButton } from "./remove-section-button";
 
 // Редактор шаблону — лише адміністратор. Менеджер бачить «Not enough rights» і «Back to templates» у тому самому
@@ -217,23 +216,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                 ))}
             </ul>
 
-            <form action={addTask} className="flex flex-wrap items-end gap-2">
-              {hidden}
-              <input type="hidden" name="section_id" value={section.id} />
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`new-task-${section.id}`}>New task</Label>
-                <Input id={`new-task-${section.id}`} name="name" required className="w-64" />
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Checkbox id={`new-task-required-${section.id}`} name="is_required" />
-                <Label htmlFor={`new-task-required-${section.id}`} className="font-normal">
-                  Required
-                </Label>
-              </div>
-              <Button type="submit" variant="outline">
-                Add task
-              </Button>
-            </form>
+            <AddTaskForm templateId={template.id} sectionId={section.id} />
           </Card>
         </section>
       ))}
