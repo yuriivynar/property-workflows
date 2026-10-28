@@ -145,4 +145,14 @@ describe("Дії редактора шаблону", () => {
     );
     expect(state.writes).toEqual(["update:template_tasks", "update:template_sections"]);
   });
+
+  it("AC-EDITOR-13: видалення розділу без підтвердження (скасування чи прямий запит) нічого не видаляє", async () => {
+    state.role = "admin";
+    expect(await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION })))).toBe(
+      `REDIRECT:/templates/${TEMPLATE}/edit`,
+    );
+    expect(state.writes).toEqual([]);
+    await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION, confirmed: "true" })));
+    expect(state.writes).toEqual(["delete:template_sections"]);
+  });
 });

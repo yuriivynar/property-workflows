@@ -21,6 +21,11 @@ export const TEMPLATE_MESSAGES = {
   templateNameRequired: "Enter a template name", // AC-EDITOR-19
   sectionEmpty: "Every section needs at least one task", // AC-EDITOR-15
   nameMissing: "Every section and task needs a name", // AC-EDITOR-20
+  removeSection: "Remove section",
+  // Підтвердження: назва розділу й «This cannot be undone» (AC-EDITOR-13).
+  confirmRemoveSection: (name: string) => `Remove «${name}» and its tasks? This cannot be undone.`,
+  confirmRemoveSectionGroup: "Confirm removing the section",
+  cancel: "Cancel",
   launchUnavailable: "Save the template to launch it", // AC-EDITOR-10
   noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
   versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх

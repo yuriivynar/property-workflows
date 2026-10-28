@@ -203,6 +203,24 @@ describe("База: правила шаблонів після уточнень 
   });
 });
 
+describe("База: видалення розділу", () => {
+  it("AC-EDITOR-14: підтверджене видалення «Move-in day» (3 задачі) прибирає його з незбережених змін, версія 1 — 2 розділи й 5 задач", async () => {
+    const { template, moveIn } = await tenantMoveIn("e1400000");
+
+    // Як дія removeSection з confirmed=true: адміністратор видаляє розділ; задачі видаляє каскад.
+    await t.asUser(ADMIN, "delete from public.template_sections where id = $1", [moveIn]);
+
+    expect(await stateOf(template)).toMatchObject({ current_version: 1, has_unpublished_changes: true, sections: 1, tasks: 2 });
+    const [v1] = await t.asService<{ sections: number; tasks: number }>(
+      `select jsonb_array_length(v.content -> 'sections') as sections,
+              (select count(*)::int from jsonb_array_elements(v.content -> 'sections') as s, jsonb_array_elements(s -> 'tasks')) as tasks
+       from public.template_versions as v where v.template_id = $1 and v.number = 1`,
+      [template],
+    );
+    expect(v1).toEqual({ sections: 2, tasks: 5 });
+  });
+});
+
 describe("База: запуски, створені до появи версій", () => {
   let old: TestDb;
 

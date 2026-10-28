@@ -16,7 +16,6 @@ import {
   addSection,
   addTask,
   moveItem,
-  removeSection,
   removeTask,
   renameSection,
   renameTemplate,
@@ -24,6 +23,7 @@ import {
   saveVersion,
   setTaskRequired,
 } from "../../actions";
+import { RemoveSectionButton } from "./remove-section-button";
 
 // Редактор шаблону — лише адміністратор. Менеджер бачить «Not enough rights» і «Back to templates» у тому самому
 // макеті, без жодних даних редактора: дані для нього навіть не запитуються (AC-DSYS-02). Кожна зміна — окрема дія,
@@ -147,13 +147,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                 </Button>
               </form>
               <MoveButtons templateId={template.id} kind="section" itemId={section.id} first={index === 0} last={index === all.length - 1} />
-              <form action={removeSection}>
-                {hidden}
-                <input type="hidden" name="section_id" value={section.id} />
-                <Button type="submit" variant="ghost">
-                  Remove section
-                </Button>
-              </form>
+              <RemoveSectionButton templateId={template.id} sectionId={section.id} sectionName={section.name} />
             </div>
 
             <ul className="flex flex-col divide-y divide-border">
