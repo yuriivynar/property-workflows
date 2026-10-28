@@ -11,6 +11,9 @@ const state = vi.hoisted(() => ({
   writes: [] as string[],
   // Рядки, які повертає update(…).select(…): порожньо — рядка ще немає (дія вставить його).
   updatedRows: [] as unknown[],
+  // Аргументи запису й фільтри — щоб перевірити, що саме й куди пише дія.
+  payloads: [] as unknown[],
+  filters: [] as [string, unknown][],
 }));
 
 vi.mock("next/navigation", () => ({
@@ -31,14 +34,23 @@ vi.mock("@/lib/supabase/server", () => ({
       };
       const chain: Record<string, unknown> = {
         select: () => chain,
-        eq: () => chain,
+        eq: (column: string, value: unknown) => {
+          state.filters.push([column, value]);
+          return chain;
+        },
         order: () => chain,
         limit: () => chain,
         in: () => chain,
         single: async () => ({ data: { id: TEMPLATE }, error: null }),
         maybeSingle: async () => ({ data: table === "profiles" ? { role: state.role } : null, error: null }),
-        insert: () => write("insert"),
-        update: () => write("update"),
+        insert: (values: unknown) => {
+          state.payloads.push(values);
+          return write("insert");
+        },
+        update: (values: unknown) => {
+          state.payloads.push(values);
+          return write("update");
+        },
         delete: () => write("delete"),
         then: (resolve: (v: unknown) => void) =>
           resolve({ data: lastOp === "update" ? state.updatedRows : null, error: null }),
@@ -70,6 +82,8 @@ beforeEach(() => {
   state.role = "manager";
   state.writes = [];
   state.updatedRows = [];
+  state.payloads = [];
+  state.filters = [];
 });
 
 describe("Дії редактора шаблону", () => {
@@ -129,6 +143,11 @@ describe("Дії редактора шаблону", () => {
     );
     // Робочої назви ще немає: update не змінив жодного рядка, тож дія вставляє її. templates не чіпаємо.
     expect(state.writes).toEqual(["update:template_draft_names", "insert:template_draft_names"]);
+    expect(state.payloads).toEqual([
+      { name: "Tenant move-in (2026)" },
+      { template_id: TEMPLATE, name: "Tenant move-in (2026)" },
+    ]);
+    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
 
     state.writes = [];
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "  " })))).toBe(
@@ -148,5 +167,7 @@ describe("Дії редактора шаблону", () => {
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
     expect(state.writes).toEqual(["update:template_draft_names"]);
+    expect(state.payloads).toEqual([{ name: "Tenant move-in (2027)" }]);
+    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
   });
 });
