@@ -8,8 +8,9 @@ import { STATUSES } from "@/components/ui/status-badge";
 type Oklch = [number, number, number];
 
 const css = readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
-const darkStart = css.indexOf("@media (prefers-color-scheme: dark)");
-const lightBlock = css.slice(css.indexOf(":root"), darkStart);
+// Блоки токенів, а не @custom-variant dark вище: світлі — «:root {» з нового рядка; системні темні — @media з :root.
+const darkStart = css.indexOf("@media (prefers-color-scheme: dark) {\n  :root");
+const lightBlock = css.slice(css.indexOf("\n:root {"), darkStart);
 const darkBlock = css.slice(darkStart);
 
 function token(block: string, name: string): Oklch {
@@ -63,5 +64,19 @@ describe("Дизайн-система: статуси в темній темі",
         }
       }
     }
+  });
+
+  it("AC-DSYS-06: обрана Light переважає темний пристрій, обрана Dark — ті самі темні токени, що й системна темна тема", () => {
+    const declarations = (block: string) =>
+      Object.fromEntries([...block.matchAll(/(--[a-z-]+):\s*([^;]+);/g)].map(([, name, value]) => [name, value.trim()]));
+    const systemDark = css.slice(darkStart, css.indexOf("\n}\n", darkStart));
+    const explicitStart = css.indexOf(':root[data-theme="dark"] {');
+    expect(explicitStart).toBeGreaterThan(-1);
+    const explicitDark = css.slice(explicitStart, css.indexOf("\n}\n", explicitStart));
+
+    // Системна темна тема не діє, якщо обрано Light.
+    expect(systemDark).toContain(':root:not([data-theme="light"])');
+    expect(Object.keys(declarations(explicitDark)).length).toBeGreaterThan(20);
+    expect(declarations(explicitDark)).toEqual(declarations(systemDark));
   });
 });
