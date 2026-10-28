@@ -2,9 +2,21 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Токени — за DESIGN.md (розділ 2: значення й контраст). Новий токен — DESIGN.md → :root і темна тема → @theme inline.
-   Темна тема — за системою (prefers-color-scheme), тому вбудований варіант dark: Tailwind 4 теж слідує за системою;
-   блоку .dark і @custom-variant dark тут немає навмисно. */
+/* Токени — за DESIGN.md (розділ 2: значення й контраст). Новий токен — DESIGN.md → :root і обидва темні блоки → @theme inline.
+   Тема — за вибором «Theme» (ADR 0004): data-theme на <html> ставить сервер з cookie; без вибору — за пристроєм.
+   Темні токени — у двох однакових блоках: системна темна тема (якщо не обрано Light) і обрана Dark; їхню рівність
+   перевіряє tests/design/status-dark-contrast.test.ts. Варіант dark: Tailwind — за тією самою умовою. */
+
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -78,7 +90,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --background: oklch(0.17 0.01 285);
     --foreground: oklch(0.96 0.003 285);
     --card: oklch(0.21 0.012 285);
@@ -107,6 +120,37 @@
     --status-unpublished: oklch(0.32 0.06 80);
     --status-unpublished-foreground: oklch(0.89 0.1 90);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: oklch(0.17 0.01 285);
+  --foreground: oklch(0.96 0.003 285);
+  --card: oklch(0.21 0.012 285);
+  --card-foreground: oklch(0.96 0.003 285);
+  --popover: oklch(0.21 0.012 285);
+  --popover-foreground: oklch(0.96 0.003 285);
+  --primary: oklch(0.72 0.15 292);
+  --primary-foreground: oklch(0.17 0.02 292);
+  --secondary: oklch(0.27 0.012 285);
+  --secondary-foreground: oklch(0.96 0.003 285);
+  --muted: oklch(0.27 0.012 285);
+  --muted-foreground: oklch(0.73 0.012 285);
+  --accent: oklch(0.29 0.03 292);
+  --accent-foreground: oklch(0.96 0.003 285);
+  --destructive: oklch(0.7 0.17 25);
+  --destructive-foreground: oklch(0.17 0.01 285);
+  --border: oklch(0.32 0.012 285);
+  --input: oklch(0.52 0.015 285);
+  --ring: oklch(0.72 0.15 292);
+  --status-todo: oklch(0.3 0.01 285);
+  --status-todo-foreground: oklch(0.86 0.01 285);
+  --status-in-progress: oklch(0.3 0.07 255);
+  --status-in-progress-foreground: oklch(0.86 0.08 250);
+  --status-done: oklch(0.3 0.06 150);
+  --status-done-foreground: oklch(0.86 0.09 150);
+  --status-unpublished: oklch(0.32 0.06 80);
+  --status-unpublished-foreground: oklch(0.89 0.1 90);
 }
 
 @layer base {
