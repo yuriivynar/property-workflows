@@ -165,7 +165,7 @@ describe("Дії редактора шаблону", () => {
     expect(await redirectOf(actions.renameTask(form({ template_id: TEMPLATE, task_id: SECTION, name: "  " })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
-    expect(await redirectOf(actions.renameSection(form({ template_id: TEMPLATE, section_id: SECTION, name: "" })))).toBe(
+    expect(await redirectOf(actions.renameSection(form({ template_id: TEMPLATE, section_id: SECTION, name: " 	 " })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
     expect(state.writes).toEqual(["update:template_tasks", "update:template_sections"]);
