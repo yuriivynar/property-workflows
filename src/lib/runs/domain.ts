@@ -1,6 +1,6 @@
 // Доменні правила запусків — чистий TypeScript без Supabase. Остаточно правила виконує база
 // (supabase/migrations/…_workflow_runs.sql); тут — перевірка форми до запиту й тексти для людини.
-import { MESSAGES, REQUIRED_LABELS, RUN_STATUS_LABELS, TASK_STATUS_LABELS } from "./messages";
+import { MESSAGES, REQUIRED_LABELS } from "./messages";
 
 export const CASE_NAME_MAX_LENGTH = 100;
 
@@ -52,14 +52,6 @@ export function errorCodeFrom(message: string | null | undefined): RunErrorCode 
 /** Текст для людини за кодом помилки; невідомий код — загальне повідомлення. */
 export function messageForError(code: string | null | undefined): string {
   return code && isRunErrorCode(code) ? MESSAGE_BY_CODE[code] : MESSAGES.unexpected;
-}
-
-export function runStatusLabel(status: string): string {
-  return Object.hasOwn(RUN_STATUS_LABELS, status) ? RUN_STATUS_LABELS[status as keyof typeof RUN_STATUS_LABELS] : status;
-}
-
-export function taskStatusLabel(status: string): string {
-  return Object.hasOwn(TASK_STATUS_LABELS, status) ? TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] : status;
 }
 
 export function requiredLabel(isRequired: boolean): string {
