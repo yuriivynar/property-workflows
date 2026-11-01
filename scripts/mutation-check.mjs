@@ -118,6 +118,11 @@ function runTests(files, label) {
   const failed = report.testResults.flatMap((f) =>
     f.assertionResults.filter((a) => a.status === "failed").map((a) => a.title),
   );
+  // Необроблена помилка поза тестами: жоден тест не впав, але прогін невдалий — це ERROR, а не «зелено»
+  // (рев'ю CodeRabbit, PR #39; відхід від materials/ курсу — суворіше, мутанта «вбитим» не робить).
+  if (!failed.length && (run.status !== 0 || report.success === false)) {
+    return { error: `Vitest завершився з помилкою (код виходу ${run.status ?? run.signal})`, failed };
+  }
   return { error: loadProblems(report, files), failed };
 }
 
