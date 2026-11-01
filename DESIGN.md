@@ -104,12 +104,12 @@ AC-DSYS-06). Темні значення — у двох однакових бл
 |---|---|---|
 | `Button` | `default`, `secondary`, `outline`, `ghost`, `destructive`, `link` | `default` (primary) — **одна** головна дія на екран; текст кнопки починається з дієслова («Launch», «Save»); `destructive` — лише з підтвердженням «This cannot be undone» |
 | `Input` + `Label` | — | у кожного поля `Label` з `htmlFor`; placeholder — не замість підпису |
-| `NativeSelect` | — | вибір шаблону й виконавця в серверних формах (нативний `<select>` працює без JavaScript); з `Label`. `Select` (Base UI) — лише в клієнтських компонентах |
+| `NativeSelect` | — | вибір шаблону й виконавця в серверних формах (нативний `<select>` працює без JavaScript); з `Label`. Клієнтського `Select` (Base UI) поки немає: знадобиться — `npx shadcn@4.22.1 add select`, лише в клієнтських компонентах |
 | `TextLink` | — | текстові посилання й навігація («Back to runs», назва випадку в таблиці): колір `foreground`, приглушене підкреслення — **не** `primary` |
 | `Card` | — | панель деталей запуску, форма входу |
 | `Table` | — | списки запусків і шаблонів; щільні рядки (розділ 4) |
-| `Badge` / `StatusBadge` | статуси домену | статус — **завжди з текстом**; колір і слово бере з однієї мапи статусів, щоб на всіх сторінках вони були однакові (AC-DSYS-01) |
-| `Dialog` | — | підтвердження незворотної дії: назва задачі + «This cannot be undone» |
+| `StatusBadge` | статуси домену | статус — **завжди з текстом**; колір і слово бере з однієї мапи статусів (`src/components/ui/status-badge.tsx`), щоб на всіх сторінках вони були однакові (AC-DSYS-01); інших функцій «статус → слово» немає |
+| Підтвердження на місці | — | незворотна дія підтверджується в тому самому рядку, без спливаючого вікна: назва задачі чи розділу + «This cannot be undone», кнопка `destructive` і «Cancel» (`mark-done-button.tsx`, `remove-section-button.tsx`) |
 | `Alert` | `default`, `destructive` | помилка над формою; текст — дослівно з AC; введене лишається у формі |
 | `PageShell` | — | спільний макет у `src/app/layout.tsx`: назва продукту й навігація (Templates · Runs · Profile) після входу; вибір «Theme» (System · Light · Dark) на кожній сторінці (ADR 0004); сторінка входу — той самий макет без навігації (AC-DSYS-02, AC-DSYS-03) |
 | `Notice` | — | відмова чи «не знайдено»: повідомлення заголовком + `TextLink` назад, жодних даних («Not enough rights», «Template not found», «Run not found») |
