@@ -2,7 +2,8 @@
 // (зокрема за прямим посиланням на запуск чи редактор) потрапляє на сторінку входу (AC-DSYS-03, AC-EDITOR-09).
 // Це UX у proxy; дані захищають ще й сторінки (getClaims → /login) і RLS (anon не має прав на таблиці).
 
-export const PUBLIC_PATHS = ["/login", "/auth"] as const;
+// "/api/health" — перевірка проду без входу (D0, WS8): лише коміт збірки й «db ok», жодних даних.
+export const PUBLIC_PATHS = ["/login", "/auth", "/api/health"] as const;
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
