@@ -14,10 +14,12 @@ export type DbHealth = { db: "ok" | "down"; reason: string };
 export function classifyDbProbe({ status, error }: DbProbe): DbHealth {
   if (status === SUPABASE_PAUSED) return { db: "down", reason: "paused" };
   const code = error?.code ?? "";
+  // 0 — мережа, 5xx — збій на боці сервера: навіть із кодом SQLSTATE (08006 — обрив з'єднання) база не «відповіла».
+  if (status === 0 || status >= 500) return { db: "down", reason: `status-${status}${code ? `-${code}` : ""}` };
   if (!error || SQLSTATE.test(code) || (code.startsWith("PGRST") && !PGRST_DB_DOWN.test(code))) {
     return { db: "ok", reason: "" };
   }
   if (/api key/i.test(error.message ?? "")) return { db: "down", reason: "invalid-api-key" };
-  // 0 — мережа (Supabase недоступний або хибний URL), 5xx, PGRST000–003.
+  // PGRST000–003 з не-5xx статусом.
   return { db: "down", reason: `status-${status}${code ? `-${code}` : ""}` };
 }

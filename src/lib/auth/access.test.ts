@@ -24,6 +24,7 @@ describe("Вхід: що бачить відвідувач без входу", (
   it("D0: без входу відкрито лише /api/health, а не весь /api", () => {
     expect(signInRedirect("/api/health", false)).toBeNull();
     expect(signInRedirect("/api/healthx", false)).toBe("/login");
+    expect(signInRedirect("/api/health/details", false)).toBe("/login");
     expect(signInRedirect("/api/other", false)).toBe("/login");
   });
 

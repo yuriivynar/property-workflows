@@ -30,4 +30,12 @@ describe("classifyDbProbe (/api/health)", () => {
     });
     expect(classifyDbProbe({ status: 0, error: { message: "fetch failed" } })).toEqual({ db: "down", reason: "status-0" });
   });
+
+  it("5xx з кодом SQLSTATE — база недоступна, а не «відповіла» (08006 — обрив з'єднання)", () => {
+    expect(classifyDbProbe({ status: 503, error: { code: "08006", message: "connection failure" } })).toEqual({
+      db: "down",
+      reason: "status-503-08006",
+    });
+    expect(classifyDbProbe({ status: 500, error: { code: "57P01", message: "terminating connection" } }).db).toBe("down");
+  });
 });

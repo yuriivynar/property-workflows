@@ -5,8 +5,13 @@
 // "/api/health" — перевірка проду без входу (D0, WS8): лише коміт збірки й «db ok», жодних даних.
 export const PUBLIC_PATHS = ["/login", "/auth", "/api/health"] as const;
 
+/** Публічні точно, без вкладених шляхів: майбутній /api/health/<щось> не стане публічним сам собою. */
+const EXACT_PUBLIC_PATHS: ReadonlySet<string> = new Set(["/api/health"]);
+
 export function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return PUBLIC_PATHS.some((path) =>
+    EXACT_PUBLIC_PATHS.has(path) ? pathname === path : pathname === path || pathname.startsWith(`${path}/`),
+  );
 }
 
 /** Куди відправити запит: null — показати сторінку, "/login" — на сторінку входу. */
