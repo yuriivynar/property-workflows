@@ -51,7 +51,9 @@ afterAll(() => {
   for (const dir of temps) rmSync(dir, { recursive: true, force: true });
 });
 
-describe("scripts/check-migration-order.mjs", () => {
+// Кожен випадок запускає git кілька разів (init, commit, update-ref, switch): на Windows під паралельним навантаженням
+// тестів PGlite це не вкладалося в стандартні 5 с (тест падав через раз). Таймаут — лише для цього набору.
+describe("scripts/check-migration-order.mjs", { timeout: 30_000 }, () => {
   it("passes when the PR migration is newer than the newest on main", () => {
     const { code, out } = run("newer");
     expect(code).toBe(0);
