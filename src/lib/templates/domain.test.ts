@@ -80,6 +80,13 @@ describe("Шаблони: правила екранів", () => {
     expect(messageForTemplateError("TEMPLATE_NAME_REQUIRED")).toBe("Enter a template name");
   });
 
+  it("AC-EDITOR-19: назви немає зовсім (поле не надіслано) — теж порожня, шаблон не створюється", () => {
+    // Мутанти Stryker на domain.ts:119 (WS8): typeof-перевірка → true (null.trim() падає) і запасне "" → інший текст
+    // (шаблон створився б із назвою-сміттям). Порожня назва з AC — це й відсутнє поле форми.
+    expect(cleanName(null)).toBeNull();
+    expect(cleanName(new File([], "name.txt"))).toBeNull();
+  });
+
   it("AC-EDITOR-15: помилка функції збереження про порожній розділ → «Every section needs at least one task»", () => {
     const code = templateErrorCode({ message: "TEMPLATE_SECTION_EMPTY" });
     expect(code).toBe("TEMPLATE_SECTION_EMPTY");

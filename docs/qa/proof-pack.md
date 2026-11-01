@@ -52,24 +52,47 @@
 
 | AC | Де живе правило | Рівень | Чому | Тест |
 |---|---|---|---|---|
-| AC-…-NN | <!-- політика / функція бази / TS-модуль / сторінка --> | <!-- unit / база (PGlite) / e2e --> | … | <!-- …/blob/<sha>/tests/…#L<N> --> |
+| AC-EDITOR-07 | політика `template_versions_select_admin_or_current` (`supabase/migrations/20261026133459_template_versions.sql`) + TS `templatePageAccess` (`src/lib/templates/domain.ts`) + сторінка `templates/[id]/versions` | база (PGlite) + unit + e2e | відмову «менеджер не бачить версій» тримає RLS — це доводить лише справжній SQL (мутант E07); роль → «Not enough rights» — розрахунок (unit); текст на сторінці — e2e | `tests/db/template-editor.test.ts#L86`, `#L116`; `src/lib/templates/domain.test.ts#L30` |
+| AC-EDITOR-19 | TS `cleanName` (`src/lib/templates/domain.ts`) + дія `createTemplate`; останній рубіж — обмеження `templates_name_not_blank` | unit + база (PGlite) + e2e | правило двічі: TS дає повідомлення, SQL — межу в обхід дії; кожен шар зі своїми тестами (Stryker на `cleanName`, мутант E19 на обмеження); «Enter a template name» на формі — e2e | `src/lib/templates/domain.test.ts#L77`, `#L83`; `tests/db/template-clarify.test.ts#L151`; `src/app/templates/actions.test.ts#L121` |
+| AC-EDITOR-09 | proxy `signInRedirect` (`src/lib/auth/access.ts`) + сторінка (`getClaims → /login`) + відсутність `grant` для `anon` | unit + база (PGlite) + e2e | редірект — розрахунок шляху (unit); «вмісту немає» навіть напряму — `anon` без прав (мутант E09); сторінка входу в браузері — e2e | `src/lib/auth/access.test.ts#L12`; `tests/db/template-editor.test.ts#L105`; `src/app/templates/actions.test.ts#L106` |
+
+Посилання вище — у межах репо; на кроці здачі їх закріплено за SHA `main` (`…/blob/<sha>/…#L<N>`).
 
 ### Покриття
 
+`npm run test:coverage` (v8; рядки / гілки):
+
 | Файл за AC | Рядки | Гілки | Чим доведено, якщо 0 % |
 |---|---|---|---|
-| <!-- src/lib/<модуль>.ts --> | … % | … % | — |
-| <!-- src/app/<сторінка>/page.tsx --> | 0 % | 0 % | <!-- e2e: tests/e2e/….spec.ts --> |
+| `src/lib/auth/access.ts` (AC-EDITOR-09) | 100 % | 100 % | — (у підлозі покриття) |
+| `src/lib/templates/domain.ts` (AC-EDITOR-07, AC-EDITOR-19) | 95 % | 86 % (було 84 %) | — (statements 89,79 % — ще не в підлозі) |
+| `src/app/templates/actions.ts` (AC-EDITOR-19, AC-EDITOR-09) | 78 % | 62 % | дії — тести з підробленим клієнтом Supabase (`actions.test.ts`) і e2e |
+| `src/app/templates/[id]/versions/page.tsx` (AC-EDITOR-07) | 0 % | 0 % | база (RLS, E07) + e2e (крок C) |
+| `src/app/templates/page.tsx` (AC-EDITOR-19) | 0 % | 0 % | e2e (крок C) |
+| `src/app/templates/[id]/edit/page.tsx` (AC-EDITOR-09) | 0 % | 0 % | база (`anon` без прав, E09) + e2e (крок C) |
+| `src/lib/supabase/proxy.ts` (AC-EDITOR-09) | 0 % | 0 % | логіка редіректу винесена в `access.ts` (100 %); сам proxy — e2e |
 
 ### Доказ мутацією
 
 | Мутант (файл:рядок, що змінено) | AC під загрозою | До | Тест, посилений з тексту AC | Після |
 |---|---|---|---|---|
-| <!-- src/lib/…/x.ts:14 `<=` → `<` --> | AC-…-NN | вижив | <!-- …/blob/<sha>/tests/…#L<N>: межа «…» з AC --> | убитий |
+| `src/lib/templates/domain.ts:119` `typeof value === "string"` → `true` | AC-EDITOR-19 | вижив | `src/lib/templates/domain.test.ts#L83`: «name empty» — і поле, якого форма не надіслала (`cleanName(null)`, `File`) | убитий |
+| `src/lib/templates/domain.ts:119` запасне `""` → `"Stryker was here!"` | AC-EDITOR-19 | без покриття | той самий тест: без назви шаблон не створюється (інакше — назва-сміття) | убитий |
+| SQL E19: `templates_name_not_blank` без `btrim` | AC-EDITOR-19 | вижив | `tests/db/template-clarify.test.ts#L151`: «Then no template is created» — назва `"   "` напряму в базу відхилена (`23514`), шаблону немає | убитий |
 
-- Stryker: <!-- score до → після, посилання на PR з виводом -->
-- SQL-мутації (`npm run mutation:sql`): <!-- таблиця з npm run mutation:sql -- --markdown (KILLED / SURVIVED / ERROR) з PR або «немає PGlite-гарнесу» -->
-- Еквівалентні мутанти: <!-- який і чому (рядок міграції чи коду, що робить його еквівалентним) або «немає» -->
+Перевірка «червоний на мутанті»: кожен мутант `domain.ts:119` внесено вручну тимчасово — новий тест падав, на справжньому коді зелений.
+
+- Stryker (`npm run mutation:ts -- --mutate src/lib/templates/domain.ts,src/lib/auth/access.ts`): до — 85,34 % (21 вижив, 7 без покриття); після — `domain.ts` 80,45 → 81,95 %, усі 11 мутантів `cleanName` (рядки 118–121) убиті. На рядках AC-EDITOR-07 (`templatePageAccess`, 91–94) і AC-EDITOR-09 (`isPublicPath`/`signInRedirect`) вижилих не було й до посилення. Вижилі `access.ts:29,36` — `safeNextPath` (AC-DSYS-08), поза нашими 3 AC.
+- Вижилі `domain.ts:80` (`23514` + `_name_not_blank` → `NAME_REQUIRED`, 6 мутантів): для AC-EDITOR-19 недосяжні з екрана — `cleanName` (JS `trim`) відсікає все, що відсік би `btrim` у Postgres, тож дія до бази з порожньою назвою не доходить, а прямий запит екрана не має. Побічна знахідка: якби цей шлях спрацював, текст був би «Enter a name», а не «Enter a template name» — записано для окремого виправлення.
+- SQL-мутації (`npm run mutation:sql`): до — 2 з 3 (E19 SURVIVED); після — **3 з 3 вбито**:
+
+| Мутант | AC | Що зламано | Вердикт | Який тест упав |
+|---|---|---|---|---|
+| E07 | AC-EDITOR-07 | політика template_versions: менеджер бачить усі версії збереженого шаблону, а не лише поточну | KILLED | AC-EDITOR-07: менеджер не бачить списку версій — лише поточну, жодної старої |
+| E09 | AC-EDITOR-09 | відвідувач без входу (anon) отримує select на шаблони, розділи й задачі | KILLED | AC-EDITOR-09: відвідувач без входу не читає жодного вмісту шаблону й нічого не змінює |
+| E19 | AC-EDITOR-19 | обмеження назви шаблону без btrim: назва лише з пробілів проходить базу | KILLED | AC-EDITOR-19: назва лише з пробілів напряму в базу, оминаючи дію, — шаблон не створено |
+
+- Еквівалентні мутанти: немає. Про E09 чесно: без `grant` RLS однаково не віддала б анонімові рядків (політики `to authenticated`), тож мутант знімає один з двох рубежів; тест вимагає саме відмову в правах (`permission denied`), а не порожній результат.
 
 ## C. UAT на проді
 
