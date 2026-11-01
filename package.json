@@ -18,6 +18,7 @@
     "check:design": "node scripts/check-design-tokens.mjs",
     "check:boundary": "node scripts/check-server-boundary.mjs",
     "check:actions": "node scripts/check-actions-claims.mjs",
+    "smoke": "node scripts/smoke.mjs",
     "gates": "npm run lint && npm run typecheck && fallow audit --base origin/main",
     "test:coverage": "vitest run --config vitest.coverage.config.mts --coverage",
     "coverage:summary": "node scripts/coverage-summary.mjs"

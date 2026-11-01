@@ -21,6 +21,13 @@ describe("Вхід: що бачить відвідувач без входу", (
     expect(signInRedirect("/login", false)).toBeNull();
   });
 
+  it("D0: без входу відкрито лише /api/health, а не весь /api", () => {
+    expect(signInRedirect("/api/health", false)).toBeNull();
+    expect(signInRedirect("/api/healthx", false)).toBe("/login");
+    expect(signInRedirect("/api/health/details", false)).toBe("/login");
+    expect(signInRedirect("/api/other", false)).toBe("/login");
+  });
+
   it("AC-DSYS-08: відвідувач за прямим посиланням на запуск — на вхід з поверненням саме на цей запуск", () => {
     const run = "/runs/10000000-0000-4000-8000-0000000000a1";
     expect(signInUrl(run)).toBe(`/login?next=${encodeURIComponent(run)}`);
