@@ -11,8 +11,8 @@ import base from "./vitest.config.mjs";
 // додайте його сюди, коли тести його піднімуть (храповик: підлогу не знижуємо). Порожній список — підлоги немає,
 // звіт усе одно будується.
 // Загальний відсоток (у демо ≈32 %) не поріг: сторінки й server actions доводять тести бази (PGlite) та e2e, а не Vitest.
-// Не в підлозі (поки нижче порогу гілок 85 %): templates/domain (84 %), templates/version (79 %); runs/messages — лише
-// константи текстів (функції 50 % — шаблонні рядки, які доводять тести сторінок і e2e).
+// Не в підлозі (поки нижче порогу): templates/version (гілки 79 %); templates/domain (statements 89,79 %, гілки 86 %
+// після WS8 B); runs/messages — лише константи текстів (функції 50 % — шаблонні рядки, які доводять тести сторінок і e2e).
 const FLOORED: string[] = ["auth/access", "auth/require-role", "runs/domain", "theme"];
 // Фігурні дужки glob розкриваються лише з комою всередині, тож один файл пишемо без них.
 const FLOORED_GLOB = FLOORED.length === 1 ? `src/lib/${FLOORED[0]}.ts` : `src/lib/{${FLOORED.join(",")}}.ts`;

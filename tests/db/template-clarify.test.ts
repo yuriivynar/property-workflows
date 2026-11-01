@@ -148,6 +148,16 @@ describe("База: правила шаблонів після уточнень 
     expect(n).toBe(1);
   });
 
+  it("AC-EDITOR-19: назва лише з пробілів напряму в базу, оминаючи дію, — шаблон не створено", async () => {
+    // Останній рубіж за cleanName у дії createTemplate: обмеження templates_name_not_blank (мутант E19, WS8).
+    const error = await errorOf(t.asUser(ADMIN, "insert into public.templates (name) values ($1)", ["   "]));
+
+    expect(error).toMatchObject({ code: "23514" });
+    expect(error?.message).toMatch(/templates_name_not_blank/);
+    const [{ n }] = await t.asService<{ n: number }>("select count(*)::int as n from public.templates where btrim(name) = ''");
+    expect(n).toBe(0);
+  });
+
   it("AC-EDITOR-26: відвідувач без входу напряму не змінює шаблон і не зберігає версію — версія 1, 5 задач, без змін", async () => {
     const { template, moveIn } = await tenantMoveIn("e2600000");
 
