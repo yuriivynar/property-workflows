@@ -87,8 +87,12 @@ export async function attachRuntimeErrors(page: Page) {
   const failed = responses
     .filter(({ r, status }) => r.failure() !== null || status >= 500)
     .map(({ r, status }) => `${r.method()} ${new URL(r.url()).pathname} → ${r.failure()?.errorText ?? status}`);
+  // Без відповіді й без помилки за RESPONSE_WAIT_MS — окремо, не ховаємо; з рядком запиту, щоб відрізнити префетч `?_rsc=`.
+  const pending = responses
+    .filter(({ r, status }) => status === 0 && r.failure() === null)
+    .map(({ r }) => `${r.method()} ${new URL(r.url()).pathname}${new URL(r.url()).search}`);
   await test.info().attach("runtime-errors.json", {
-    body: JSON.stringify({ console: consoleErrors, pageErrors, failed }, null, 2),
+    body: JSON.stringify({ console: consoleErrors, pageErrors, failed, pending }, null, 2),
     contentType: "application/json",
   });
 }
