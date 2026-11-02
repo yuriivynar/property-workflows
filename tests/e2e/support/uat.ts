@@ -87,10 +87,14 @@ export async function attachRuntimeErrors(page: Page) {
   const failed = responses
     .filter(({ r, status }) => r.failure() !== null || status >= 500)
     .map(({ r, status }) => `${r.method()} ${new URL(r.url()).pathname} → ${r.failure()?.errorText ?? status}`);
-  // Без відповіді й без помилки за RESPONSE_WAIT_MS — окремо, не ховаємо; з рядком запиту, щоб відрізнити префетч `?_rsc=`.
+  // Без відповіді й без помилки за RESPONSE_WAIT_MS — окремо, не ховаємо. Рядок запиту в артефакт не пишемо (там можуть
+  // бути дані), лише позначку префетчу Next.js (`?_rsc=`), щоб відрізнити його від справжнього незавершеного запиту.
   const pending = responses
     .filter(({ r, status }) => status === 0 && r.failure() === null)
-    .map(({ r }) => `${r.method()} ${new URL(r.url()).pathname}${new URL(r.url()).search}`);
+    .map(({ r }) => {
+      const url = new URL(r.url());
+      return `${r.method()} ${url.pathname}${url.searchParams.has("_rsc") ? " (префетч RSC)" : ""}`;
+    });
   await test.info().attach("runtime-errors.json", {
     body: JSON.stringify({ console: consoleErrors, pageErrors, failed, pending }, null, 2),
     contentType: "application/json",
