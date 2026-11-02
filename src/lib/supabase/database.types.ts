@@ -302,6 +302,33 @@ export type Database = {
           email: string | null;
         }[];
       };
+      // 20261102133035_vendor_role.sql — список запусків вендора і його задачі (AC-VENDOR-03…06, AC-VENDOR-10).
+      vendor_runs: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+          case_name: string;
+          status: string;
+          created_at: string;
+          my_done: number;
+          my_total: number;
+        }[];
+      };
+      vendor_run_tasks: {
+        Args: {
+          p_run_id: string;
+        };
+        Returns: {
+          id: string;
+          name: string;
+          is_required: boolean;
+          status: string;
+          task_position: number;
+          section_name: string;
+          section_position: number;
+          needs_confirmation: boolean;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;

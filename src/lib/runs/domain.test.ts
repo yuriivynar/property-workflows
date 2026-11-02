@@ -5,6 +5,8 @@ import {
   canMarkTask,
   errorCodeFrom,
   formatProgress,
+  formatYourTasks,
+  groupBySection,
   isUuid,
   messageForError,
   needsConfirmation,
@@ -12,6 +14,7 @@ import {
   staffLabel,
   taskBelongsToRun,
   validateCaseName,
+  runsListState,
 } from "./domain";
 import { LABELS, MESSAGES } from "./messages";
 
@@ -56,7 +59,7 @@ describe("Помилки функцій бази", () => {
   it("AC-RUN-04: невідомий код — загальне повідомлення, а не сирий текст бази", () => {
     expect(errorCodeFrom("duplicate key value violates unique constraint")).toBeUndefined();
     expect(messageForError(undefined)).toBe("Something went wrong. Try again.");
-    expect(messageForError("INVALID_ASSIGNEE")).toBe("An assignee must be a manager or an administrator");
+    expect(messageForError("INVALID_ASSIGNEE")).toBe("An assignee must be a manager, an administrator or a vendor");
   });
 });
 
@@ -183,5 +186,33 @@ describe("Задача й запуск з форми", () => {
     expect(taskBelongsToRun({ run_id: "run-1" }, "run-1")).toBe(true);
     expect(taskBelongsToRun({ run_id: "run-2" }, "run-1")).toBe(false);
     expect(taskBelongsToRun(null, "run-1")).toBe(false);
+  });
+});
+
+describe("Вендор: список і сторінка запуску", () => {
+  it("AC-VENDOR-03: рядок запуску вендора — «Your tasks: 0 of 2 done» (лише його задачі в запуску)", () => {
+    expect(formatYourTasks(0, 2)).toBe("Your tasks: 0 of 2 done");
+  });
+
+  it("AC-VENDOR-05: після позначки своєї задачі вендор бачить «Your tasks: 1 of 2 done»", () => {
+    expect(formatYourTasks(1, 2)).toBe("Your tasks: 1 of 2 done");
+  });
+
+  it("AC-VENDOR-04: задачі вендора — за розділами в порядку запуску, розділів без його задач немає", () => {
+    const tasks = [
+      { id: "t4", section_name: "Move-in day", section_position: 2 },
+      { id: "t3", section_name: "Before move-in", section_position: 1 },
+    ];
+    expect(groupBySection(tasks)).toEqual([
+      { name: "Before move-in", position: 1, tasks: [tasks[1]] },
+      { name: "Move-in day", position: 2, tasks: [tasks[0]] },
+    ]);
+    expect(groupBySection([])).toEqual([]);
+  });
+
+  it("AC-VENDOR-10: вендор без задач — «No tasks assigned to you yet.» замість порожньої таблиці", () => {
+    expect(runsListState([])).toBe("empty");
+    expect(runsListState(null)).toBe("empty");
+    expect(MESSAGES.noVendorTasks).toBe("No tasks assigned to you yet.");
   });
 });

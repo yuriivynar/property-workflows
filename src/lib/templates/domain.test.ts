@@ -27,6 +27,16 @@ describe("Шаблони: правила екранів", () => {
     expect(newestFirst([{ number: 1 }, { number: 3 }, { number: 2 }]).map((v) => v.number)).toEqual([3, 2, 1]);
   });
 
+  it("AC-VENDOR-08: вендор на списку шаблонів (і на будь-якій сторінці шаблону) — «Not enough rights»", () => {
+    for (const page of ["list", "view", "edit", "versions"] as const) {
+      expect(templatePageAccess("vendor", page)).toBe("not-enough-rights");
+    }
+    // Список і поточну версію, як і раніше, бачать менеджер і адміністратор.
+    expect(templatePageAccess("manager", "list")).toBe("ok");
+    expect(templatePageAccess("admin", "list")).toBe("ok");
+    expect(TEMPLATE_MESSAGES.notEnoughRights).toBe("Not enough rights");
+  });
+
   it("AC-EDITOR-07: менеджер на списку версій — «Not enough rights», адміністратор бачить список", () => {
     expect(templatePageAccess("manager", "versions")).toBe("not-enough-rights");
     expect(templatePageAccess("admin", "versions")).toBe("ok");

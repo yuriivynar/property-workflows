@@ -90,11 +90,20 @@ export async function createTestDb(options: { stopBefore?: string } = {}): Promi
       { full_name: u.full_name },
     ]);
   }
-  await db.exec("commit; begin; set local role service_role;");
-  for (const u of demoUsers) {
-    await db.query("update public.profiles set role = $2 where id = $1", [users[u.email], u.role]);
-  }
   await db.exec("commit");
+  // Роль, якої ще немає в profiles_role_check до stopBefore (vendor — з міграції vendor_role), ставимо після migrateRest():
+  // до того користувач лишається з default-роллю manager.
+  const setRole = (u: DemoUser) =>
+    inTransaction(db, "service_role", null, "update public.profiles set role = $2 where id = $1", [users[u.email], u.role]);
+  const deferredRoles: DemoUser[] = [];
+  for (const u of demoUsers) {
+    try {
+      await setRole(u);
+    } catch (error) {
+      if (!stop) throw error;
+      deferredRoles.push(u);
+    }
+  }
 
   return {
     db,
@@ -115,6 +124,7 @@ export async function createTestDb(options: { stopBefore?: string } = {}): Promi
     },
     migrateRest: async () => {
       for (const file of later.splice(0)) await db.exec(read(`supabase/migrations/${file}`));
+      for (const u of deferredRoles.splice(0)) await setRole(u);
     },
   };
 }

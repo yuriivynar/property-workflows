@@ -6,7 +6,11 @@ import type { Database } from "@/lib/supabase/database.types";
 // ДО будь-якого запису; запис потім робить клієнт користувача під RLS і GRANT (друга лінія захисту). proxy.ts лише
 // перенаправляє на /login — це UX, не захист.
 
-export type AppRole = "manager" | "admin";
+export type AppRole = "manager" | "admin" | "vendor";
+
+/** Ролі застосунку (profiles_role_check); vendor — з зрізу 3 (openspec/specs/vendor-work). */
+const APP_ROLES: readonly string[] = ["manager", "admin", "vendor"] satisfies AppRole[];
+const isAppRole = (role: unknown): role is AppRole => typeof role === "string" && APP_ROLES.includes(role);
 
 export type RoleCheck =
   | { ok: true; userId: string; role: AppRole }
@@ -21,7 +25,7 @@ export async function currentUser(supabase: Client): Promise<RoleCheck> {
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
   const role = profile?.role;
-  if (role !== "manager" && role !== "admin") return { ok: false, reason: "NOT_ALLOWED" };
+  if (!isAppRole(role)) return { ok: false, reason: "NOT_ALLOWED" };
   return { ok: true, userId, role };
 }
 
