@@ -77,7 +77,11 @@ export function templateErrorCode(error: { message?: string; code?: string } | n
   // За назвою обмеження, а не лише за кодом: інший unique / check не має перетворюватись на «назва зайнята».
   const message = error.message ?? "";
   if (error.code === "23505" && /templates_name(_normalized)?_key/.test(message)) return "NAME_TAKEN"; // AC-EDITOR-23
-  if (error.code === "23514" && /_name_not_blank/.test(message)) return "NAME_REQUIRED";
+  // Обмеження назви в базі лишились лише для назви шаблону — збереженої й робочої (розділи й задачі з порожньою назвою
+  // дозволено, AC-EDITOR-20), тож текст — «Enter a template name» (AC-EDITOR-19), а не загальне «Enter a name».
+  if (error.code === "23514" && /\b(templates|template_draft_names)_name_not_blank\b/.test(message)) {
+    return "TEMPLATE_NAME_REQUIRED";
+  }
   if (error.code === "42501") return "NOT_ALLOWED";
   return "UNEXPECTED";
 }

@@ -2,7 +2,7 @@
 // незбережений шаблон не запускається й не видний менеджеру, збереження без змін і з порожнім розділом відхилено,
 // унікальна назва без урахування регістру, прямі запити без входу й без прав, старі запуски — версія 1.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { cleanName, templateErrorCode } from "@/lib/templates/domain";
+import { cleanName, messageForTemplateError, templateErrorCode } from "@/lib/templates/domain";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
@@ -156,6 +156,18 @@ describe("База: правила шаблонів після уточнень 
     expect(error?.message).toMatch(/templates_name_not_blank/);
     const [{ n }] = await t.asService<{ n: number }>("select count(*)::int as n from public.templates where btrim(name) = ''");
     expect(n).toBe(0);
+    // «Then … A sees the message "Enter a template name"» — і коли назву відхилила сама база.
+    expect(messageForTemplateError(templateErrorCode(error))).toBe("Enter a template name");
+  });
+
+  it("AC-EDITOR-19: робоча назва шаблону лише з пробілів напряму в базу — відхилено з тим самим «Enter a template name»", async () => {
+    const [{ id }] = await t.asService<{ id: string }>("select id from public.templates order by created_at limit 1");
+    const error = await errorOf(
+      t.asUser(ADMIN, "insert into public.template_draft_names (template_id, name) values ($1, $2)", [id, "   "]),
+    );
+
+    expect(error).toMatchObject({ code: "23514" });
+    expect(messageForTemplateError(templateErrorCode(error))).toBe("Enter a template name");
   });
 
   it("AC-EDITOR-26: відвідувач без входу напряму не змінює шаблон і не зберігає версію — версія 1, 5 задач, без змін", async () => {
