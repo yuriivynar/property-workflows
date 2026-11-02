@@ -5,17 +5,23 @@ import { redirect } from "next/navigation";
 import { errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
+/** Клієнт користувача, що увійшов (getClaims перевіряє JWT); без входу — на сторінку входу. */
+async function signedInClient() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims) {
+    redirect("/login");
+  }
+  return supabase;
+}
+
 // Позначка задачі виконаною (openspec/specs/run-progress). Хто може позначати і чи завершено запуск, вирішує функція
 // бази mark_task_done; відмова — код NOT_ALLOWED, текст AC-TASK-03 показує сторінка запуску.
 export async function markTaskDone(formData: FormData) {
   const runId = String(formData.get("run_id") ?? "");
   const taskId = String(formData.get("task_id") ?? "");
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) {
-    redirect("/login");
-  }
+  const supabase = await signedInClient();
 
   // Ідентифікатори з форми — лише UUID: інше відкидаємо до запиту до бази.
   if (!isUuid(runId)) {
