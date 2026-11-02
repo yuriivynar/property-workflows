@@ -120,16 +120,24 @@
 
 ## D. Eval рецензента
 
-- PR з вадами (не злитий): <!-- …/pull/N -->
-- Ключ і таблиця: <!-- …/pull/N#issuecomment-M -->
+- PR з вадами (не злитий, закритий): https://github.com/yuriivynar/property-workflows/pull/41
+- Ключ і таблиця: https://github.com/yuriivynar/property-workflows/pull/41#issuecomment-6574406386 (виправлення щодо pre-merge checks CodeRabbit — у коментарі повторного прогону)
+- Рецензенти: CodeRabbit (ASSERTIVE, `.coderabbit.yaml`); `/code-review high 41` через `claude -p … --setting-sources project --output-format json` — моделі `claude-opus-5-5` + `claude-haiku-5-5`, 94 с і $0.92 (перший), 74 с і $0.91 (повторний)
 
 | # | Вада (ключ) | CodeRabbit | `/code-review high` |
 |---|---|---|---|
-| 1 | <!-- категорія і файл:рядок --> | <!-- знайшов / пропустив + цитата --> | <!-- знайшов / пропустив + цитата --> |
-| 2 | … | … | … |
-| 3 | … | … | … |
-| П | приманка: <!-- що --> | <!-- хибна тривога? цитата --> | <!-- хибна тривога? цитата --> |
+| 1 | права в даних — `supabase/migrations/20261102095213_run_task_counts.sql:4-16`: `public.run_task_counts` — `security definer` у `public`, без `set search_path = ''`, без перевірки доступу до запуску, `execute` не відкликано | знайшов: inline Major (CWE-862) «не перевіряє доступ до `p_run_id` … успадковує `EXECUTE` для `PUBLIC`»; pre-merge «міграції: Rls, Grant і політики» — «Порушено правило для security definer … у схемі `public` і не має `set search_path = ''`» | знайшов, серйозна: «Функція має `security definer`, тож обходить RLS. Вона не перевіряє, чи має користувач доступ до запуску (`private.can_see_run`) … лежить у схемі `public` без `set search_path = ''`, що суперечить правилу в `AGENTS.md`» |
+| 2 | авторизація в дії — `src/app/templates/actions.ts:161` (`setTaskRequired`): запис до `adminClient()`/`requireAdmin` | знайшов, але inline лише **Minor** (Data Integrity) через кеш: «Зміна вже залишиться в базі, а `done` не виконає інвалідацію кешу. RLS наразі обмежує запис адміністратором»; pre-merge «Proxy і Getclaims» — «Виявлено порушення авторизації … перевірка не є першою операцією перед записом» | знайшов, серйозна: «`requireAdmin` тепер викликається після запису, а за інваріантом файлу (рядок 10, AC-EDITOR-08) має бути першим кроком. Зараз запис від менеджера зупиняє лише RLS» |
+| 3 | тести — `tests/db/run-progress.test.ts:120`: «task stays to do» перевіряє `tasks[1]`, а не `taskOfB` | знайшов, Major: «Виклик `mark` змінює `taskOfB.id`, але твердження перевіряє `tasks[1].id` … Тест може пройти навіть після регресії авторизації» | знайшов, серйозна: «Тест дивиться на `tasks[1]`, якої ніхто не чіпає, замість `taskOfB`. Якщо ця регресія з'явиться, тест її не впіймає» |
+| П | приманка: `src/app/runs/[id]/actions.ts` — `getClaims()` + `redirect("/login")` винесено в локальний `signedInClient()` | хибної тривоги немає (коментаря немає) | хибної тривоги немає: «Помічник `signedInClient` є лише в одному файлі … Краще винести його в `src/lib/auth`» (порада) |
 
-- Інші знахідки: <!-- слушна / шум, по рядку на кожну -->
-- Правило, що закриває пропуск: <!-- рядок в AGENTS.md чи path instruction, …/commit/<sha> -->
-- Повторний прогін: <!-- хто, результат, цитата, …/pull/N#issuecomment-M -->
+- Інші знахідки:
+  - CodeRabbit «Оновіть AC-тести та матрицю відповідності» — частково слушна: тесту AC-EDITOR-08 на `setTaskRequired` немає (він зловив би ваду 2); вимога оновити `conformance.md` — шум;
+  - `/code-review`: `run_task_counts` дублює `run_overview`, не викликається, типи не оновлено — слушна;
+  - `/code-review`: «`setTaskRequired` тепер створює два клієнти Supabase на один запит» — слушна (наслідок вади 2);
+  - `/code-review`: дубль перевірки входу в `runs/new/actions.ts` — слушна дрібниця.
+- Ворота: перша версія вади 3 (видалене твердження) не дійшла б до рецензентів — `npm run gates` (fallow audit): «`weakened-tests (assertion-drop) [error] assertions: 38 -> 37`». Решта вад проходить усі обов'язкові перевірки: `check:actions` перевіряє наявність `requireAdmin`, а не порядок; SQL-функцій без `search_path` не перевіряє ніщо в CI.
+- Правило, що закриває пропуск: два рядки в `AGENTS.md` (розділ «База даних»): запис у Server Action до перевірки ролі — «must fix», навіть якщо RLS блокує; `security definer` без будь-якої з чотирьох умов (`private`, `search_path`, перевірка доступу, `revoke execute`) — «must fix». PR https://github.com/yuriivynar/property-workflows/pull/42, коміт https://github.com/yuriivynar/property-workflows/commit/6d7352d
+- Повторний прогін: https://github.com/yuriivynar/property-workflows/pull/41#issuecomment-6575184268
+  - `/code-review high` — правило подіяло: усі вади явно «must fix» за `AGENTS.md`; вада 1 розкладена на дві з наслідком «`anon` може викликати її без входу»; про приманку — «Зміна `markTaskDone` через `signedInClient` поводиться так само, як раніше»;
+  - CodeRabbit — без помітної зміни: «No actionable comments were generated in the recent review» (старі треди відкриті, inline не перегенеровано), pre-merge checks — ті самі Warning, що й до правила; ризик у security review понижено з «High» до «Medium». Слабке місце — Minor на inline до вади 2 — правилом в `AGENTS.md` не закрито.
