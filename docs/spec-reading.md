@@ -154,7 +154,7 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 `requirements/product.md` (роль `vendor`, матриця прав із третьою колонкою), `requirements/2-launch-a-template-for-a-case.md`
 (виконавцем може бути vendor) і `requirements/3-complete-tasks-and-track-run-progress.md` (vendor бачить лише власні
 задачі). Зміна специфікації — `add-vendor-assignees` (ще не створена). Наявних питань із міткою `question` про AC-VENDOR
-у репо PM немає (перевірено 02.11.2026).
+у репо PM немає (перевірено 02.11.2026). Питання колеги до того самого зрізу: solomchaak/property-workflows-spec#45 (зміна ролі на vendor чи з vendor для користувача, який уже бере участь у запусках) і solomchaak/property-workflows-spec#46 (опційна задача vendor «to do», коли запуск став completed) — не дублюємо.
 
 ### Скан за таксономією (зріз 3)
 
@@ -176,10 +176,10 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | | очікуємо | у специфікації — текст PM, питання в Open questions зміни `add-vendor-assignees` |
-| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | | очікуємо | до відповіді — буквально AC-VENDOR-03 (без назви шаблону); Open questions |
-| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | | очікуємо | до відповіді — як у «Припущеннях» PM (лише остання обов'язкова); Open questions |
-| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | | очікуємо | Open questions; AC-VENDOR-08 тестуємо прямим посиланням незалежно від відповіді |
+| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | solomchaak/property-workflows-spec#41 | очікуємо | у специфікації — текст PM, питання в Open questions зміни `add-vendor-assignees` |
+| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | solomchaak/property-workflows-spec#42 | очікуємо | до відповіді — буквально AC-VENDOR-03 (без назви шаблону); Open questions |
+| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | solomchaak/property-workflows-spec#43 | очікуємо | до відповіді — як у «Припущеннях» PM (лише остання обов'язкова); Open questions |
+| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | solomchaak/property-workflows-spec#44 | очікуємо | Open questions; AC-VENDOR-08 тестуємо прямим посиланням незалежно від відповіді |
 
 ### Власні припущення (зріз 3)
 
