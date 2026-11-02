@@ -114,10 +114,10 @@ describe("База: позначка задачі виконаною", () => {
 
 describe("База: відмова в позначці", () => {
   it("AC-TASK-03: менеджер C (не менеджер запуску і не виконавець) → NOT_ALLOWED, задача лишається «to do»", async () => {
-    const { taskOfB } = await runOfAWithTaskForB("AC-TASK-03 run");
+    const { tasks, taskOfB } = await runOfAWithTaskForB("AC-TASK-03 run");
 
     expect(await mark(MANAGER_C, taskOfB.id)).toContain("NOT_ALLOWED");
-    expect(await taskStatus(taskOfB.id)).toBe("to_do");
+    expect(await taskStatus(tasks[1].id)).toBe("to_do");
   });
 
   it("AC-TASK-03: співвиконавець іншої задачі того самого запуску теж не позначає задачу B", async () => {
