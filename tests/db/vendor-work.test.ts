@@ -206,6 +206,30 @@ describe("База: позначка задач вендором", () => {
   });
 });
 
+describe("База: колишній менеджер запуску з роллю vendor", () => {
+  it("AC-VENDOR-07: менеджер запуску, якому змінили роль на vendor, не позначає чужу задачу свого колишнього запуску", async () => {
+    // Рецензія CodeRabbit (CWE-863): право менеджера запуску — лише за поточної ролі manager (solomchaak/property-workflows-spec#45).
+    const MANAGER_C = t.users["manager.c@example.test"];
+    const ids = await templateTaskIds(TENANT_MOVE_IN);
+    const runId = await launch(MANAGER_C, TENANT_MOVE_IN, "AC-VENDOR-07 former manager", { [ids[0]]: MANAGER_B });
+    const [taskOfB] = (await tasksOf(runId)).filter((task) => task.assignee_id === MANAGER_B);
+
+    await t.asService("update public.profiles set role = 'vendor' where id = $1", [MANAGER_C]);
+    try {
+      expect(await errorOf(t.asUser(MANAGER_C, "select public.mark_task_done($1, true)", [taskOfB.id]))).toMatch(
+        /NOT_ALLOWED/,
+      );
+      const [task] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [taskOfB.id]);
+      expect(task.status).toBe("to_do");
+      // Свою задачу (як виконавець) він, як і будь-який вендор, позначає.
+      const [own] = (await tasksOf(runId)).filter((task) => task.assignee_id === MANAGER_C && !task.is_required);
+      expect(await errorOf(t.asUser(MANAGER_C, "select public.mark_task_done($1, false)", [own.id]))).toBe("");
+    } finally {
+      await t.asService("update public.profiles set role = 'manager' where id = $1", [MANAGER_C]);
+    }
+  });
+});
+
 describe("База: шаблони й запуск для вендора", () => {
   it("AC-VENDOR-08: вендор V не читає жодного шаблону, розділу, задачі шаблону чи версії", async () => {
     expect(await t.asUser(VENDOR_V, "select id from public.templates")).toEqual([]);

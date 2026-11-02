@@ -299,3 +299,60 @@ $$;
 
 revoke execute on function public.vendor_run_tasks(uuid) from public, anon;
 grant execute on function public.vendor_run_tasks(uuid) to authenticated;
+
+-- ── 6. Позначка: право менеджера запуску — лише за поточної ролі manager (AC-VENDOR-07) ─
+-- Вендор ніколи не менеджер запуску («Припущення» PM), але якщо колишньому менеджеру змінять роль на vendor
+-- (питання solomchaak/property-workflows-spec#45), run_manager_id лишиться його: без перевірки ролі він позначав би
+-- будь-яку задачу свого колишнього запуску (рецензія CodeRabbit, CWE-863). Решта функції — без змін.
+create or replace function private.mark_task_done(p_task_id uuid, p_confirmed boolean default false)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid            uuid := (select auth.uid());
+  v_role           text := coalesce((select private.current_app_role()), '');
+  v_run_id         uuid;
+  v_run_manager_id uuid;
+  v_assignee_id    uuid;
+  v_status         text;
+  v_is_required    boolean;
+begin
+  select t.run_id, r.run_manager_id, t.assignee_id
+    into v_run_id, v_run_manager_id, v_assignee_id
+  from public.run_tasks as t
+  join public.runs as r on r.id = t.run_id
+  where t.id = p_task_id;
+
+  if not found or v_uid is null
+     or not (v_role = 'admin' or (v_role = 'manager' and v_run_manager_id = v_uid) or v_assignee_id = v_uid) then
+    raise exception 'NOT_ALLOWED' using errcode = '42501';
+  end if;
+
+  -- Позначки задач одного запуску — по черзі; стан нижче читаємо вже після блокування.
+  perform 1 from public.runs where id = v_run_id for update;
+
+  select t.status, t.is_required into v_status, v_is_required from public.run_tasks as t where t.id = p_task_id;
+  if v_status = 'done' then
+    return;
+  end if;
+
+  -- Остання обов'язкова задача «to do» завершить запуск — лише з підтвердженням.
+  if v_is_required and not coalesce(p_confirmed, false) and not exists (
+    select 1 from public.run_tasks
+    where run_id = v_run_id and is_required and status <> 'done' and id <> p_task_id
+  ) then
+    raise exception 'CONFIRMATION_REQUIRED' using errcode = '22023';
+  end if;
+
+  update public.run_tasks set status = 'done' where id = p_task_id;
+
+  if not exists (
+    select 1 from public.run_tasks
+    where run_id = v_run_id and is_required and status <> 'done'
+  ) then
+    update public.runs set status = 'completed' where id = v_run_id and status <> 'completed';
+  end if;
+end;
+$$;
