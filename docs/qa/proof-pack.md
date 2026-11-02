@@ -102,7 +102,7 @@
 | AC-EDITOR-09 | [template-editor-signed-out.spec.ts](../../tests/e2e/template-editor-signed-out.spec.ts) | passed | Haiku: PASS | PASS, R6 | [AC-EDITOR-09-then-1.png](uat/2026-11-02/frames/AC-EDITOR-09-then-1.png) |
 | AC-EDITOR-19 | [template-name-required.spec.ts](../../tests/e2e/template-name-required.spec.ts) | passed | Haiku: PASS | PASS, R6 | [then-1](uat/2026-11-02/frames/AC-EDITOR-19-then-1.png), [then-2](uat/2026-11-02/frames/AC-EDITOR-19-then-2.png) |
 
-Перший прогін того самого дня дав AC-EDITOR-07 **FAIL (R1)** на кроці «Дано»: вада тесту, не продукту — `hasText: /^Version 1/` на рядку таблиці, а Playwright склеює текст комірок без пробілів («Version 127.10.2026…»), тож `` не збігався. Виправлено пошуком комірки «Version N» (коміт у PR UAT); повторний прогін — 3 × PASS. Перевірка «Дано» спрацювала як задумано: тест не пройшов на непідтвердженій передумові.
+Перший прогін того самого дня дав AC-EDITOR-07 **FAIL (R1)** на кроці «Дано»: вада тесту, не продукту — `hasText: /^Version 1\b/` на рядку таблиці, а Playwright склеює текст комірок без пробілів («Version 127.10.2026…»), тож `\b` не збігався. Виправлено пошуком комірки «Version N» (коміт у PR UAT); повторний прогін — 3 × PASS. Перевірка «Дано» спрацювала як задумано: тест не пройшов на непідтвердженій передумові.
 
 - Звіт: [report.md](uat/2026-11-02/report.md), [manifest.json](uat/2026-11-02/manifest.json)
 - Відео: вкладення в описі https://github.com/yuriivynar/property-workflows/pull/40
