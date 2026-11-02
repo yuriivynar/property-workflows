@@ -146,6 +146,11 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
   репозиторію `koldovsky/2026-quitcode-06-leave-portal-demo`): `security invoker`, або `security definer` лише в
   схемі `private` з `set search_path = ''`.
 - Авторизація на сервері — `supabase.auth.getClaims()`, ніколи `getSession()`.
+- Server Action перевіряє вхід і роль (`requireAdmin()`, `currentUser()` або `getClaims()` + роль з `profiles`) першим
+  кроком — до будь-якого запиту, що пише (`insert`, `update`, `delete`, `rpc`). Запис до перевірки ролі — помилка рівня
+  «must fix» (обхід авторизації), навіть якщо RLS зараз його блокує: RLS — друга лінія, а не перша.
+- Функція `security definer` поза схемою `private`, без `set search_path = ''`, без перевірки, що викликач має доступ до
+  рядків, або без `revoke execute … from public, anon` — помилка рівня «must fix» (обхід RLS).
 
 ## Секрети
 
