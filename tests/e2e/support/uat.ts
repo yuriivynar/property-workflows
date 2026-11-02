@@ -1,8 +1,9 @@
 // UAT-кроки: кожне «Дано / Коли / Тоді» з AC — окремий test.step, а кожне «Тоді» лишає докази для агента-рецензента:
 // кадр екрана, aria-знімок сторінки і список частин «Тоді», які людина БАЧИТЬ (агент має їх процитувати з кадру).
 // Невидимі частини (буфер обміну, рядки в базі, «даних немає») вирішують лише автоматичні перевірки.
-// Джерело: демо-репо курсу, tests/e2e/support/uat.ts (тег ws8-03-uat). Змінюйте лише signIn (форма входу).
-import { test, type Locator, type Page } from "@playwright/test";
+// Джерело: демо-репо курсу, tests/e2e/support/uat.ts (тег ws8-03-uat). Змінено signIn (форма входу) і
+// attachRuntimeErrors (обмежене очікування відповіді — див. RESPONSE_WAIT_MS).
+import { test, type Locator, type Page, type Request } from "@playwright/test";
 
 export type ThenSpec = {
   /** Частина «Тоді» — дослівно з AC від PM. */
@@ -67,6 +68,13 @@ async function captureEvidence(page: Page, n: number, spec: ThenSpec, assertions
   await info.attach(`then-${n}.json`, { body: JSON.stringify(meta, null, 2), contentType: "application/json" });
 }
 
+// Запит, який так і не отримав ні відповіді, ні помилки (префетч Next.js `?_rsc=`, перерваний переходом page.goto),
+// робить r.response() вічним: afterEach висів до таймауту 60 с, і AC-EDITOR-19 отримував FAIL (R1) при зелених кроках.
+// Тож чекаємо на відповідь не довше RESPONSE_WAIT_MS; такий запит — статус 0, не помилка сторінки.
+const RESPONSE_WAIT_MS = 2_000;
+const responseOrNull = (r: Request) =>
+  Promise.race([r.response(), new Promise<null>((resolve) => setTimeout(() => resolve(null), RESPONSE_WAIT_MS))]);
+
 /** Помилки консолі, необроблені помилки сторінки й відповіді 5xx за час тесту (API Playwright 1.56+). */
 export async function attachRuntimeErrors(page: Page) {
   const consoleErrors = (await page.consoleMessages({ filter: "all" }))
@@ -74,13 +82,21 @@ export async function attachRuntimeErrors(page: Page) {
     .map((m) => m.text());
   const pageErrors = (await page.pageErrors({ filter: "all" })).map((e) => String(e));
   const responses = await Promise.all(
-    (await page.requests()).map(async (r) => ({ r, status: (await r.response())?.status() ?? 0 })),
+    (await page.requests()).map(async (r) => ({ r, status: (await responseOrNull(r))?.status() ?? 0 })),
   );
   const failed = responses
     .filter(({ r, status }) => r.failure() !== null || status >= 500)
     .map(({ r, status }) => `${r.method()} ${new URL(r.url()).pathname} → ${r.failure()?.errorText ?? status}`);
+  // Без відповіді й без помилки за RESPONSE_WAIT_MS — окремо, не ховаємо. Рядок запиту в артефакт не пишемо (там можуть
+  // бути дані), лише позначку RSC-запиту Next.js (`?_rsc=` — префетч або навігація), щоб відрізнити його від інших.
+  const pending = responses
+    .filter(({ r, status }) => status === 0 && r.failure() === null)
+    .map(({ r }) => {
+      const url = new URL(r.url());
+      return `${r.method()} ${url.pathname}${url.searchParams.has("_rsc") ? " (RSC)" : ""}`;
+    });
   await test.info().attach("runtime-errors.json", {
-    body: JSON.stringify({ console: consoleErrors, pageErrors, failed }, null, 2),
+    body: JSON.stringify({ console: consoleErrors, pageErrors, failed, pending }, null, 2),
     contentType: "application/json",
   });
 }
