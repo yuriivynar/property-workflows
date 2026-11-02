@@ -87,6 +87,19 @@ describe("Шаблони: правила екранів", () => {
     expect(cleanName(new File([], "name.txt"))).toBeNull();
   });
 
+  it("AC-EDITOR-19: назву лише з пробілів відхилила база (обмеження назви шаблону) — теж «Enter a template name»", () => {
+    const rejected = (constraint: string) =>
+      templateErrorCode({
+        message: `new row for relation "templates" violates check constraint "${constraint}"`,
+        code: "23514",
+      });
+    expect(messageForTemplateError(rejected("templates_name_not_blank"))).toBe("Enter a template name");
+    expect(messageForTemplateError(rejected("template_draft_names_name_not_blank"))).toBe("Enter a template name");
+    // Інше check-обмеження чи інший код з тією самою назвою — не «назва порожня».
+    expect(rejected("runs_case_name_trimmed")).toBe("UNEXPECTED");
+    expect(templateErrorCode({ message: 'violates "templates_name_not_blank"', code: "23505" })).toBe("UNEXPECTED");
+  });
+
   it("AC-EDITOR-15: помилка функції збереження про порожній розділ → «Every section needs at least one task»", () => {
     const code = templateErrorCode({ message: "TEMPLATE_SECTION_EMPTY" });
     expect(code).toBe("TEMPLATE_SECTION_EMPTY");

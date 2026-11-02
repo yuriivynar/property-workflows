@@ -44,7 +44,7 @@
 
 Тестові правила лінтера (`@vitest/eslint-plugin` 1.6.27, `eslint-plugin-playwright` 2.12.1) — у `eslint.config.mjs` як `error`; знахідок на наших тестах **0**.
 
-Підлога покриття (`vitest.coverage.config.mts`, perFile 90/85/90/90): `auth/access`, `auth/require-role`, `runs/domain`, `theme`. Поза підлогою (гілки нижче 85 %): `templates/domain` (84 %), `templates/version` (79 %).
+Підлога покриття (`vitest.coverage.config.mts`, perFile 90/85/90/90): `auth/access`, `auth/require-role`, `runs/domain`, `templates/domain` (з WS8 B, після тестів AC-EDITOR-19 на помилку бази), `theme`. Поза підлогою (гілки нижче 85 %): `templates/version` (79 %).
 
 ## B. Якість тестів
 
@@ -65,7 +65,7 @@
 | Файл за AC | Рядки | Гілки | Чим доведено, якщо 0 % |
 |---|---|---|---|
 | `src/lib/auth/access.ts` (AC-EDITOR-09) | 100 % | 100 % | — (у підлозі покриття) |
-| `src/lib/templates/domain.ts` (AC-EDITOR-07, AC-EDITOR-19) | 95 % | 86 % (було 84 %) | — (statements 89,79 % — ще не в підлозі) |
+| `src/lib/templates/domain.ts` (AC-EDITOR-07, AC-EDITOR-19) | 95 % | 91 % (було 84 %) | — (у підлозі з WS8 B: statements 91,8 %) |
 | `src/app/templates/actions.ts` (AC-EDITOR-19, AC-EDITOR-09) | 78 % | 62 % | дії — тести з підробленим клієнтом Supabase (`actions.test.ts`) і e2e |
 | `src/app/templates/[id]/versions/page.tsx` (AC-EDITOR-07) | 0 % | 0 % | база (RLS, E07) + e2e (крок C) |
 | `src/app/templates/page.tsx` (AC-EDITOR-19) | 0 % | 0 % | e2e (крок C) |
@@ -82,8 +82,8 @@
 
 Перевірка «червоний на мутанті»: кожен мутант `domain.ts:119` внесено вручну тимчасово — новий тест падав, на справжньому коді зелений.
 
-- Stryker (`npm run mutation:ts -- --mutate src/lib/templates/domain.ts,src/lib/auth/access.ts`): до — 85,34 % (21 вижив, 7 без покриття); після — `domain.ts` 80,45 → 81,95 %, усі 11 мутантів `cleanName` (рядки 118–121) убиті. На рядках AC-EDITOR-07 (`templatePageAccess`, 91–94) і AC-EDITOR-09 (`isPublicPath`/`signInRedirect`) вижилих не було й до посилення. Вижилі `access.ts:29,36` — `safeNextPath` (AC-DSYS-08), поза нашими 3 AC.
-- Вижилі `domain.ts:80` (`23514` + `_name_not_blank` → `NAME_REQUIRED`, 6 мутантів): для AC-EDITOR-19 недосяжні з екрана — `cleanName` (JS `trim`) відсікає все, що відсік би `btrim` у Postgres, тож дія до бази з порожньою назвою не доходить, а прямий запит екрана не має. Побічна знахідка: якби цей шлях спрацював, текст був би «Enter a name», а не «Enter a template name» — записано для окремого виправлення.
+- Stryker (`npm run mutation:ts -- --mutate src/lib/templates/domain.ts,src/lib/auth/access.ts`, той самий набір файлів до і після): до — **85,34 %** (21 вижив, 7 без покриття); після — **89,58 %** (172 убито, 15 вижило, 5 без покриття; `domain.ts` 86,57 %, `access.ts` 96,55 %). Усі 11 мутантів `cleanName` (рядки 118–121) і всі мутанти правила назви шаблону в `templateErrorCode` (рядки 82–84) убиті. На рядках AC-EDITOR-07 (`templatePageAccess`) і AC-EDITOR-09 (`isPublicPath`/`signInRedirect`) вижилих не було й до посилення. Вижилі `access.ts:29,36` — `safeNextPath` (AC-DSYS-08), а `domain.ts:40–85` поза правилом назви — інші коди помилок (AC-EDITOR-04, -08, -23), поза нашими 3 AC.
+- Колишні вижилі `domain.ts:80` (`23514` + `_name_not_blank` → `NAME_REQUIRED`, 6 мутантів) вказали на справжню ваду: коли назву шаблону лише з пробілів відхиляла сама база (прямий запит в обхід дії), людина побачила б «Enter a name», а не «Enter a template name» з AC-EDITOR-19. Обмеження назви в базі лишились лише для назви шаблону (`templates`, `template_draft_names`), тож правило тепер повертає `TEMPLATE_NAME_REQUIRED`. Тести з тексту AC («Then … A sees the message "Enter a template name"») перевіряють перетворення помилки бази на текст, який покаже екран: юніт — `src/lib/templates/domain.test.ts` («назву лише з пробілів відхилила база»: повідомлення Postgres → `TEMPLATE_NAME_REQUIRED` → «Enter a template name»), база — `tests/db/template-clarify.test.ts` (справжня помилка PGlite `23514` → той самий текст). Сам прямий SQL-запит інтерфейсу не має; повідомлення на екрані для порожньої назви доводить UAT. На старому коді обидва тести червоні («Enter a name»). Мутаційний доказ на рівні SQL (E19) — лише для `templates_name_not_blank`; `template_draft_names_name_not_blank` доводять юніт- і DB-тест, окремого SQL-мутанта для нього немає. Посилання з SHA `11af9e5` у таблицях вище — на стан до цієї правки (рядки тестів не змінились).
 - SQL-мутації (`npm run mutation:sql`): до — 2 з 3 (E19 SURVIVED); після — **3 з 3 вбито**:
 
 | Мутант | AC | Що зламано | Вердикт | Який тест упав |
