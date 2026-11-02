@@ -6,8 +6,9 @@ export const MESSAGES = {
   markNotAllowed: "Only the task's assignee, the run manager, or an administrator can mark a task as done",
   launchNotAllowed: "Only a manager or an administrator can launch a template",
   templateNotFound: "Choose a template",
-  invalidAssignee: "An assignee must be a manager or an administrator",
+  invalidAssignee: "An assignee must be a manager, an administrator or a vendor",
   runNotFound: "Run not found",
+  noVendorTasks: "No tasks assigned to you yet.", // AC-VENDOR-10, дослівно
   confirmationRequired: "This is the last required task: confirm to mark it as done. This cannot be undone.",
   unexpected: "Something went wrong. Try again.",
   // Робоче рішення (рев'ю PR #17): версію шаблону змінили, поки заповнювали форму запуску.
@@ -41,6 +42,7 @@ export const LABELS = {
   columnTemplate: "Template",
   columnStatus: "Status",
   columnProgress: "Progress",
+  columnYourTasks: "Your tasks",
   template: "Template",
   chooseTemplate: "Choose a template",
   choose: "Choose",

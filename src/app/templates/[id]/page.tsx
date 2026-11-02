@@ -7,8 +7,9 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
+import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
-import { TEMPLATE_MESSAGES } from "@/lib/templates/domain";
+import { TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import Link from "next/link";
 
@@ -20,6 +21,14 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   const supabase = await createClient();
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
+  // Вендор не бачить жодного шаблону (AC-VENDOR-08) — і за прямим посиланням на шаблон.
+  if (templatePageAccess(user.role, "view") !== "ok") {
+    return (
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
+      </main>
+    );
+  }
   const isAdmin = user.role === "admin";
 
   const { data: template } = await supabase

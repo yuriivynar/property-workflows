@@ -26,7 +26,13 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
+  const claims = data?.claims;
+  const signedIn = Boolean(claims);
+  // Вендору посилання «Templates» не показуємо: воно завжди вело б до «Not enough rights» (AC-VENDOR-08; робоче рішення
+  // до solomchaak/property-workflows-spec#44). Прямий запит однаково відхиляють сторінка й RLS.
+  const { data: profile } = claims
+    ? await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle()
+    : { data: null };
   // Обрана тема — з cookie ще до першого малювання; без вибору — за пристроєм (ADR 0004; AC-DSYS-05, AC-DSYS-06).
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
 
@@ -37,7 +43,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PageShell signedIn={signedIn} theme={theme}>{children}</PageShell>
+        <PageShell signedIn={signedIn} showTemplates={profile?.role !== "vendor"} theme={theme}>{children}</PageShell>
       </body>
     </html>
   );

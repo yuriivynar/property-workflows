@@ -2,7 +2,7 @@
 // redirect кидає виняток, як у Next.js.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ signInError: null as { message: string } | null }));
+const state = vi.hoisted(() => ({ signInError: null as { message: string } | null, role: "manager" }));
 
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
@@ -12,7 +12,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
-    auth: { signInWithPassword: async () => ({ error: state.signInError }) },
+    auth: {
+      signInWithPassword: async () => ({ error: state.signInError }),
+      getClaims: async () => ({ data: { claims: { sub: "user-1" } } }),
+    },
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { role: state.role } }) }) }) }),
   }),
 }));
 
@@ -32,6 +36,7 @@ const redirectOf = (promise: Promise<unknown>) =>
 
 beforeEach(() => {
   state.signInError = null;
+  state.role = "manager";
 });
 
 describe("Дія входу", () => {
@@ -41,6 +46,14 @@ describe("Дія входу", () => {
     // Без посилання — як раніше, на головну; чужа адреса — теж на головну.
     expect(await redirectOf(login(form(credentials)))).toBe("REDIRECT:/");
     expect(await redirectOf(login(form({ ...credentials, next: "//evil.example" })))).toBe("REDIRECT:/");
+  });
+
+  it("AC-VENDOR-03: вендор після входу без посилання одразу бачить список своїх запусків; з посиланням — сторінку з посилання", async () => {
+    // Робоче рішення до solomchaak/property-workflows-spec#44 (основний сценарій вимоги, крок 3).
+    state.role = "vendor";
+    const credentials = { email: "vendor@example.test", password: "synthetic" };
+    expect(await redirectOf(login(form(credentials)))).toBe("REDIRECT:/runs");
+    expect(await redirectOf(login(form({ ...credentials, next: RUN })))).toBe(`REDIRECT:${RUN}`);
   });
 
   it("AC-DSYS-08: невдалий вхід лишає повернення на запуск для наступної спроби", async () => {

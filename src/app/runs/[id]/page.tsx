@@ -7,6 +7,8 @@ import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
   formatProgress,
+  formatYourTasks,
+  groupBySection,
   messageForError,
   needsConfirmation,
   requiredLabel,
@@ -32,32 +34,20 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     redirect("/login");
   }
 
-  const [{ data: run }, { data: profile }] = await Promise.all([
-    supabase
-      .from("run_overview")
-      .select("id, case_name, template_name, status, run_manager_id, done_count, total_count")
-      .eq("id", id)
-      .maybeSingle(),
-    supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle(),
-  ]);
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
+  if (profile?.role === "vendor") return <VendorRun id={id} message={message} />;
+
+  const { data: run } = await supabase
+    .from("run_overview")
+    .select("id, case_name, template_name, status, run_manager_id, done_count, total_count")
+    .eq("id", id)
+    .maybeSingle();
 
   if (!run?.id || !run.run_manager_id) {
     // Той, хто не бачить запуску, теж отримує текст AC-TASK-03, якщо надіслав позначку попри інтерфейс
     // (стара сторінка, прямий запит): база відповідає NOT_ALLOWED і для чужої, і для відсутньої задачі, тож
     // повідомлення не підказує, що запуск існує.
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
-        <h1 className="text-2xl font-semibold">{MESSAGES.runNotFound}</h1>
-        {message ? (
-          <Alert variant="destructive">
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
-        ) : null}
-        <TextLink href="/runs" className="w-fit text-sm">
-          {LABELS.backToRuns}
-        </TextLink>
-      </main>
-    );
+    return <RunNotFound message={message} />;
   }
   const runId = run.id;
   const runManagerId = run.run_manager_id;
@@ -141,6 +131,87 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                       taskName={task.name}
                       confirm={needsConfirmation(tasks ?? [], task.id)}
                     />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      ))}
+
+      <TextLink href="/runs" className="w-fit text-sm">
+        {LABELS.backToRuns}
+      </TextLink>
+    </main>
+  );
+}
+
+function RunNotFound({ message }: { message?: string }) {
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <h1 className="text-2xl font-semibold">{MESSAGES.runNotFound}</h1>
+      {message ? (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      ) : null}
+      <TextLink href="/runs" className="w-fit text-sm">
+        {LABELS.backToRuns}
+      </TextLink>
+    </main>
+  );
+}
+
+/**
+ * Запуск очима вендора: назва випадку, «Your tasks: N of K done» і рівно його задачі за розділами — назва, розділ,
+ * «required» / «optional», статус; без чужих задач, email інших користувачів, менеджера запуску, назви й версії шаблону
+ * та прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05; заголовок і рядок прогресу — робоче рішення до
+ * solomchaak/property-workflows-spec#41). Запуск без його задач — «Run not found» (AC-VENDOR-06). Дані — лише з функцій
+ * бази vendor_runs і vendor_run_tasks; позначка останньої обов'язкової задачі просить підтвердження («Припущення» PM).
+ */
+async function VendorRun({ id, message }: { id: string; message?: string }) {
+  const supabase = await createClient();
+  const [{ data: runs }, { data: tasks }] = await Promise.all([
+    supabase.rpc("vendor_runs"),
+    supabase.rpc("vendor_run_tasks", { p_run_id: id }),
+  ]);
+  const run = runs?.find((candidate) => candidate.id === id);
+  if (!run || !tasks?.length) return <RunNotFound message={message} />;
+
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold" data-testid="case-name">
+          {run.case_name}
+        </h1>
+        <p className="text-sm tabular-nums text-muted-foreground" data-testid="your-tasks">
+          {formatYourTasks(run.my_done, run.my_total)}
+        </p>
+      </div>
+
+      {message ? (
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {groupBySection(tasks).map((section) => (
+        <section key={section.position} className="flex flex-col gap-2">
+          <h2 className="text-base font-semibold">{section.name}</h2>
+          <Card className="gap-0 py-0">
+            <ul className="flex flex-col divide-y divide-border">
+              {section.tasks.map((task) => (
+                <li key={task.id} data-testid="run-task" className="flex flex-col gap-2 px-4 py-3 text-sm">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span>
+                      {task.name} <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
+                    </span>
+                    <span data-testid="task-status">
+                      <StatusBadge status={task.status} />
+                    </span>
+                  </div>
+                  {task.status === "to_do" ? (
+                    <MarkDoneButton runId={id} taskId={task.id} taskName={task.name} confirm={task.needs_confirmation} />
                   ) : null}
                 </li>
               ))}

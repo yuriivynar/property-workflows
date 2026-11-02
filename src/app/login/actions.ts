@@ -28,6 +28,16 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
+  // Вендор після входу без посилання — одразу на свою роботу, список запусків (основний сценарій вимоги
+  // requirements/39-assign-a-vendor.md, крок 3; робоче рішення до solomchaak/property-workflows-spec#44).
+  if (next === "/") {
+    const { data: claims } = await supabase.auth.getClaims();
+    const userId = claims?.claims?.sub;
+    const { data: profile } = userId
+      ? await supabase.from("profiles").select("role").eq("id", userId).maybeSingle()
+      : { data: null };
+    if (profile?.role === "vendor") redirect("/runs");
+  }
   redirect(next);
 }
 

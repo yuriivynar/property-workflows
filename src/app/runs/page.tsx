@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatProgress, runsListState } from "@/lib/runs/domain";
+import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,12 +14,17 @@ import { createClient } from "@/lib/supabase/server";
 // виконавець; адміністратор — усі (AC-TASK-06). У рядку — назва шаблону, статус і прогрес «N of M done» (AC-TASK-09);
 // найновіші вгорі (робочі рішення до solomchaak/property-workflows-spec#10 і коментаря в ньому, #12).
 // Таблиця щільна; на вузькому екрані колонка шаблону переходить під назву випадку (DESIGN.md, розділ 4).
+// Вендор бачить окремий список (VendorRuns): лише запуски зі своїми задачами (AC-VENDOR-03, AC-VENDOR-10).
 export default async function RunsPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) {
+  const claims = data?.claims;
+  if (!claims) {
     redirect("/login");
   }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
+  if (profile?.role === "vendor") return <VendorRuns />;
 
   const { data: runs, error: loadError } = await supabase
     .from("run_overview")
@@ -68,6 +73,58 @@ export default async function RunsPage() {
         </Table>
       ) : (
         <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
+      )}
+      <TextLink href="/" className="w-fit text-sm">
+        {LABELS.backToProfile}
+      </TextLink>
+    </main>
+  );
+}
+
+/**
+ * Список запусків вендора: лише запуски, де він виконавець, — назва випадку, статус запуску й «Your tasks: N of K done»;
+ * без назви шаблону й прогресу всього запуску (AC-VENDOR-03; робоче рішення до solomchaak/property-workflows-spec#42).
+ * Без задач — «No tasks assigned to you yet.» без порожньої таблиці й без «Launch a template»: вендор не запускає
+ * шаблонів (AC-VENDOR-10). Дані — лише з функції бази vendor_runs (рядків runs вендору RLS не віддає).
+ */
+async function VendorRuns() {
+  const supabase = await createClient();
+  const { data: runs, error: loadError } = await supabase.rpc("vendor_runs");
+
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
+      {loadError ? (
+        <Alert variant="destructive">
+          <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
+        </Alert>
+      ) : runsListState(runs) === "table" && runs ? (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{LABELS.columnCase}</TableHead>
+              <TableHead>{LABELS.columnStatus}</TableHead>
+              <TableHead>{LABELS.columnYourTasks}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {runs.map((run) => (
+              <TableRow key={run.id} data-testid="run-row">
+                <TableCell className="py-2">
+                  <TextLink href={`/runs/${run.id}`}>{run.case_name}</TextLink>
+                </TableCell>
+                <TableCell className="py-2">
+                  <StatusBadge status={run.status} />
+                </TableCell>
+                <TableCell className="py-2 tabular-nums" data-testid="your-tasks">
+                  {formatYourTasks(run.my_done, run.my_total)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <EmptyState message={MESSAGES.noVendorTasks} />
       )}
       <TextLink href="/" className="w-fit text-sm">
         {LABELS.backToProfile}

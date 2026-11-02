@@ -67,6 +67,27 @@ export function formatProgress(done: number, total: number): string {
 }
 
 /**
+ * Прогрес вендора: «Your tasks: N of K done» — лише його задачі в цьому запуску, K — їх кількість, N — «done»
+ * (AC-VENDOR-03, AC-VENDOR-05; «Припущення» PM у requirements/39-assign-a-vendor.md).
+ */
+export function formatYourTasks(done: number, total: number): string {
+  return `Your tasks: ${formatProgress(done, total)}`;
+}
+
+/** Задачі вендора, згруповані за розділами в порядку запуску (AC-VENDOR-04): розділи без його задач не показуємо. */
+export function groupBySection<T extends { section_name: string; section_position: number }>(
+  tasks: readonly T[],
+): { name: string; position: number; tasks: T[] }[] {
+  const sections = new Map<number, { name: string; position: number; tasks: T[] }>();
+  for (const task of tasks) {
+    const section = sections.get(task.section_position) ?? { name: task.section_name, position: task.section_position, tasks: [] };
+    section.tasks.push(task);
+    sections.set(task.section_position, section);
+  }
+  return [...sections.values()].sort((a, b) => a.position - b.position);
+}
+
+/**
  * Чи показувати кнопку позначки: виконавець задачі, менеджер запуску або адміністратор (AC-TASK-01, AC-TASK-02,
  * AC-TASK-07). Лише для інтерфейсу — остаточно вирішує функція бази mark_task_done (AC-TASK-03).
  */

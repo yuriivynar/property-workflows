@@ -8,11 +8,13 @@ import type { Theme } from "@/lib/theme"
 // Вибір «Theme» — на кожній сторінці, зокрема на сторінці входу (ADR 0004; AC-DSYS-05, AC-DSYS-06).
 function PageShell({
   signedIn,
+  showTemplates = true,
   theme,
   children,
   className,
 }: {
   signedIn: boolean
+  showTemplates?: boolean
   theme: Theme
   children: React.ReactNode
   className?: string
@@ -25,7 +27,7 @@ function PageShell({
           <div className="flex flex-wrap items-center gap-4">
             {signedIn ? (
               <nav aria-label="Main" className="flex gap-4 text-sm">
-                <TextLink href="/templates">Templates</TextLink>
+                {showTemplates ? <TextLink href="/templates">Templates</TextLink> : null}
                 <TextLink href="/runs">Runs</TextLink>
                 <TextLink href="/">Profile</TextLink>
               </nav>

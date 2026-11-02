@@ -5,11 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Notice } from "@/components/ui/notice";
 import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
-import { launchOptions } from "@/lib/templates/domain";
+import { launchOptions, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
@@ -26,6 +27,17 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const claims = data?.claims;
   if (!claims) {
     redirect("/login");
+  }
+
+  // Вендор не запускає шаблонів (матриця прав: «Launch a template» — «—»): відмова, жодного шаблону; прямий запит на
+  // запуск відхиляє функція бази launch_run (AC-VENDOR-09).
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
+  if (profile?.role === "vendor") {
+    return (
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
+      </main>
+    );
   }
 
   // Запускають лише збережені шаблони: задачі — з поточної версії (знімка), а не з незбережених змін
