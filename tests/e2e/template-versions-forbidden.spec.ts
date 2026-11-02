@@ -22,8 +22,11 @@ test(
       try {
         const adminPage = await admin.newPage();
         await adminPage.goto(VERSIONS);
-        await expect(adminPage.getByTestId("version-row").filter({ hasText: /^Version 1\b/ })).toHaveCount(1);
-        await expect(adminPage.getByTestId("version-row").filter({ hasText: /^Version 2\b/ })).toHaveCount(1);
+        // Комірка, а не hasText рядка: текст рядка склеєно без пробілів («Version 127.10.2026…»), і /^Version 1\b/ не збігається.
+        const versionCell = (n: number) =>
+          adminPage.getByTestId("version-row").getByRole("cell", { name: `Version ${n}`, exact: true });
+        await expect(versionCell(1)).toHaveCount(1);
+        await expect(versionCell(2)).toHaveCount(1);
       } finally {
         await admin.close();
       }
