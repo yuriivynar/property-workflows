@@ -156,11 +156,10 @@ export async function setTaskRequired(form: FormData) {
   const templateId = id(form, "template_id");
   const taskId = id(form, "task_id");
   if (!templateId || !taskId) redirect("/templates");
-  const supabase = await adminClient(editPath(templateId));
-  const { error } = await supabase
-    .from("template_tasks")
-    .update({ is_required: form.get("is_required") === "true" })
-    .eq("id", taskId);
+  const isRequired = form.get("is_required") === "true";
+  const supabase = await createClient();
+  const { error } = await supabase.from("template_tasks").update({ is_required: isRequired }).eq("id", taskId);
+  await adminClient(editPath(templateId));
   done(templateId, error);
 }
 
