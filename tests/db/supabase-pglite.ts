@@ -15,7 +15,7 @@ const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 interface DemoUser {
   email: string;
   full_name: string;
-  role: "manager" | "admin";
+  role: "manager" | "admin" | "vendor";
 }
 
 /** Емуляція того, що в Supabase вже є до наших міграцій: ролі, схема auth, auth.uid(). */
@@ -95,12 +95,16 @@ export async function createTestDb(options: { stopBefore?: string } = {}): Promi
   // до того користувач лишається з default-роллю manager.
   const setRole = (u: DemoUser) =>
     inTransaction(db, "service_role", null, "update public.profiles set role = $2 where id = $1", [users[u.email], u.role]);
+  // Межа stopBefore, до якої ролі vendor ще немає (міграція з profiles_role_check, що її дозволяє).
+  const VENDOR_ROLE_MIGRATION = "20261102133035_vendor_role.sql";
   const deferredRoles: DemoUser[] = [];
   for (const u of demoUsers) {
     try {
       await setRole(u);
     } catch (error) {
-      if (!stop) throw error;
+      // Лише очікувана відмова: роль vendor до міграції vendor_role порушує profiles_role_check. Решту — пробросити.
+      const roleCheck = (error as { constraint?: string }).constraint === "profiles_role_check";
+      if (!stop || u.role !== "vendor" || !roleCheck || stop > VENDOR_ROLE_MIGRATION) throw error;
       deferredRoles.push(u);
     }
   }
