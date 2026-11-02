@@ -1,0 +1,133 @@
+{
+  "kind": "uat",
+  "generatedAt": "2026-11-02T08:48:57.303Z",
+  "baseURL": "https://property-workflows-eta.vercel.app",
+  "deployedSha": "43157b6c363472097bff33bbc1b75f2c1bdc6fac",
+  "testsCommit": "7dd40753c80052b958ca8f2ecf3ced4b0c851f8a",
+  "reviewer": {
+    "model": "claude-haiku-5-5",
+    "disputes": "claude-sonnet-5-5"
+  },
+  "note": "Відео й траси не в git (test-results/ локально, артефакт CI). check-recordings конвеєра WS9 вимагає відео на диску — для нього цей manifest треба доповнити.",
+  "results": [
+    {
+      "id": "AC-EDITOR-07",
+      "proof": "AC-EDITOR-07",
+      "title": "AC-EDITOR-07: менеджер B за прямим посиланням на список версій бачить «Not enough rights» і жодної версії",
+      "screenshot": "docs/qa/uat/2026-11-02/frames/AC-EDITOR-07-then-1.png",
+      "video": "test-results/artifacts/template-versions-forbidde-2f920-ugh-rights»-і-жодної-версії-chromium/video.webm",
+      "trace": "test-results/artifacts/template-versions-forbidde-2f920-ugh-rights»-і-жодної-версії-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі видно сторінку з заголовком «Not enough rights» і посиланням «Back to templates», текст збігається з критерієм посимвольно. Ознак таблиці версій чи рядків «Version N» на кадрі немає, але це перевіряють автоматичні перевірки, тож я цю частину не оцінював."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to templates",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 7039,
+      "reviewCostUsd": 0.00191,
+      "reviewWallMs": 15595
+    },
+    {
+      "id": "AC-EDITOR-09",
+      "proof": "AC-EDITOR-09",
+      "title": "AC-EDITOR-09: відвідувач без входу за прямим посиланням на редактор бачить сторінку входу й жодного вмісту шаблону",
+      "screenshot": "docs/qa/uat/2026-11-02/frames/AC-EDITOR-09-then-1.png",
+      "video": "test-results/artifacts/template-editor-signed-out-e4907-ду-й-жодного-вмісту-шаблону-chromium/video.webm",
+      "trace": "test-results/artifacts/template-editor-signed-out-e4907-ду-й-жодного-вмісту-шаблону-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png видно сторінку входу з заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in». Жодного вмісту шаблону «Tenant move-in» на кадрі немає. Кадр повний і читабельний, без завантаження."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Sign in",
+          "onPage": true
+        },
+        {
+          "quote": "Email",
+          "onPage": true
+        },
+        {
+          "quote": "Password",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 2011,
+      "reviewCostUsd": 0.00192,
+      "reviewWallMs": 11923
+    },
+    {
+      "id": "AC-EDITOR-19",
+      "proof": "AC-EDITOR-19",
+      "title": "AC-EDITOR-19: адміністратор створює шаблон з порожньою назвою чи лише з пробілів — шаблон не створено, «Enter a template name»",
+      "screenshot": "docs/qa/uat/2026-11-02/frames/AC-EDITOR-19-then-1.png",
+      "video": "test-results/artifacts/template-name-required-AC--7c5fa-ено-«Enter-a-template-name»-chromium/video.webm",
+      "trace": "test-results/artifacts/template-name-required-AC--7c5fa-ено-«Enter-a-template-name»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На обох кадрах сторінки /templates під полем «Template name» (поле підсвічене червоним) напис червоним кольором «Enter a template name» розташований над таблицею шаблонів. Таблиця містить три рядки (Demo: smoke test, Repair request, Tenant move-in) без нового шаблону. Поле вводу на кадрі 2 виглядає порожнім, тож пробіли з кадру не видно — це не оцінюю, бо пробіли перевіряються автоматично."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Enter a template name",
+          "onPage": true
+        },
+        {
+          "quote": "Enter a template name",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 9196,
+      "reviewCostUsd": 0.00242,
+      "reviewWallMs": 10919
+    }
+  ],
+  "negativeControls": [],
+  "cleanup": {
+    "at": "2026-11-02T08:48:38.513Z",
+    "deleted": [],
+    "remaining": [],
+    "leftoverRequests": 0
+  }
+}
