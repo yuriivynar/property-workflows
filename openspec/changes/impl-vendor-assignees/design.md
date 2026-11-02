@@ -24,8 +24,9 @@ PM: кожне обмеження матриці діє й для прямих �
    - хелпери — у `private`, `security definer`, `set search_path = ''`, `revoke … from public, anon`, щоб політики
      `run_sections` і `run_tasks` не посилались одна на одну (42P17), як `private.can_see_run`.
 3. **Список і сторінка запуску вендора — функціями бази** (AC-VENDOR-03, AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-10):
-   `public.vendor_runs()` (назва випадку, статус запуску, `my_done` / `my_total` — лише його задачі, найновіші вгорі) і
-   `public.vendor_run_tasks(run_id)` (назва, розділ, обов'язковість, статус і `needs_confirmation` — остання
+   `public.vendor_runs()` (`id` запуску — для посилання на `/runs/[id]`, назва випадку, статус запуску, `my_done` /
+   `my_total` — лише його задачі, найновіші вгорі) і `public.vendor_run_tasks(run_id)` (`id` задачі — для
+   `MarkDoneButton` і `mark_task_done`, назва, розділ, обов'язковість, статус і `needs_confirmation` — остання
    обов'язкова задача «to do» запуску, та сама умова, що в `mark_task_done`). Логіка — `private`, `security definer`;
    у `public` — обгортки `security invoker`; іншим ролям повертають порожньо.
 4. **Довідник колег** (AC-VENDOR-02): `staff_directory` повертає й вендорів, як і раніше лише `id` і `email` і лише
@@ -33,9 +34,11 @@ PM: кожне обмеження матриці діє й для прямих �
 5. **Запуск** (AC-VENDOR-01, AC-VENDOR-09): `launch_run` приймає виконавцем `manager`, `admin` або `vendor`; перевірка
    ролі того, хто запускає (`manager`, `admin`), — без змін, тож вендор отримує `LAUNCH_NOT_ALLOWED` і запуску немає.
    Менеджер запуску — завжди той, хто запустив, тож вендор ним не стає.
-6. **Позначка** (AC-VENDOR-05, AC-VENDOR-07): `mark_task_done` без змін — дозволено виконавцю, менеджеру запуску й
-   адміністратору; вендор не буває менеджером запуску, тож позначає лише свої задачі. Підтвердження останньої
-   обов'язкової — як для всіх («Припущення» PM; питання solomchaak/property-workflows-spec#43 відкрите).
+6. **Позначка** (AC-VENDOR-05, AC-VENDOR-07): `mark_task_done` дозволяє виконавцю, адміністратору й менеджеру
+   запуску — право менеджера запуску лише за поточної ролі `manager` (рецензія CodeRabbit, CWE-863): якщо колишньому
+   менеджеру змінять роль на `vendor` (питання solomchaak/property-workflows-spec#45), він позначатиме лише задачі, де
+   він виконавець. Решта логіки (підтвердження останньої обов'язкової, завершення запуску) — без змін, як для всіх
+   («Припущення» PM; питання solomchaak/property-workflows-spec#43 відкрите).
 7. **Застосунок:**
    - `AppRole` += `vendor`; `currentUser()` приймає вендора, `requireAdmin()` — як раніше лише `admin`;
    - `templatePageAccess(vendor, …)` — «Not enough rights» на кожній сторінці шаблонів, зокрема на списку

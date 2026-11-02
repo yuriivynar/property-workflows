@@ -2,32 +2,33 @@
 
 Вертикальні задачі: міграція / RLS / функції бази + доменні функції + сторінки + тести; кожна закінчується рядком
 «Done when» з AC ID. Перевірка — `npm test`, `npm run test:coverage`, `npm run ac:coverage`, `npm run check:design`,
-`npm run check:boundary`, `npm run gates`. Задача — гілка `task/vendor-assignees` — PR «Реалізація» з CodeRabbit і
+`npm run check:boundary`, `npm run gates`. Задачі — гілка `task/vendor-assignees` — PR «Реалізація» з CodeRabbit і
 рядками `docs/conformance.md`.
 
-## 1. Роль vendor і права в базі (`task/vendor-assignees`)
+## 1. Вендор як виконавець (`task/vendor-assignees`)
 
-- [ ] 1.1 Міграція `…_vendor_role.sql`: `profiles_role_check` з `vendor`; RLS `templates`, `template_versions`,
-  `runs`, `run_sections`, `run_tasks` за design.md (рішення 2) з хелперами в `private`; `staff_directory` з вендорами;
-  `launch_run` — виконавець `vendor`; `vendor_runs()` і `vendor_run_tasks()` (`private` + обгортки `security invoker`,
-  `execute` лише `authenticated`).
-- [ ] 1.2 `supabase/demo-users.json`: `vendor@example.test`, `pm-vendor@example.test`; обв'язка PGlite — роль, якої
-  ще немає до `stopBefore`, — після `migrateRest()`.
-- [ ] 1.3 Тести бази `tests/db/vendor-work.test.ts`: призначення, довідник, список і задачі вендора, позначка власної
-  задачі й підтвердження останньої обов'язкової, відмови (чужа задача, шаблони, запуск, чужий запуск); регрес усіх
-  тестів бази.
-  Done when: AC-VENDOR-01, AC-VENDOR-02, AC-VENDOR-03, AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-06, AC-VENDOR-07,
-  AC-VENDOR-08, AC-VENDOR-09, AC-VENDOR-10 — кожен «Тоді» перевірено на справжньому Postgres прямими запитами від імені
-  вендора й менеджера.
+- [ ] 1.1 Призначення вендора під час запуску: роль `vendor` (міграція `…_vendor_role.sql`, `profiles_role_check`),
+  `launch_run` приймає виконавцем вендора, `staff_directory` повертає й вендорів (лише `id`, `email`, лише менеджеру й
+  адміністратору); `supabase/demo-users.json` — `vendor@example.test`, `pm-vendor@example.test`; обв'язка PGlite ставить
+  роль, якої ще немає до `stopBefore`, після `migrateRest()`; тести бази й регрес наявних.
+  Done when: AC-VENDOR-01, AC-VENDOR-02 — задачі 3 і 4 у вендора, решта в менеджера запуску; у виборі виконавця email
+  менеджера B, адміністратора й вендора, без інших даних профілю.
 
-## 2. Сторінки вендора (`task/vendor-assignees`)
+## 2. Список і сторінка запуску вендора (`task/vendor-assignees`)
 
-- [ ] 2.1 `AppRole` += `vendor`, `currentUser()`; `templatePageAccess` (`list`, `view`, `edit`, `versions` — «Not
-  enough rights» вендору); відмова на `/templates`, `/templates/[id]`, `/runs/new`.
-- [ ] 2.2 `/runs` — `VendorRuns` («Your tasks: N of K done», `EmptyState` «No tasks assigned to you yet.»);
-  `/runs/[id]` — `VendorRun` (задачі за розділами, `MarkDoneButton` з підтвердженням останньої обов'язкової, «Run not
-  found»); `formatYourTasks`, `groupBySection`; `database.types.ts`.
-- [ ] 2.3 Навігація без «Templates» для вендора; після входу без посилання — `/runs`.
-- [ ] 2.4 Юніт-тести доменних функцій і дії входу; рядки `docs/conformance.md` AC-VENDOR-01…10 — «реалізовано».
-  Done when: AC-VENDOR-03, AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-08, AC-VENDOR-10 — тексти й правила екранів
-  перевірено юніт-тестами; `npm run ac:coverage` — 77 з 77 «реалізовано».
+- [ ] 2.1 RLS `runs` / `run_sections` / `run_tasks` для вендора (хелпери в `private`), `vendor_runs()`,
+  `vendor_run_tasks()` з `id`; `/runs` — `VendorRuns`, `/runs/[id]` — `VendorRun`; `formatYourTasks`, `groupBySection`,
+  `database.types.ts`; навігація без «Templates» і `/runs` після входу; тести бази, юніт-тести й тест дії входу.
+  Done when: AC-VENDOR-03, AC-VENDOR-04, AC-VENDOR-06, AC-VENDOR-10 — вендор бачить лише запуск зі своїми задачами й
+  «Your tasks: 0 of 2 done»; рівно свої задачі з розділом, обов'язковістю й статусом, без чужих задач, email і прогресу
+  запуску; чужий запуск — «Run not found»; без задач — «No tasks assigned to you yet.» без таблиці.
+
+## 3. Позначка й відмови вендору (`task/vendor-assignees`)
+
+- [ ] 3.1 `mark_task_done`: право менеджера запуску — лише за поточної ролі `manager`; `MarkDoneButton` на задачах
+  вендора з підтвердженням останньої обов'язкової (`needs_confirmation`); RLS `templates` і `template_versions` для
+  вендора, `templatePageAccess` (`list`, `view`, `edit`, `versions`), відмова на `/templates`, `/templates/[id]`,
+  `/runs/new`; тести бази й юніт-тести; рядки `docs/conformance.md` AC-VENDOR-01…10 — «реалізовано».
+  Done when: AC-VENDOR-05, AC-VENDOR-07, AC-VENDOR-08, AC-VENDOR-09 — своя задача «done» і «Your tasks: 1 of 2 done»;
+  прямий запит на чужу задачу нічого не змінює; на шаблонах «Not enough rights» і жодного шаблону; прямий запуск
+  шаблону не створює запуску; `npm run ac:coverage` — 77 з 77 «реалізовано».
