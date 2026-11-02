@@ -10,7 +10,7 @@
 
 - Прод-URL: https://property-workflows-eta.vercel.app
 - Вимоги: https://github.com/solomchaak/property-workflows-spec · джерело: issues · знімок 2026-11-01
-- `/api/health` на момент UAT: <!-- sha і db, напр. «sha 1a2b3c4, db ok, 01.11.2026» -->
+- `/api/health` на момент UAT: sha `43157b6`, db ok, 02.11.2026
 
 ## 3 AC
 
@@ -22,9 +22,9 @@
 
 ## A. Ворота
 
-- PR воріт: <!-- …/pull/N -->
-- Зелений `quality` на `main`: <!-- …/actions/runs/N -->
-- Обов'язкові перевірки в `solo-main` з <!-- дата -->: <!-- назви jobs -->
+- PR воріт: https://github.com/yuriivynar/property-workflows/pull/37
+- Зелений `quality` на `main`: https://github.com/yuriivynar/property-workflows/actions/runs/41360940284 (`43157b6`)
+- Обов'язкові перевірки в `solo-main` з 02.11.2026: «Ворота: fallow audit», «Покриття: доменна підлога» (поруч із `spec`, `app`, `conformance`, `db-check`; «Порада: вразливі залежності» — навмисно не обов'язкова)
 
 Розбір першого повного прогону `fallow` (той самий — в описі PR воріт):
 
@@ -98,13 +98,19 @@
 
 | AC | Специфікація | Тест (твердження) | Агент | Вердикт | Кадр |
 |---|---|---|---|---|---|
-| AC-…-NN | <!-- …/blob/<sha>/tests/e2e/….spec.ts --> | <!-- passed / failed --> | <!-- Haiku: PASS / FAIL / NEEDS-HUMAN (+ Sonnet, якщо була суперечка) --> | <!-- PASS / FAIL / NEEDS-HUMAN і правило (R1–R6) --> | <!-- …/blob/<sha>/docs/qa/uat/<дата>/frames/AC-…-then-1.png --> |
+| AC-EDITOR-07 | [template-versions-forbidden.spec.ts](../../tests/e2e/template-versions-forbidden.spec.ts) | passed | Haiku: PASS | PASS, R6 | [AC-EDITOR-07-then-1.png](uat/2026-11-02/frames/AC-EDITOR-07-then-1.png) |
+| AC-EDITOR-09 | [template-editor-signed-out.spec.ts](../../tests/e2e/template-editor-signed-out.spec.ts) | passed | Haiku: PASS | PASS, R6 | [AC-EDITOR-09-then-1.png](uat/2026-11-02/frames/AC-EDITOR-09-then-1.png) |
+| AC-EDITOR-19 | [template-name-required.spec.ts](../../tests/e2e/template-name-required.spec.ts) | passed | Haiku: PASS | PASS, R6 | [then-1](uat/2026-11-02/frames/AC-EDITOR-19-then-1.png), [then-2](uat/2026-11-02/frames/AC-EDITOR-19-then-2.png) |
 
-- Звіт: <!-- …/blob/<sha>/docs/qa/uat/<YYYY-MM-DD>/report.md -->
+Перший прогін того самого дня дав AC-EDITOR-07 **FAIL (R1)** на кроці «Дано»: вада тесту, не продукту — `hasText: /^Version 1/` на рядку таблиці, а Playwright склеює текст комірок без пробілів («Version 127.10.2026…»), тож `` не збігався. Виправлено пошуком комірки «Version N» (коміт у PR UAT); повторний прогін — 3 × PASS. Перевірка «Дано» спрацювала як задумано: тест не пройшов на непідтвердженій передумові.
+
+- Звіт: [report.md](uat/2026-11-02/report.md), [manifest.json](uat/2026-11-02/manifest.json)
 - Відео: <!-- вкладення в описі PR …/pull/N -->
-- Рецензент: <!-- моделі зі звіту (claude-haiku-5-5; суперечки — claude-sonnet-5-5) і вартість прогону -->
-- Негативний контроль: <!-- NC-… (npm run uat:nc): що навмисно хибне, вердикт (FAIL / NEEDS-HUMAN), …/pull/N -->
-- Дані: <!-- «лише читання» або «@writes: uat-<запуск>@example.test, рядок «Прибирання» зі звіту» -->
+- Рецензент: `claude-haiku-5-5`, суперечки — `claude-sonnet-5-5`; розбір $0.0063 (UAT) + $0.0433 (негативні контролі)
+- Негативний контроль (`npm run uat:nc`, [negative-controls.spec.ts](../../tests/e2e/negative-controls.spec.ts), обидва на AC-EDITOR-07):
+  - NC-1 — у тесті хибний текст («You do not have access to versions»): перевірка впала → **FAIL (R1)**, хоч Haiku на кадрі й бачив «Not enough rights» (PASS) — агент не перекриває твердження;
+  - NC-2 — «Тоді» в анотації `ac-text` уточнено до «Only administrators can see versions», тест і застосунок — ні: перевірки зелені, Haiku FAIL → Sonnet FAIL → **NEEDS-HUMAN (R3)**.
+- Дані: лише читання (AC-EDITOR-19 не створює шаблону за самим AC); «Прибирання»: видалено 0, лишилось 0
 
 ### Приймання PM
 
