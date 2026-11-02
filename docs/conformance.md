@@ -100,3 +100,13 @@
 | AC-DSYS-06 | обрано «Light» при темному пристрої — світла тема й після перезапуску браузера, «Theme» показує «Light» | `src/lib/theme.ts` (themeCookie: Path=/, Max-Age рік), `src/components/ui/theme-select.tsx`, `src/app/layout.tsx`, `src/app/globals.css` (:root[data-theme="dark"], Light переважає пристрій) | `src/lib/theme.test.ts`, `tests/design/status-dark-contrast.test.ts` | реалізовано |
 | AC-DSYS-07 | темна тема — «in progress» синій, «completed» зелений, слово поруч, контраст ≥ 4.5:1 | `src/app/globals.css` (темні токени status-*), `src/components/ui/status-badge.tsx` | `tests/design/status-dark-contrast.test.ts` | реалізовано |
 | AC-DSYS-08 | після входу з прямого посилання на запуск — сторінка запуску «Apartment 12, move-in» | `src/lib/auth/access.ts` (safeNextPath, signInUrl), `src/lib/supabase/proxy.ts` (/login?next=…), `src/app/login/page.tsx`, `src/app/login/actions.ts` | `src/lib/auth/access.test.ts`, `src/app/login/actions.test.ts` | реалізовано |
+| AC-VENDOR-01 | менеджер призначає вендора V виконавцем задач 3 і 4; задачі 1, 2, 5 — менеджера A | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-02 | у виборі виконавця — email менеджера B, адміністратора й вендора V, без імен і ролей | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-03 | вендор бачить лише запуск зі своїми задачами, статус запуску й «Your tasks: 0 of 2 done» | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-04 | вендор на сторінці запуску бачить рівно свої задачі (назва, розділ, required/optional, статус), без чужих задач, email і прогресу запуску | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-05 | вендор позначає свою задачу «done» і бачить «Your tasks: 1 of 2 done» | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-06 | запуск без задач вендора за прямим посиланням — «Run not found», жодної задачі | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-07 | прямий запит вендора на позначку задачі менеджера — задача лишається «to do» | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-08 | вендор на списку шаблонів — «Not enough rights», жодного шаблону | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-09 | прямий запит вендора на запуск шаблону — запуску немає, список запусків без змін | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-10 | вендор без задач — «No tasks assigned to you yet.», без порожньої таблиці | — | — | відкладено (чекає реалізації) |
