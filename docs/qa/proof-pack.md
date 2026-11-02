@@ -105,9 +105,9 @@
 Перший прогін того самого дня дав AC-EDITOR-07 **FAIL (R1)** на кроці «Дано»: вада тесту, не продукту — `hasText: /^Version 1/` на рядку таблиці, а Playwright склеює текст комірок без пробілів («Version 127.10.2026…»), тож `` не збігався. Виправлено пошуком комірки «Version N» (коміт у PR UAT); повторний прогін — 3 × PASS. Перевірка «Дано» спрацювала як задумано: тест не пройшов на непідтвердженій передумові.
 
 - Звіт: [report.md](uat/2026-11-02/report.md), [manifest.json](uat/2026-11-02/manifest.json)
-- Відео: <!-- вкладення в описі PR …/pull/N -->
+- Відео: вкладення в описі https://github.com/yuriivynar/property-workflows/pull/40
 - Рецензент: `claude-haiku-5-5`, суперечки — `claude-sonnet-5-5`; розбір $0.0063 (UAT) + $0.0433 (негативні контролі)
-- Негативний контроль (`npm run uat:nc`, [negative-controls.spec.ts](../../tests/e2e/negative-controls.spec.ts), обидва на AC-EDITOR-07):
+- Негативний контроль (https://github.com/yuriivynar/property-workflows/pull/40, `npm run uat:nc`, [negative-controls.spec.ts](../../tests/e2e/negative-controls.spec.ts), обидва на AC-EDITOR-07):
   - NC-1 — у тесті хибний текст («You do not have access to versions»): перевірка впала → **FAIL (R1)**, хоч Haiku на кадрі й бачив «Not enough rights» (PASS) — агент не перекриває твердження;
   - NC-2 — «Тоді» в анотації `ac-text` уточнено до «Only administrators can see versions», тест і застосунок — ні: перевірки зелені, Haiku FAIL → Sonnet FAIL → **NEEDS-HUMAN (R3)**.
 - Дані: лише читання (AC-EDITOR-19 не створює шаблону за самим AC); «Прибирання»: видалено 0, лишилось 0
