@@ -1,9 +1,9 @@
 {
   "kind": "uat",
-  "generatedAt": "2026-11-02T08:48:57.303Z",
+  "generatedAt": "2026-11-02T15:55:15.022Z",
   "baseURL": "https://property-workflows-eta.vercel.app",
-  "deployedSha": "43157b6c363472097bff33bbc1b75f2c1bdc6fac",
-  "testsCommit": "7dd40753c80052b958ca8f2ecf3ced4b0c851f8a",
+  "deployedSha": "a2c2bcca886013c55a036b60ea4c295b2a66a4ca",
+  "testsCommit": "a2c2bcca886013c55a036b60ea4c295b2a66a4ca",
   "reviewer": {
     "model": "claude-haiku-5-5",
     "disputes": "claude-sonnet-5-5"
@@ -21,7 +21,7 @@
       "vision": {
         "met": true,
         "readable": true,
-        "notes": "На кадрі видно сторінку з заголовком «Not enough rights» і посиланням «Back to templates», текст збігається з критерієм посимвольно. Ознак таблиці версій чи рядків «Version N» на кадрі немає, але це перевіряють автоматичні перевірки, тож я цю частину не оцінював."
+        "notes": "На кадрі frame-then-1.png видно заголовок «Not enough rights» і посилання «Back to templates» під ним, текст збігається з критерієм посимвольно. Таблиці версій або рядків «Version N» на кадрі немає, але це з розділу «Не з кадрів», тому не оцінювалося."
       },
       "agentModel": "claude-haiku-5-5",
       "agentVerdicts": {
@@ -42,9 +42,9 @@
       "verdict": "PASS",
       "factoryGate": "PASS",
       "rule": "R6: перевірки, агент і цитати збігаються",
-      "playwrightMs": 7039,
-      "reviewCostUsd": 0.00191,
-      "reviewWallMs": 15595
+      "playwrightMs": 6405,
+      "reviewCostUsd": 0.00172,
+      "reviewWallMs": 8406
     },
     {
       "id": "AC-EDITOR-09",
@@ -57,7 +57,7 @@
       "vision": {
         "met": true,
         "readable": true,
-        "notes": "На кадрі frame-then-1.png видно сторінку входу з заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in». Жодного вмісту шаблону «Tenant move-in» на кадрі немає. Кадр повний і читабельний, без завантаження."
+        "notes": "На кадрі frame-then-1.png видно сторінку входу з заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in»; вмісту шаблону на кадрі немає. Видимі частини «Тоді» підтверджені дослівними цитатами, частини «Не з кадрів» не оцінювалися."
       },
       "agentModel": "claude-haiku-5-5",
       "agentVerdicts": {
@@ -82,9 +82,9 @@
       "verdict": "PASS",
       "factoryGate": "PASS",
       "rule": "R6: перевірки, агент і цитати збігаються",
-      "playwrightMs": 2011,
-      "reviewCostUsd": 0.00192,
-      "reviewWallMs": 11923
+      "playwrightMs": 2167,
+      "reviewCostUsd": 0.002,
+      "reviewWallMs": 11138
     },
     {
       "id": "AC-EDITOR-19",
@@ -97,7 +97,7 @@
       "vision": {
         "met": true,
         "readable": true,
-        "notes": "На обох кадрах сторінки /templates під полем «Template name» (поле підсвічене червоним) напис червоним кольором «Enter a template name» розташований над таблицею шаблонів. Таблиця містить три рядки (Demo: smoke test, Repair request, Tenant move-in) без нового шаблону. Поле вводу на кадрі 2 виглядає порожнім, тож пробіли з кадру не видно — це не оцінюю, бо пробіли перевіряються автоматично."
+        "notes": "На обох кадрах (сторінка /templates) під полем «Template name» і над таблицею шаблонів червоним текстом написано «Enter a template name», поле введення підсвічено червоною рамкою. Таблиця на обох кадрах показує ті самі три шаблони, що свідчить про відсутність нового запису, але це перевіряють автоматичні перевірки, а не кадри."
       },
       "agentModel": "claude-haiku-5-5",
       "agentVerdicts": {
@@ -118,14 +118,14 @@
       "verdict": "PASS",
       "factoryGate": "PASS",
       "rule": "R6: перевірки, агент і цитати збігаються",
-      "playwrightMs": 9196,
-      "reviewCostUsd": 0.00242,
-      "reviewWallMs": 10919
+      "playwrightMs": 10812,
+      "reviewCostUsd": 0.00233,
+      "reviewWallMs": 12332
     }
   ],
   "negativeControls": [],
   "cleanup": {
-    "at": "2026-11-02T08:48:38.513Z",
+    "at": "2026-11-02T15:55:00.401Z",
     "deleted": [],
     "remaining": [],
     "leftoverRequests": 0

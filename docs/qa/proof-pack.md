@@ -10,7 +10,7 @@
 
 - Прод-URL: https://property-workflows-eta.vercel.app
 - Вимоги: https://github.com/solomchaak/property-workflows-spec · джерело: issues · знімок 2026-11-01
-- `/api/health` на момент UAT: sha `43157b6`, db ok, 02.11.2026
+- `/api/health` на момент UAT: sha `a2c2bcc`, db ok, 02.11.2026 (код тестів — той самий `main @ a2c2bcc`, без незакомічених змін)
 
 ## 3 AC
 
@@ -104,9 +104,11 @@
 
 Перший прогін того самого дня дав AC-EDITOR-07 **FAIL (R1)** на кроці «Дано»: вада тесту, не продукту — `hasText: /^Version 1\b/` на рядку таблиці, а Playwright склеює текст комірок без пробілів («Version 127.10.2026…»), тож `\b` не збігався. Виправлено пошуком комірки «Version N» (коміт у PR UAT); повторний прогін — 3 × PASS. Перевірка «Дано» спрацювала як задумано: тест не пройшов на непідтвердженій передумові.
 
+Другий і третій прогони (на `main @ 36735aa`) дали AC-EDITOR-19 **FAIL (R1)** при зелених кроках «Дано / Коли / Тоді»: `Test timeout of 60000ms exceeded while running "afterEach" hook`. У трасі — префетч Next.js `GET /templates?_rsc=…` зі статусом `-1`, перерваний `page.goto`; `attachRuntimeErrors` чекав на його відповідь вічно. Виправлено в https://github.com/yuriivynar/property-workflows/pull/45 (очікування не довше 2 с, такі запити — окремим списком `pending`). Звіт у репо — чистий прогін на `main @ a2c2bcc`: **3 × PASS (R6)**, рецензент — $0.0060.
+
 - Звіт: [report.md](uat/2026-11-02/report.md), [manifest.json](uat/2026-11-02/manifest.json)
 - Відео: вкладення в описі https://github.com/yuriivynar/property-workflows/pull/40
-- Рецензент: `claude-haiku-5-5`, суперечки — `claude-sonnet-5-5`; розбір $0.0063 (UAT) + $0.0433 (негативні контролі)
+- Рецензент: `claude-haiku-5-5`, суперечки — `claude-sonnet-5-5`; розбір $0.0060 (UAT) + $0.0433 (негативні контролі)
 - Негативний контроль (https://github.com/yuriivynar/property-workflows/pull/40, `npm run uat:nc`, [negative-controls.spec.ts](../../tests/e2e/negative-controls.spec.ts), обидва на AC-EDITOR-07):
   - NC-1 — у тесті хибний текст («You do not have access to versions»): перевірка впала → **FAIL (R1)**, хоч Haiku на кадрі й бачив «Not enough rights» (PASS) — агент не перекриває твердження;
   - NC-2 — «Тоді» в анотації `ac-text` уточнено до «Only administrators can see versions», тест і застосунок — ні: перевірки зелені, Haiku FAIL → Sonnet FAIL → **NEEDS-HUMAN (R3)**.
@@ -141,3 +143,12 @@
 - Повторний прогін: https://github.com/yuriivynar/property-workflows/pull/41#issuecomment-6575184268
   - `/code-review high` — правило подіяло: усі вади явно «must fix» за `AGENTS.md`; вада 1 розкладена на дві з наслідком «`anon` може викликати її без входу»; про приманку — «Зміна `markTaskDone` через `signedInClient` поводиться так само, як раніше»;
   - CodeRabbit — без помітної зміни: «No actionable comments were generated in the recent review» (старі треди відкриті, inline не перегенеровано), pre-merge checks — ті самі Warning, що й до правила; ризик у security review понижено з «High» до «Medium». Слабке місце — Minor на inline до вади 2 — правилом в `AGENTS.md` не закрито.
+
+## Бонус: UAT у CI
+
+- PR: https://github.com/yuriivynar/property-workflows/pull/48 — `.github/workflows/e2e.yml` з матеріалів курсу: одноразовий Supabase у раннері (міграції, `seed.sql`, користувачі з `supabase/demo-users.json` з випадковим паролем), `next build` + `next start`, ті самі `tests/e2e/*.spec.ts`; хмарних секретів немає. Один доданий крок — `tests/e2e/fixtures/tenant-move-in-v2.sql` (версія 2 «Tenant move-in» для «Дано» AC-EDITOR-07; не в `seed.sql`, бо його читають тести бази з версією 1).
+- Зелений прогін `workflow_dispatch` на `main`: https://github.com/yuriivynar/property-workflows/actions/runs/41462285946 — `6 passed` (2 входи, 3 AC, прибирання), 0 пропущених, 0 нестабільних; артефакт `e2e-<run_id>`.
+
+## Зріз 3: вендор (реалізовано у WS8)
+
+За рішенням PM зріз 3 реалізовано в цьому WS (у матеріалах курсу — WS9): специфікація https://github.com/yuriivynar/property-workflows/pull/47 (AC-VENDOR-01…10, змінені межі run-launch / run-progress / design-system / template-versions), план https://github.com/yuriivynar/property-workflows/pull/49, реалізація https://github.com/yuriivynar/property-workflows/pull/50 (міграція `vendor_role`: роль, RLS, `vendor_runs` / `vendor_run_tasks`; сторінки вендора; 13 тестів бази й юніт-тести; `e2e` у CI зелений). Матриця — 77 з 77 AC «реалізовано». Робочі рішення до відповідей PM — solomchaak/property-workflows-spec#41, #42, #44; акаунт для приймання — `pm-vendor@example.test` (`accounts.zip`, https://github.com/yuriivynar/property-workflows/pull/51).

@@ -1,17 +1,17 @@
 # Звіт UAT — 02.11.2026
 
-- **Застосунок:** https://property-workflows-eta.vercel.app (/api/health: коміт `43157b6`)
-- **Код тестів:** `task/uat` @ `7dd4075` + незакомічені зміни
-- **Прогін:** 02.11.2026, 10:48 (Київ), Playwright 33.5 с; AC: 3 — PASS 3, FAIL 0, NEEDS-HUMAN 0
-- **Рецензент:** `claude-haiku-5-5`; суперечки → `claude-sonnet-5-5`. Разом за розбір: $0.0063 (ціни API; за підпискою — у межах ліміту плану)
+- **Застосунок:** https://property-workflows-eta.vercel.app (/api/health: коміт `a2c2bcc`)
+- **Код тестів:** `main` @ `a2c2bcc`
+- **Прогін:** 02.11.2026, 17:54 (Київ), Playwright 38.1 с; AC: 3 — PASS 3, FAIL 0, NEEDS-HUMAN 0
+- **Рецензент:** `claude-haiku-5-5`; суперечки → `claude-sonnet-5-5`. Разом за розбір: $0.0060 (ціни API; за підпискою — у межах ліміту плану)
 - **Прибирання:** синтетичних uat-*@example.test видалено 0, лишилось 0, їхніх рядків, що лишились: 0
 - **Відео й траси:** не в git — `test-results/` локально або артефакт CI; трасу відкриває `npx playwright show-trace <trace.zip>`
 
 | AC | Перевірки | Агент | Підсумок | Чому | Playwright | Розбір |
 |---|---|---|---|---|---|---|
-| AC-EDITOR-07 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 7.0 с | $0.0019, 15.6 с |
-| AC-EDITOR-09 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 2.0 с | $0.0019, 11.9 с |
-| AC-EDITOR-19 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 9.2 с | $0.0024, 10.9 с |
+| AC-EDITOR-07 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 6.4 с | $0.0017, 8.4 с |
+| AC-EDITOR-09 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 2.2 с | $0.0020, 11.1 с |
+| AC-EDITOR-19 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 10.8 с | $0.0023, 12.3 с |
 
 ## AC-EDITOR-07 — PASS
 
@@ -25,7 +25,7 @@
 
 **Кроки:** ✔ Дано: manager B signed in and the template "Tenant move-in" with versions 1 and 2 → ✔ Коли: B opens the list of versions of this template by a direct link → ✔ Тоді: B sees the message "Not enough rights" and no versions.
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі видно сторінку з заголовком «Not enough rights» і посиланням «Back to templates», текст збігається з критерієм посимвольно. Ознак таблиці версій чи рядків «Version N» на кадрі немає, але це перевіряють автоматичні перевірки, тож я цю частину не оцінював.
+**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png видно заголовок «Not enough rights» і посилання «Back to templates» під ним, текст збігається з критерієм посимвольно. Таблиці версій або рядків «Version N» на кадрі немає, але це з розділу «Не з кадрів», тому не оцінювалося.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Not enough rights» — є на сторінці
@@ -49,7 +49,7 @@
 
 **Кроки:** ✔ Дано: a visitor who is not signed in → ✔ Коли: the visitor opens the editor of the template "Tenant move-in" by a direct link → ✔ Тоді: the visitor sees the sign-in page and no content of the template.
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png видно сторінку входу з заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in». Жодного вмісту шаблону «Tenant move-in» на кадрі немає. Кадр повний і читабельний, без завантаження.
+**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png видно сторінку входу з заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in»; вмісту шаблону на кадрі немає. Видимі частини «Тоді» підтверджені дослівними цитатами, частини «Не з кадрів» не оцінювалися.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Sign in» — є на сторінці
@@ -75,7 +75,7 @@
 
 **Кроки:** ✔ Дано: administrator A → ✔ Коли: A creates a new template with the name empty → ✔ Тоді: no template is created, and A sees the message "Enter a template name". → ✔ Коли: A creates a new template with the name consisting only of spaces → ✔ Тоді: no template is created, and A sees the message "Enter a template name".
 
-**Агент (claude-haiku-5-5, PASS):** На обох кадрах сторінки /templates під полем «Template name» (поле підсвічене червоним) напис червоним кольором «Enter a template name» розташований над таблицею шаблонів. Таблиця містить три рядки (Demo: smoke test, Repair request, Tenant move-in) без нового шаблону. Поле вводу на кадрі 2 виглядає порожнім, тож пробіли з кадру не видно — це не оцінюю, бо пробіли перевіряються автоматично.
+**Агент (claude-haiku-5-5, PASS):** На обох кадрах (сторінка /templates) під полем «Template name» і над таблицею шаблонів червоним текстом написано «Enter a template name», поле введення підсвічено червоною рамкою. Таблиця на обох кадрах показує ті самі три шаблони, що свідчить про відсутність нового запису, але це перевіряють автоматичні перевірки, а не кадри.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Enter a template name» — є на сторінці
