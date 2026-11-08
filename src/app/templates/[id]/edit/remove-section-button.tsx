@@ -22,7 +22,7 @@ export function RemoveSectionButton({
 
   if (!confirming) {
     return (
-      <Button type="button" variant="ghost" onClick={() => setConfirming(true)}>
+      <Button type="button" variant="ghost" size="sm" onClick={() => setConfirming(true)}>
         {TEMPLATE_MESSAGES.removeSection}
       </Button>
     );

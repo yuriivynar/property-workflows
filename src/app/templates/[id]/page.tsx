@@ -24,7 +24,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   // Вендор не бачить жодного шаблону (AC-VENDOR-08) — і за прямим посиланням на шаблон.
   if (templatePageAccess(user.role, "view") !== "ok") {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
       </main>
     );
@@ -39,7 +39,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
 
   if (!template) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.templateNotFound} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -56,7 +56,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   const sections = parseVersionContent(version?.content).sections;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{template.name}</h1>

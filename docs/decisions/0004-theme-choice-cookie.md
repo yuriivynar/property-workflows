@@ -31,7 +31,7 @@
   - варіант `dark:` Tailwind 4 — `@custom-variant dark` за тією самою умовою, щоб `dark:` у компонентах shadcn
     збігався з токенами.
 - **Вибір.** «Theme» — `NativeSelect` у `PageShell`, тож він є на кожній сторінці, зокрема на сторінці входу
-  (клієнтський `src/components/ui/theme-select.tsx`). Зміна одразу ставить `data-theme` на `<html>` і пише cookie;
+  (клієнтський `src/components/ui/theme-switch.tsx`). Зміна одразу ставить `data-theme` на `<html>` і пише cookie;
   наступний рендер сервер робить уже з cookie.
 - **Уточнення під час реалізації: без server action.** Дія `setTheme` порушила б правило «кожна дія перевіряє вхід»
   (`check-actions-claims`, ADR 0003), а вхід для вибору теми не потрібен. Виняток у правилі заради зручності послабив

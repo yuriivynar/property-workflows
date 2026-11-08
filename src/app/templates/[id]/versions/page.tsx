@@ -19,7 +19,7 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
 
   if (templatePageAccess(user.role, "versions") !== "ok") {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -32,7 +32,7 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
 
   if (!template) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.templateNotFound} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -46,7 +46,7 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
   const emailOf = new Map((authors ?? []).map((a) => [a.id, a.email]));
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">Versions</h1>
         <p className="text-sm text-muted-foreground">{template.name}</p>

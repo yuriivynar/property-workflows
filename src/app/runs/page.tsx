@@ -6,9 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
+
+// Рядок таблиці на телефоні стає карткою (сітка з двох колонок), а клітинки — її частинами (ADR 0007).
+const ROW_STACK =
+  "max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-x-3 max-sm:gap-y-2 max-sm:px-4 max-sm:py-3";
+const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal";
 
 // Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
 // виконавець; адміністратор — усі (AC-TASK-06). У рядку — назва шаблону, статус і прогрес «N of M done» (AC-TASK-09);
@@ -32,10 +38,10 @@ export default async function RunsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
-        <Link href="/runs/new" className={buttonVariants({ size: "lg" })}>
+        <Link href="/runs/new" className={buttonVariants({ size: "lg", className: "max-sm:w-full" })}>
           {LABELS.launchTemplate}
         </Link>
       </div>
@@ -45,7 +51,7 @@ export default async function RunsPage() {
         </Alert>
       ) : runsListState(runs) === "table" && runs ? (
         <Table>
-          <TableHeader>
+          <TableHeader className="max-sm:hidden">
             <TableRow>
               <TableHead>{LABELS.columnCase}</TableHead>
               <TableHead className="hidden sm:table-cell">{LABELS.columnTemplate}</TableHead>
@@ -53,19 +59,29 @@ export default async function RunsPage() {
               <TableHead>{LABELS.columnProgress}</TableHead>
             </TableRow>
           </TableHeader>
+          {/* На телефоні рядок — картка: назва (з шаблоном під нею) і статус зверху, прогрес на всю ширину нижче. */}
           <TableBody>
             {runs.map((run) => (
-              <TableRow key={run.id} data-testid="run-row">
-                <TableCell className="py-2">
-                  <TextLink href={`/runs/${run.id}`}>{run.case_name}</TextLink>
+              <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
+                <TableCell className={CELL_STACK}>
+                  <TextLink href={`/runs/${run.id}`} className="font-medium">
+                    {run.case_name}
+                  </TextLink>
                   <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
                 </TableCell>
-                <TableCell className="hidden py-2 sm:table-cell">{run.template_name}</TableCell>
-                <TableCell className="py-2">
+                <TableCell className="hidden py-2.5 text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
+                <TableCell className={CELL_STACK}>
                   <StatusBadge status={run.status ?? ""} />
                 </TableCell>
-                <TableCell className="py-2 tabular-nums" data-testid="run-progress">
-                  {formatProgress(run.done_count ?? 0, run.total_count ?? 0)}
+                <TableCell className={`${CELL_STACK} tabular-nums max-sm:col-span-2`} data-testid="run-progress">
+                  <span className="flex items-center gap-3">
+                    <ProgressBar
+                      done={run.done_count ?? 0}
+                      total={run.total_count ?? 0}
+                      className="max-sm:w-auto max-sm:flex-1"
+                    />
+                    <span className="font-medium">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</span>
+                  </span>
                 </TableCell>
               </TableRow>
             ))}
@@ -92,7 +108,7 @@ async function VendorRuns() {
   const { data: runs, error: loadError } = await supabase.rpc("vendor_runs");
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
       {loadError ? (
         <Alert variant="destructive">
@@ -100,7 +116,7 @@ async function VendorRuns() {
         </Alert>
       ) : runsListState(runs) === "table" && runs ? (
         <Table>
-          <TableHeader>
+          <TableHeader className="max-sm:hidden">
             <TableRow>
               <TableHead>{LABELS.columnCase}</TableHead>
               <TableHead>{LABELS.columnStatus}</TableHead>
@@ -109,14 +125,16 @@ async function VendorRuns() {
           </TableHeader>
           <TableBody>
             {runs.map((run) => (
-              <TableRow key={run.id} data-testid="run-row">
-                <TableCell className="py-2">
-                  <TextLink href={`/runs/${run.id}`}>{run.case_name}</TextLink>
+              <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
+                <TableCell className={CELL_STACK}>
+                  <TextLink href={`/runs/${run.id}`} className="font-medium">
+                    {run.case_name}
+                  </TextLink>
                 </TableCell>
-                <TableCell className="py-2">
+                <TableCell className={CELL_STACK}>
                   <StatusBadge status={run.status} />
                 </TableCell>
-                <TableCell className="py-2 tabular-nums" data-testid="your-tasks">
+                <TableCell className={`${CELL_STACK} tabular-nums max-sm:col-span-2`} data-testid="your-tasks">
                   {formatYourTasks(run.my_done, run.my_total)}
                 </TableCell>
               </TableRow>

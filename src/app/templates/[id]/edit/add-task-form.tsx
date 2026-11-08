@@ -51,14 +51,14 @@ export function AddTaskForm({ templateId, sectionId }: { templateId: string; sec
       <div className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="template_id" value={templateId} />
         <input type="hidden" name="section_id" value={sectionId} />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
           <Label htmlFor={`new-task-${sectionId}`}>New task</Label>
           <Input
             id={`new-task-${sectionId}`}
             name="name"
             value={state.name}
             onChange={(e) => setState((current) => ({ ...current, name: e.target.value }))}
-            className="w-64"
+            className="w-full sm:w-64"
             aria-invalid={state.message ? true : undefined}
             aria-describedby={state.message ? errorId : undefined}
           />

@@ -31,8 +31,9 @@ function StatusBadge({ status, className }: { status: string; className?: string
       data-slot="status-badge"
       data-status={status}
       className={cn(
-        "inline-flex h-5 w-fit shrink-0 items-center rounded-sm px-2 text-xs font-medium whitespace-nowrap",
+        "inline-flex h-6 w-fit shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-semibold whitespace-nowrap ring-1 ring-current/20 ring-inset before:size-1.5 before:rounded-full before:bg-current before:content-['']",
         tone,
+        status === "done" || status === "completed" ? "animate-pop" : null,
         className
       )}
     >
