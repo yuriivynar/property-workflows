@@ -5,7 +5,6 @@
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { adminClient, deleteUatUsers, randomPassword, uatEmail } from "./admin";
-import { signIn } from "./uat";
 
 // Довідкові шаблони зі стабільними id (supabase/migrations/20261020115709_workflow_templates_reference_data.sql).
 export const TENANT_MOVE_IN = "10000000-0000-4000-8000-000000000001";
@@ -180,8 +179,19 @@ export async function launchApartment12(manager: Actor, vendor: Actor): Promise<
   return { runId, tasks: await runTasks(runId) };
 }
 
-/** Вхід у контексті тесту (фікстура page) через форму входу; пароль не потрапляє в назви кроків (див. signIn). */
+/**
+ * Вхід у контексті тесту (фікстура page) через форму входу. Свій, а не signIn з uat.ts: вендор після входу потрапляє
+ * на /runs (src/app/login/actions.ts), а не на «/». Пароль вводимо через evaluate — він не потрапляє в назви кроків.
+ * Особу перевіряємо за email на сторінці профілю.
+ */
 export async function signInAs(page: Page, actor: Actor) {
-  await signIn(page, actor.email, actor.password);
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(actor.email);
+  await page.getByLabel("Password").evaluate((el, value) => {
+    (el as HTMLInputElement).value = value;
+  }, actor.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL((url) => url.pathname === "/" || url.pathname === "/runs");
+  await page.goto("/");
   await expect(page.getByTestId("user-email")).toHaveText(actor.email);
 }
