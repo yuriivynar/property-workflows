@@ -47,7 +47,8 @@ function PageShell({
           </span>
           {signedIn ? <MainNav items={items} /> : null}
           <div className="ml-auto">
-            <ThemeSwitch value={theme} />
+            {/* key: якщо сервер віддав іншу тему (cookie змінили в іншій вкладці), перемикач відтворюється з нею. */}
+            <ThemeSwitch key={theme} value={theme} />
           </div>
         </div>
       </header>

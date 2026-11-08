@@ -30,6 +30,7 @@ function ThemeSwitch({ value }: { value: Theme }) {
               value={option}
               checked={theme === option}
               onChange={() => choose(option)}
+              onClick={() => choose(option)}
               className="peer absolute inset-0 size-full cursor-pointer opacity-0"
             />
             <span className="block rounded-full px-2 py-[11px] text-[13px] font-medium text-hero-muted transition-colors peer-checked:bg-hero-foreground peer-checked:text-hero peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-hero-foreground hover:text-hero-foreground sm:px-3 sm:py-1 sm:text-sm">

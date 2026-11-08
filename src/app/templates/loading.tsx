@@ -4,6 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <main aria-busy="true" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <p role="status" className="sr-only">
+        Loading…
+      </p>
       <Skeleton className="h-8 w-40" />
       <div className="flex flex-col gap-2">
         {Array.from({ length: 4 }, (_, index) => (

@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <main className="mx-auto grid w-full max-w-5xl flex-1 gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
-      <AuthHero className="hidden lg:grid" />
+      <AuthHero className="hidden lg:block" />
       <Card className="mx-auto w-full max-w-sm self-center [--card-spacing:--spacing(6)] sm:[--card-spacing:--spacing(8)]">
         <CardHeader>
           <CardTitle>

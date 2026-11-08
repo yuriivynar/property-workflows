@@ -66,7 +66,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
           </p>
         </div>
         {template.current_version ? (
-          <Link href={`/runs/new?template=${template.id}`} className={buttonVariants({ size: "lg" })}>
+          <Link data-slot="button" href={`/runs/new?template=${template.id}`} className={buttonVariants({ size: "lg" })}>
             Launch
           </Link>
         ) : null}

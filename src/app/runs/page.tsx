@@ -14,7 +14,8 @@ import { createClient } from "@/lib/supabase/server";
 // Рядок таблиці на телефоні стає карткою (сітка з двох колонок), а клітинки — її частинами (ADR 0007).
 const ROW_STACK =
   "max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:items-center max-sm:gap-x-3 max-sm:gap-y-2 max-sm:px-4 max-sm:py-3";
-const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal";
+// Довга назва без пробілів (до 100 символів) переноситься всередині слова, а не перекриває статус чи розсуває екран.
+const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]";
 
 // Список запусків. Які запуски видно, вирішує RLS (run_overview — security_invoker): менеджер — свої й ті, де він
 // виконавець; адміністратор — усі (AC-TASK-06). У рядку — назва шаблону, статус і прогрес «N of M done» (AC-TASK-09);
@@ -41,7 +42,7 @@ export default async function RunsPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">{LABELS.runsTitle}</h1>
-        <Link href="/runs/new" className={buttonVariants({ size: "lg", className: "max-sm:w-full" })}>
+        <Link data-slot="button" href="/runs/new" className={buttonVariants({ size: "lg", className: "max-sm:w-full" })}>
           {LABELS.launchTemplate}
         </Link>
       </div>
@@ -51,7 +52,7 @@ export default async function RunsPage() {
         </Alert>
       ) : runsListState(runs) === "table" && runs ? (
         <Table>
-          <TableHeader className="max-sm:hidden">
+          <TableHeader className="max-sm:sr-only">
             <TableRow>
               <TableHead>{LABELS.columnCase}</TableHead>
               <TableHead className="hidden sm:table-cell">{LABELS.columnTemplate}</TableHead>
@@ -116,7 +117,7 @@ async function VendorRuns() {
         </Alert>
       ) : runsListState(runs) === "table" && runs ? (
         <Table>
-          <TableHeader className="max-sm:hidden">
+          <TableHeader className="max-sm:sr-only">
             <TableRow>
               <TableHead>{LABELS.columnCase}</TableHead>
               <TableHead>{LABELS.columnStatus}</TableHead>

@@ -257,8 +257,9 @@
   }
 }
 
-/* Поява вмісту сторінки: дочірні елементи <main> по черзі (без руху, якщо користувач просив менше анімацій). */
-main > * {
+/* Поява вмісту сторінки: дочірні елементи <main> по черзі (без руху, якщо користувач просив менше анімацій).
+   Заглушки Skeleton мають власне мерехтіння, тож їх з появи виключено. */
+main > *:not([data-slot="skeleton"]) {
   animation: var(--animate-rise);
 }
 main > *:nth-child(2) {
@@ -505,16 +506,39 @@ main > *:nth-child(4) {
   }
 }
 
-/* Друк запуску: без шапки, кнопок і тіней — чекліст для виїзду на об'єкт. */
+/* Пауза руху панелі входу (кнопка в AuthHero): WCAG 2.2.2 — рух довше за 5 секунд можна зупинити. */
+[data-slot="auth-hero"][data-paused="true"] *,
+[data-slot="auth-hero"][data-paused="true"] *::before,
+[data-slot="auth-hero"][data-paused="true"] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Друк: без шапки й кнопок (чекліст запуску для виїзду на об'єкт), світлі токени незалежно від теми, щоб текст був
+   контрастним на білому папері. Форми не ховаємо: у редакторі в них назви розділів і задач. */
 @media print {
   header,
-  [data-slot="button"],
-  form {
+  [data-slot="button"] {
     display: none !important;
   }
-  body {
-    background: white;
-    color: black;
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.2 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.2 0 0);
+    --muted: oklch(0.96 0 0);
+    --muted-foreground: oklch(0.4 0 0);
+    --border: oklch(0.8 0 0);
+    --input: oklch(0.5 0 0);
+    --status-todo: oklch(0.93 0.008 255);
+    --status-todo-foreground: oklch(0.36 0.015 255);
+    --status-in-progress: oklch(0.915 0.041 250);
+    --status-in-progress-foreground: oklch(0.38 0.126 255);
+    --status-done: oklch(0.915 0.08 150);
+    --status-done-foreground: oklch(0.37 0.1 150);
+    --status-unpublished: oklch(0.94 0.075 90);
+    --status-unpublished-foreground: oklch(0.4 0.086 70);
   }
   main > * {
     animation: none !important;

@@ -86,7 +86,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       {/* Рядок збереження липне до верху: «Save» і «Unpublished changes» видно, поки прокручуєш довгий шаблон. */}
-      <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-start justify-between gap-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
+      <div className="static z-10 -mx-4 [@media(min-height:40rem)]:sticky [@media(min-height:40rem)]:top-0 flex flex-wrap items-start justify-between gap-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{workingName}</h1>
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
