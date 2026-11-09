@@ -16,7 +16,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * on delete cascade (інакше Auth відповідає «Database error deleting user»). У демо: leave_requests.employee_id.
  * Якщо таких таблиць немає (або всі FK — cascade), лишіть порожнім.
  */
-const OWNED_ROWS: { table: string; column: string }[] = [];
+// У нас: runs.run_manager_id → profiles без cascade (зріз 3 створює синтетичні запуски); run_sections і run_tasks
+// видаляються каскадом разом із запуском, а run_tasks.assignee_id (вендор, менеджер) — теж без cascade, тож запуски
+// мають зникнути РАНІШЕ за будь-якого користувача (порядок — у deleteUatUsers).
+const OWNED_ROWS: { table: string; column: string }[] = [{ table: "runs", column: "run_manager_id" }];
 
 /** Лише такі адреси прибирання має право видалити: uat-<run>[-<суфікс>]@example.test. */
 export const UAT_EMAIL = /^uat-[0-9a-z-]+@example\.test$/;
@@ -77,11 +80,15 @@ export async function deleteUatUsers(onlyEmail?: string): Promise<CleanupResult>
   const supabase = adminClient();
   const targets = (await listUatUsers(supabase)).filter((u) => !onlyEmail || u.email === onlyEmail);
   const deleted: string[] = [];
+  // Спершу рядки ВСІХ цілей, потім самі користувачі: задачі вендора лежать у запуску менеджера, і видалити вендора
+  // раніше за запуск неможливо (FK run_tasks.assignee_id без cascade).
   for (const u of targets) {
     for (const { table, column } of OWNED_ROWS) {
       const { error: rowsError } = await supabase.from(table).delete().eq(column, u.id);
       if (rowsError) throw rowsError;
     }
+  }
+  for (const u of targets) {
     const { error } = await supabase.auth.admin.deleteUser(u.id);
     if (error) throw error;
     deleted.push(u.email);
