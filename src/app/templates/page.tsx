@@ -25,7 +25,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   // не віддала б жодного (AC-VENDOR-08).
   if (templatePageAccess(user.role, "list") !== "ok") {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
       </main>
     );
@@ -40,19 +40,19 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
     .order("name");
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold">Templates</h1>
 
       {/* noValidate: порожню назву перевіряє дія й показує «Enter a template name» (AC-EDITOR-19), а не підказка браузера. */}
       {isAdmin ? (
         <form action={createTemplate} noValidate className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
             <Label htmlFor="new-template-name">Template name</Label>
             <Input
               id="new-template-name"
               name="name"
               required
-              className="w-72"
+              className="w-full sm:w-72"
               aria-invalid={nameError || undefined}
               aria-describedby={nameError ? "template-error" : undefined}
             />

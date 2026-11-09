@@ -2,7 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Токени — за DESIGN.md (розділ 2: значення й контраст). Новий токен — DESIGN.md → :root і обидва темні блоки → @theme inline.
+/* Токени — за DESIGN.md (розділ 2: значення й контраст), палітра «Lagoon» (ADR 0007). Новий токен: DESIGN.md → :root і
+   обидва темні блоки → @theme inline.
    Тема — за вибором «Theme» (ADR 0004): data-theme на <html> ставить сервер з cookie; без вибору — за пристроєм.
    Темні токени — у двох однакових блоках: системна темна тема (якщо не обрано Light) і обрана Dark; їхню рівність
    перевіряє tests/design/status-dark-contrast.test.ts. Варіант dark: Tailwind — за тією самою умовою. */
@@ -19,7 +20,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-heading: var(--font-sans);
   --color-background: var(--background);
@@ -29,6 +30,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -36,11 +38,23 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-glow: var(--glow);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-destructive-border: var(--destructive-border);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-hero: var(--hero);
+  --color-hero-hover: var(--hero-hover);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-border: var(--hero-border);
+  --color-hero-progress: var(--hero-progress);
+  --color-hero-done: var(--hero-done);
+  --color-fill-progress: var(--fill-progress);
+  --color-fill-done: var(--fill-done);
   --color-status-todo: var(--status-todo);
   --color-status-todo-foreground: var(--status-todo-foreground);
   --color-status-in-progress: var(--status-in-progress);
@@ -56,101 +70,179 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-card: 0 1px 2px var(--shade), 0 10px 28px -14px var(--shade);
+  --shadow-press: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 1px 2px var(--shade);
+  --shadow-press-hover: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 10px 20px -10px var(--primary);
+  --animate-rise: rise 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-pop: pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes pop {
+    0% {
+      transform: scale(0.8);
+    }
+    60% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
 }
 
 :root {
-  --radius: 0.375rem;
-  --background: oklch(0.985 0.002 285);
-  --foreground: oklch(0.21 0.01 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.01 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.01 285);
-  --primary: oklch(0.49 0.2 292);
-  --primary-foreground: oklch(0.985 0.002 285);
-  --secondary: oklch(0.955 0.006 285);
-  --secondary-foreground: oklch(0.25 0.01 285);
-  --muted: oklch(0.955 0.006 285);
-  --muted-foreground: oklch(0.47 0.015 285);
-  --accent: oklch(0.95 0.012 292);
-  --accent-foreground: oklch(0.21 0.01 285);
-  --destructive: oklch(0.52 0.2 27);
-  --destructive-foreground: oklch(0.985 0.002 285);
-  --border: oklch(0.9 0.006 285);
-  --input: oklch(0.62 0.015 285);
-  --ring: oklch(0.49 0.2 292);
-  --status-todo: oklch(0.94 0.005 285);
-  --status-todo-foreground: oklch(0.37 0.01 285);
-  --status-in-progress: oklch(0.93 0.045 250);
-  --status-in-progress-foreground: oklch(0.42 0.14 255);
-  --status-done: oklch(0.93 0.05 150);
-  --status-done-foreground: oklch(0.4 0.11 150);
-  --status-unpublished: oklch(0.94 0.07 85);
-  --status-unpublished-foreground: oklch(0.42 0.09 70);
+  --radius: 0.625rem;
+  --background: oklch(0.968 0.016 245);
+  --foreground: oklch(0.22 0.045 245);
+  --card: oklch(0.995 0.002 245);
+  --card-foreground: oklch(0.22 0.045 245);
+  --popover: oklch(0.995 0.002 245);
+  --popover-foreground: oklch(0.22 0.045 245);
+  --primary: oklch(0.47 0.079 195);
+  --primary-hover: oklch(0.4 0.068 195);
+  --primary-foreground: oklch(0.985 0.01 195);
+  --secondary: oklch(0.945 0.024 245);
+  --secondary-foreground: oklch(0.22 0.045 245);
+  --muted: oklch(0.945 0.024 245);
+  --muted-foreground: oklch(0.43 0.04 245);
+  --accent: oklch(0.925 0.032 245);
+  --accent-foreground: oklch(0.22 0.045 245);
+  --glow: oklch(0.95 0.024 245);
+  --destructive: oklch(0.5 0.2 27);
+  --destructive-foreground: oklch(0.99 0.004 27);
+  --destructive-surface: oklch(0.95 0.023 27);
+  --destructive-border: oklch(0.8 0.1 27);
+  --border: oklch(0.9 0.022 245);
+  --input: oklch(0.6 0.04 245);
+  --ring: oklch(0.22 0.045 245);
+  --hero: oklch(0.3 0.07 240);
+  --hero-hover: oklch(0.36 0.082 240);
+  --hero-foreground: oklch(0.97 0.012 240);
+  --hero-muted: oklch(0.84 0.04 240);
+  --hero-border: oklch(0.42 0.081 240);
+  --hero-progress: oklch(0.915 0.041 250);
+  --hero-done: oklch(0.915 0.08 150);
+  --fill-progress: oklch(0.54 0.162 252);
+  --fill-done: oklch(0.5 0.138 150);
+  --shade: oklch(0.25 0.05 245 / 0.1);
+  --status-todo: oklch(0.93 0.008 255);
+  --status-todo-foreground: oklch(0.36 0.015 255);
+  --status-in-progress: oklch(0.915 0.041 250);
+  --status-in-progress-foreground: oklch(0.38 0.126 255);
+  --status-done: oklch(0.915 0.08 150);
+  --status-done-foreground: oklch(0.37 0.1 150);
+  --status-unpublished: oklch(0.94 0.075 90);
+  --status-unpublished-foreground: oklch(0.4 0.086 70);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --background: oklch(0.17 0.01 285);
-    --foreground: oklch(0.96 0.003 285);
-    --card: oklch(0.21 0.012 285);
-    --card-foreground: oklch(0.96 0.003 285);
-    --popover: oklch(0.21 0.012 285);
-    --popover-foreground: oklch(0.96 0.003 285);
-    --primary: oklch(0.72 0.15 292);
-    --primary-foreground: oklch(0.17 0.02 292);
-    --secondary: oklch(0.27 0.012 285);
-    --secondary-foreground: oklch(0.96 0.003 285);
-    --muted: oklch(0.27 0.012 285);
-    --muted-foreground: oklch(0.73 0.012 285);
-    --accent: oklch(0.29 0.03 292);
-    --accent-foreground: oklch(0.96 0.003 285);
-    --destructive: oklch(0.7 0.17 25);
-    --destructive-foreground: oklch(0.17 0.01 285);
-    --border: oklch(0.32 0.012 285);
-    --input: oklch(0.52 0.015 285);
-    --ring: oklch(0.72 0.15 292);
-    --status-todo: oklch(0.3 0.01 285);
-    --status-todo-foreground: oklch(0.86 0.01 285);
-    --status-in-progress: oklch(0.3 0.07 255);
-    --status-in-progress-foreground: oklch(0.86 0.08 250);
-    --status-done: oklch(0.3 0.06 150);
-    --status-done-foreground: oklch(0.86 0.09 150);
-    --status-unpublished: oklch(0.32 0.06 80);
-    --status-unpublished-foreground: oklch(0.89 0.1 90);
+    --background: oklch(0.215 0.045 250);
+    --foreground: oklch(0.95 0.014 250);
+    --card: oklch(0.275 0.05 250);
+    --card-foreground: oklch(0.95 0.014 250);
+    --popover: oklch(0.275 0.05 250);
+    --popover-foreground: oklch(0.95 0.014 250);
+    --primary: oklch(0.8 0.12 195);
+    --primary-hover: oklch(0.85 0.125 195);
+    --primary-foreground: oklch(0.18 0.032 200);
+    --secondary: oklch(0.175 0.04 250);
+    --secondary-foreground: oklch(0.95 0.014 250);
+    --muted: oklch(0.175 0.04 250);
+    --muted-foreground: oklch(0.8 0.035 250);
+    --accent: oklch(0.325 0.055 250);
+    --accent-foreground: oklch(0.95 0.014 250);
+    --glow: oklch(0.3 0.07 250);
+    --destructive: oklch(0.72 0.17 25);
+    --destructive-foreground: oklch(0.17 0.03 27);
+    --destructive-surface: oklch(0.3 0.085 27);
+    --destructive-border: oklch(0.46 0.13 27);
+    --border: oklch(0.35 0.05 250);
+    --input: oklch(0.58 0.05 250);
+    --ring: oklch(0.95 0.014 250);
+    --hero: oklch(0.34 0.079 240);
+    --hero-hover: oklch(0.41 0.094 240);
+    --hero-foreground: oklch(0.96 0.014 240);
+    --hero-muted: oklch(0.82 0.045 240);
+    --hero-border: oklch(0.46 0.086 240);
+    --hero-progress: oklch(0.87 0.066 250);
+    --hero-done: oklch(0.87 0.11 150);
+    --fill-progress: oklch(0.72 0.15 250);
+    --fill-done: oklch(0.74 0.17 150);
+    --shade: oklch(0.08 0.03 250 / 0.55);
+    --status-todo: oklch(0.33 0.012 255);
+    --status-todo-foreground: oklch(0.88 0.012 255);
+    --status-in-progress: oklch(0.33 0.09 250);
+    --status-in-progress-foreground: oklch(0.87 0.066 250);
+    --status-done: oklch(0.32 0.075 150);
+    --status-done-foreground: oklch(0.87 0.11 150);
+    --status-unpublished: oklch(0.34 0.069 85);
+    --status-unpublished-foreground: oklch(0.9 0.12 90);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: oklch(0.17 0.01 285);
-  --foreground: oklch(0.96 0.003 285);
-  --card: oklch(0.21 0.012 285);
-  --card-foreground: oklch(0.96 0.003 285);
-  --popover: oklch(0.21 0.012 285);
-  --popover-foreground: oklch(0.96 0.003 285);
-  --primary: oklch(0.72 0.15 292);
-  --primary-foreground: oklch(0.17 0.02 292);
-  --secondary: oklch(0.27 0.012 285);
-  --secondary-foreground: oklch(0.96 0.003 285);
-  --muted: oklch(0.27 0.012 285);
-  --muted-foreground: oklch(0.73 0.012 285);
-  --accent: oklch(0.29 0.03 292);
-  --accent-foreground: oklch(0.96 0.003 285);
-  --destructive: oklch(0.7 0.17 25);
-  --destructive-foreground: oklch(0.17 0.01 285);
-  --border: oklch(0.32 0.012 285);
-  --input: oklch(0.52 0.015 285);
-  --ring: oklch(0.72 0.15 292);
-  --status-todo: oklch(0.3 0.01 285);
-  --status-todo-foreground: oklch(0.86 0.01 285);
-  --status-in-progress: oklch(0.3 0.07 255);
-  --status-in-progress-foreground: oklch(0.86 0.08 250);
-  --status-done: oklch(0.3 0.06 150);
-  --status-done-foreground: oklch(0.86 0.09 150);
-  --status-unpublished: oklch(0.32 0.06 80);
-  --status-unpublished-foreground: oklch(0.89 0.1 90);
+  --background: oklch(0.215 0.045 250);
+  --foreground: oklch(0.95 0.014 250);
+  --card: oklch(0.275 0.05 250);
+  --card-foreground: oklch(0.95 0.014 250);
+  --popover: oklch(0.275 0.05 250);
+  --popover-foreground: oklch(0.95 0.014 250);
+  --primary: oklch(0.8 0.12 195);
+  --primary-hover: oklch(0.85 0.125 195);
+  --primary-foreground: oklch(0.18 0.032 200);
+  --secondary: oklch(0.175 0.04 250);
+  --secondary-foreground: oklch(0.95 0.014 250);
+  --muted: oklch(0.175 0.04 250);
+  --muted-foreground: oklch(0.8 0.035 250);
+  --accent: oklch(0.325 0.055 250);
+  --accent-foreground: oklch(0.95 0.014 250);
+  --glow: oklch(0.3 0.07 250);
+  --destructive: oklch(0.72 0.17 25);
+  --destructive-foreground: oklch(0.17 0.03 27);
+  --destructive-surface: oklch(0.3 0.085 27);
+  --destructive-border: oklch(0.46 0.13 27);
+  --border: oklch(0.35 0.05 250);
+  --input: oklch(0.58 0.05 250);
+  --ring: oklch(0.95 0.014 250);
+  --hero: oklch(0.34 0.079 240);
+  --hero-hover: oklch(0.41 0.094 240);
+  --hero-foreground: oklch(0.96 0.014 240);
+  --hero-muted: oklch(0.82 0.045 240);
+  --hero-border: oklch(0.46 0.086 240);
+  --hero-progress: oklch(0.87 0.066 250);
+  --hero-done: oklch(0.87 0.11 150);
+  --fill-progress: oklch(0.72 0.15 250);
+  --fill-done: oklch(0.74 0.17 150);
+  --shade: oklch(0.08 0.03 250 / 0.55);
+  --status-todo: oklch(0.33 0.012 255);
+  --status-todo-foreground: oklch(0.88 0.012 255);
+  --status-in-progress: oklch(0.33 0.09 250);
+  --status-in-progress-foreground: oklch(0.87 0.066 250);
+  --status-done: oklch(0.32 0.075 150);
+  --status-done-foreground: oklch(0.87 0.11 150);
+  --status-unpublished: oklch(0.34 0.069 85);
+  --status-unpublished-foreground: oklch(0.9 0.12 90);
 }
 
 @layer base {
@@ -162,5 +254,293 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Поява вмісту сторінки: дочірні елементи <main> по черзі (без руху, якщо користувач просив менше анімацій).
+   Заглушки Skeleton мають власне мерехтіння, тож їх з появи виключено. */
+main > *:not([data-slot="skeleton"]) {
+  animation: var(--animate-rise);
+}
+main > *:nth-child(2) {
+  animation-delay: 0.05s;
+}
+main > *:nth-child(3) {
+  animation-delay: 0.1s;
+}
+main > *:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+/* «Rename» з'являється, лише поки поле назви у фокусі (Enter теж зберігає); поза @layer, щоб перемагати утиліти кнопки. */
+.rename-btn {
+  max-width: 0;
+  margin-left: -0.5rem;
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.16s,
+    max-width 0.2s,
+    padding 0.2s,
+    margin 0.2s;
+}
+.rename-scope:focus-within .rename-btn {
+  max-width: 7rem;
+  margin-left: 0;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Вхід: кільце процесу заповнюється від «to do» до «completed» (декоративне, aria-hidden у розмітці). */
+.auth-orb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1.5px dashed var(--hero-border);
+  border-radius: 9999px;
+  animation: auth-spin 60s linear infinite;
+}
+.auth-orb::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  margin-left: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--hero-muted);
+}
+.auth-orb-1 {
+  width: 330px;
+  height: 330px;
+  margin: -165px 0 0 -165px;
+  animation-duration: 36s;
+}
+.auth-orb-2 {
+  width: 470px;
+  height: 470px;
+  margin: -235px 0 0 -235px;
+  animation-duration: 58s;
+  animation-direction: reverse;
+}
+.auth-orb-3 {
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px;
+  animation-duration: 84s;
+}
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.auth-ring-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid var(--hero-done);
+  opacity: 0;
+  animation: auth-burst 10s infinite both;
+}
+.auth-ring-track {
+  stroke: var(--hero-border);
+}
+.auth-ring-fill {
+  stroke-dasharray: 100;
+  animation: auth-ringfill 10s cubic-bezier(0.4, 0, 0.2, 1) infinite both;
+}
+@keyframes auth-ringfill {
+  0%,
+  20% {
+    stroke-dashoffset: 96;
+    stroke: var(--hero-muted);
+    opacity: 1;
+  }
+  32%,
+  46% {
+    stroke-dashoffset: 52;
+    stroke: var(--hero-progress);
+  }
+  60%,
+  92% {
+    stroke-dashoffset: 0;
+    stroke: var(--hero-done);
+    opacity: 1;
+  }
+  98%,
+  100% {
+    stroke-dashoffset: 0;
+    stroke: var(--hero-done);
+    opacity: 0;
+  }
+}
+@keyframes auth-burst {
+  0%,
+  60% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  62% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+.auth-core {
+  animation: auth-corepop 10s infinite both;
+}
+@keyframes auth-corepop {
+  0%,
+  60% {
+    transform: scale(1);
+  }
+  64% {
+    transform: scale(1.12);
+  }
+  70%,
+  100% {
+    transform: scale(1);
+  }
+}
+.auth-word {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+.auth-word-1::before {
+  content: "to do";
+}
+.auth-word-2::before {
+  content: "in progress";
+}
+.auth-word-3::before {
+  content: "completed";
+}
+.auth-word-1 {
+  animation: auth-word-1 10s infinite both;
+}
+.auth-word-2 {
+  animation: auth-word-2 10s infinite both;
+}
+.auth-word-3 {
+  animation: auth-word-3 10s infinite both;
+}
+@keyframes auth-word-1 {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  5%,
+  18% {
+    opacity: 1;
+    transform: none;
+  }
+  24%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes auth-word-2 {
+  0%,
+  24% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  30%,
+  56% {
+    opacity: 1;
+    transform: none;
+  }
+  62%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes auth-word-3 {
+  0%,
+  60% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  66%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .auth-word-1,
+  .auth-word-2 {
+    display: none;
+  }
+  .auth-word-3 {
+    opacity: 1;
+  }
+  .auth-ring-fill {
+    stroke-dashoffset: 0;
+    stroke: var(--hero-done);
+  }
+}
+
+/* Пауза руху панелі входу (кнопка в AuthHero): WCAG 2.2.2 — рух довше за 5 секунд можна зупинити. */
+[data-slot="auth-hero"][data-paused="true"] *,
+[data-slot="auth-hero"][data-paused="true"] *::before,
+[data-slot="auth-hero"][data-paused="true"] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Друк: без шапки й кнопок (чекліст запуску для виїзду на об'єкт), світлі токени незалежно від теми, щоб текст був
+   контрастним на білому папері. Форми не ховаємо: у редакторі в них назви розділів і задач. */
+@media print {
+  header,
+  [data-slot="button"] {
+    display: none !important;
+  }
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.2 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.2 0 0);
+    --muted: oklch(0.96 0 0);
+    --muted-foreground: oklch(0.4 0 0);
+    --border: oklch(0.8 0 0);
+    --input: oklch(0.5 0 0);
+    --status-todo: oklch(0.93 0.008 255);
+    --status-todo-foreground: oklch(0.36 0.015 255);
+    --status-in-progress: oklch(0.915 0.041 250);
+    --status-in-progress-foreground: oklch(0.38 0.126 255);
+    --status-done: oklch(0.915 0.08 150);
+    --status-done-foreground: oklch(0.37 0.1 150);
+    --status-unpublished: oklch(0.94 0.075 90);
+    --status-unpublished-foreground: oklch(0.4 0.086 70);
+  }
+  main > * {
+    animation: none !important;
   }
 }

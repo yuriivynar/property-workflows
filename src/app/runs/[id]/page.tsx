@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
@@ -66,7 +67,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const names = new Map((staff ?? []).map((person) => [person.id, staffLabel(person)]));
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold" data-testid="case-name">
           {run.case_name}
@@ -78,18 +79,29 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           ) : null}
         </p>
       </div>
-      <dl className="grid grid-cols-[max-content_1fr] items-center gap-x-4 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">{LABELS.runManager}</dt>
-        <dd data-testid="run-manager">{names.get(runManagerId) ?? "—"}</dd>
-        <dt className="text-muted-foreground">{LABELS.status}</dt>
-        <dd data-testid="run-status">
-          <StatusBadge status={run.status ?? ""} />
-        </dd>
-        <dt className="text-muted-foreground">{LABELS.progress}</dt>
-        <dd className="tabular-nums" data-testid="run-progress">
-          {formatProgress(run.done_count ?? 0, run.total_count ?? 0)}
-        </dd>
-      </dl>
+      <Card className="gap-0 py-0">
+        <dl className="grid divide-y divide-border text-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div className="flex flex-col gap-1.5 px-4 py-3.5">
+            <dt className="text-muted-foreground">{LABELS.runManager}</dt>
+            <dd className="font-medium break-all" data-testid="run-manager">
+              {names.get(runManagerId) ?? "—"}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1.5 px-4 py-3.5">
+            <dt className="text-muted-foreground">{LABELS.status}</dt>
+            <dd data-testid="run-status">
+              <StatusBadge status={run.status ?? ""} />
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1.5 px-4 py-3.5">
+            <dt className="text-muted-foreground">{LABELS.progress}</dt>
+            <dd className="flex items-center gap-3 tabular-nums" data-testid="run-progress">
+              <ProgressBar done={run.done_count ?? 0} total={run.total_count ?? 0} />
+              <span className="font-medium">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</span>
+            </dd>
+          </div>
+        </dl>
+      </Card>
 
       {message ? (
         <Alert variant="destructive">
@@ -105,13 +117,17 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
             {(tasks ?? [])
               .filter((task) => task.section_id === section.id)
               .map((task) => (
-                <li key={task.id} data-testid="run-task" className="flex flex-col gap-2 px-4 py-3 text-sm">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={task.id}
+                  data-testid="run-task"
+                  className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
+                >
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <span>
                       {task.name}{" "}
                       <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
-                    <span className="flex flex-wrap items-center gap-x-4 text-muted-foreground">
+                    <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-foreground">
                       <span>{names.get(task.assignee_id) ?? "—"}</span>
                       <span data-testid="task-status">
                         <StatusBadge status={task.status} />
@@ -148,7 +164,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
 function RunNotFound({ message }: { message?: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold">{MESSAGES.runNotFound}</h1>
       {message ? (
         <Alert variant="destructive">
@@ -179,7 +195,7 @@ async function VendorRun({ id, message }: { id: string; message?: string }) {
   if (!run || !tasks?.length) return <RunNotFound message={message} />;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold" data-testid="case-name">
           {run.case_name}
@@ -201,8 +217,12 @@ async function VendorRun({ id, message }: { id: string; message?: string }) {
           <Card className="gap-0 py-0">
             <ul className="flex flex-col divide-y divide-border">
               {section.tasks.map((task) => (
-                <li key={task.id} data-testid="run-task" className="flex flex-col gap-2 px-4 py-3 text-sm">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={task.id}
+                  data-testid="run-task"
+                  className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
+                >
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <span>
                       {task.name} <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>

@@ -34,7 +34,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
   if (profile?.role === "vendor") {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
       </main>
     );
@@ -68,7 +68,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const colleagues = (staffResult?.data ?? []).filter((person) => person.id !== claims.sub);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <h1 className="text-2xl font-semibold">{LABELS.launchTemplate}</h1>
 
       <form action="/runs/new" className="flex flex-wrap items-end gap-3">

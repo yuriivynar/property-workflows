@@ -8,7 +8,7 @@ function TextLink({ className, ...props }: React.ComponentProps<typeof Link>) {
     <Link
       data-slot="text-link"
       className={cn(
-        "rounded-sm text-foreground underline decoration-muted-foreground underline-offset-4 outline-none hover:decoration-foreground hover:decoration-2 focus-visible:ring-3 focus-visible:ring-ring/50",
+        "rounded-sm text-foreground underline decoration-input underline-offset-4 outline-none transition-[text-decoration-color] hover:decoration-foreground hover:decoration-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className
       )}
       {...props}

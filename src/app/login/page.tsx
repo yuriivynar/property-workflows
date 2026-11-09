@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthHero } from "@/components/ui/auth-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const message = typeof error === "string" ? ERRORS[error] : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
-      <Card>
+    <main className="mx-auto grid w-full max-w-5xl flex-1 gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
+      <AuthHero className="hidden lg:block" />
+      <Card className="mx-auto w-full max-w-sm self-center [--card-spacing:--spacing(6)] sm:[--card-spacing:--spacing(8)]">
         <CardHeader>
           <CardTitle>
             <h1 className="text-2xl font-semibold">Sign in</h1>
@@ -46,7 +48,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 <AlertDescription>{message}</AlertDescription>
               </Alert>
             ) : null}
-            <Button type="submit">Sign in</Button>
+            <Button type="submit" size="lg" className="w-full">
+              Sign in
+            </Button>
           </form>
         </CardContent>
       </Card>

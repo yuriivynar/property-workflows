@@ -38,7 +38,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
 
   if (templatePageAccess(user.role, "edit") !== "ok") {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -63,7 +63,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
 
   if (!template) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.templateNotFound} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -72,7 +72,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   // Помилку читання незбережених змін не показуємо як порожній шаблон (рев'ю CodeRabbit, PR #18).
   if (sectionsError || tasksError || draftNameError) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Notice message={TEMPLATE_MESSAGES.notLoaded} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
       </main>
     );
@@ -84,8 +84,9 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   const nameError = error === "TEMPLATE_NAME_REQUIRED" || error === "NAME_TAKEN";
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      {/* Рядок збереження липне до верху: «Save» і «Unpublished changes» видно, поки прокручуєш довгий шаблон. */}
+      <div className="static z-10 -mx-4 [@media(min-height:40rem)]:sticky [@media(min-height:40rem)]:top-0 flex flex-wrap items-start justify-between gap-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{workingName}</h1>
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -109,20 +110,20 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
       ) : null}
 
       {/* noValidate: порожню назву перевіряє дія й показує «Enter a template name». */}
-      <form action={renameTemplate} noValidate className="flex flex-wrap items-end gap-2">
+      <form action={renameTemplate} noValidate className="rename-scope flex flex-wrap items-end gap-2">
         {hidden}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
           <Label htmlFor="template-name">Template name</Label>
           <Input
             id="template-name"
             name="name"
             defaultValue={workingName}
-            className="w-72"
+            className="w-full sm:w-72"
             aria-invalid={nameError || undefined}
             aria-describedby={nameError ? "editor-error" : undefined}
           />
         </div>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="rename-btn">
           Rename
         </Button>
       </form>
@@ -136,14 +137,19 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
         <section key={section.id} className="flex flex-col gap-2">
           <Card className="gap-4 px-4">
             <div className="flex flex-wrap items-end gap-2">
-              <form action={renameSection} noValidate className="flex flex-wrap items-end gap-2">
+              <form action={renameSection} noValidate className="rename-scope flex flex-wrap items-end gap-2">
                 {hidden}
                 <input type="hidden" name="section_id" value={section.id} />
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
                   <Label htmlFor={`section-${section.id}`}>Section</Label>
-                  <Input id={`section-${section.id}`} name="name" defaultValue={section.name} className="w-64" />
+                  <Input
+                    id={`section-${section.id}`}
+                    name="name"
+                    defaultValue={section.name}
+                    className="w-full sm:w-64"
+                  />
                 </div>
-                <Button type="submit" variant="outline">
+                <Button type="submit" variant="outline" className="rename-btn">
                   Rename
                 </Button>
               </form>
@@ -156,16 +162,21 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                 .filter((task) => task.section_id === section.id)
                 .map((task, taskIndex, sectionTasks) => (
                   <li key={task.id} data-testid="editor-task" className="flex flex-wrap items-end gap-2 py-3 text-sm">
-                    <form action={renameTask} noValidate className="flex flex-wrap items-end gap-2">
+                    <form action={renameTask} noValidate className="rename-scope flex flex-wrap items-end gap-2 max-sm:w-full">
                       {hidden}
                       <input type="hidden" name="task_id" value={task.id} />
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
                         <Label htmlFor={`task-${task.id}`} className="font-normal">
                           Task <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                         </Label>
-                        <Input id={`task-${task.id}`} name="name" defaultValue={task.name} className="w-64" />
+                        <Input
+                          id={`task-${task.id}`}
+                          name="name"
+                          defaultValue={task.name}
+                          className="w-full sm:w-64"
+                        />
                       </div>
-                      <Button type="submit" variant="outline">
+                      <Button type="submit" variant="outline" className="rename-btn">
                         Rename
                       </Button>
                     </form>
@@ -173,7 +184,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                       {hidden}
                       <input type="hidden" name="task_id" value={task.id} />
                       <input type="hidden" name="is_required" value={task.is_required ? "false" : "true"} />
-                      <Button type="submit" variant="outline">
+                      <Button type="submit" variant="ghost" size="sm">
                         {task.is_required ? "Make optional" : "Make required"}
                       </Button>
                     </form>
@@ -200,7 +211,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                             ))}
                           </NativeSelect>
                         </div>
-                        <Button type="submit" variant="outline">
+                        <Button type="submit" variant="ghost" size="sm">
                           Move
                         </Button>
                       </form>
@@ -208,7 +219,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
                     <form action={removeTask}>
                       {hidden}
                       <input type="hidden" name="task_id" value={task.id} />
-                      <Button type="submit" variant="ghost">
+                      <Button type="submit" variant="ghost" size="sm">
                         Remove
                       </Button>
                     </form>
@@ -258,10 +269,10 @@ function MoveButtons({
       <input type="hidden" name="template_id" value={templateId} />
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="item_id" value={itemId} />
-      <Button type="submit" name="direction" value="up" variant="outline" disabled={first}>
+      <Button type="submit" name="direction" value="up" variant="ghost" size="sm" disabled={first}>
         Move up
       </Button>
-      <Button type="submit" name="direction" value="down" variant="outline" disabled={last}>
+      <Button type="submit" name="direction" value="down" variant="ghost" size="sm" disabled={last}>
         Move down
       </Button>
     </form>

@@ -1,11 +1,12 @@
 import { cn } from "cn"
-import { TextLink } from "@/components/ui/text-link"
-import { ThemeSelect } from "@/components/ui/theme-select"
+import { MainNav } from "@/components/ui/main-nav"
+import { ThemeSwitch } from "@/components/ui/theme-switch"
 import type { Theme } from "@/lib/theme"
 
-// Спільний макет усіх сторінок: назва продукту й навігація однаково зверху, вміст — нижче. Сторінка входу, відмова
-// («Not enough rights») і «не знайдено» — у тому самому макеті (DESIGN.md, «Стани»; AC-DSYS-02, AC-DSYS-03).
-// Вибір «Theme» — на кожній сторінці, зокрема на сторінці входу (ADR 0004; AC-DSYS-05, AC-DSYS-06).
+// Спільний макет усіх сторінок: кольорова шапка з назвою продукту, навігацією й вибором «Theme», вміст — нижче.
+// Сторінка входу, відмова («Not enough rights») і «не знайдено» — у тому самому макеті (DESIGN.md, «Стани»; AC-DSYS-02,
+// AC-DSYS-03). Вибір «Theme» — на кожній сторінці, зокрема на сторінці входу (ADR 0004; AC-DSYS-05, AC-DSYS-06).
+// На телефоні: назва й «Theme» в одному рядку, навігація — окремим рядком нижче.
 function PageShell({
   signedIn,
   showTemplates = true,
@@ -19,20 +20,35 @@ function PageShell({
   children: React.ReactNode
   className?: string
 }) {
+  const items = [
+    ...(showTemplates ? [{ href: "/templates", label: "Templates" }] : []),
+    { href: "/runs", label: "Runs" },
+    { href: "/", label: "Profile" },
+  ]
   return (
     <div data-slot="page-shell" className={cn("flex min-h-full flex-1 flex-col", className)}>
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-          <span className="text-sm font-semibold">Property workflows</span>
-          <div className="flex flex-wrap items-center gap-4">
-            {signedIn ? (
-              <nav aria-label="Main" className="flex gap-4 text-sm">
-                {showTemplates ? <TextLink href="/templates">Templates</TextLink> : null}
-                <TextLink href="/runs">Runs</TextLink>
-                <TextLink href="/">Profile</TextLink>
-              </nav>
-            ) : null}
-            <ThemeSelect value={theme} />
+      <header className="border-b border-hero-border bg-hero text-hero-foreground">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 sm:gap-x-6 sm:min-h-[60px] sm:px-6 sm:py-0">
+          <span className="flex items-center gap-2.5 text-[15px] font-semibold whitespace-nowrap sm:text-base">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0 sm:size-7">
+              <rect width="24" height="24" rx="6" className="fill-hero-foreground" />
+              <path
+                d="M7 17h5v-5h5V8"
+                fill="none"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="stroke-hero"
+              />
+              <circle cx="7" cy="17" r="1.6" className="fill-hero" />
+              <circle cx="17" cy="8" r="1.6" className="fill-hero" />
+            </svg>
+            Property workflows
+          </span>
+          {signedIn ? <MainNav items={items} /> : null}
+          <div className="ml-auto">
+            {/* key: якщо сервер віддав іншу тему (cookie змінили в іншій вкладці), перемикач відтворюється з нею. */}
+            <ThemeSwitch key={theme} value={theme} />
           </div>
         </div>
       </header>
