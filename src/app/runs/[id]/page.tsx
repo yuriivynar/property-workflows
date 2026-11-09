@@ -196,7 +196,9 @@ async function VendorRun({ id, message }: { id: string; message?: string }) {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <Alert variant="destructive">
-          <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
+          <AlertDescription>
+            <h1 className="text-base font-semibold">{MESSAGES.unexpected}</h1>
+          </AlertDescription>
         </Alert>
         <TextLink href="/runs" className="w-fit text-sm">
           {LABELS.backToRuns}
