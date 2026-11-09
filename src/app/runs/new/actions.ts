@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const ASSIGNEE_FIELD = "assignee:";
 
+// Призначення виконавців із форми: поля «assignee:<id задачі>»; порожнє значення пропускаємо.
 function assignmentsFrom(formData: FormData): Record<string, string> {
   const assignments: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
@@ -20,7 +21,6 @@ function assignmentsFrom(formData: FormData): Record<string, string> {
 
 const canLaunch = (user: RoleCheck) => user.ok && user.role !== "vendor";
 
-// Призначення виконавців із форми: поля «assignee:<id задачі>»; порожнє значення пропускаємо.
 // Запуск шаблону для випадку (openspec/specs/run-launch). Перевірка назви тут — щоб показати повідомлення без запиту;
 // остаточно правила виконує функція бази launch_run (одна транзакція: запуск, розділи, задачі).
 export async function launchRun(formData: FormData) {
