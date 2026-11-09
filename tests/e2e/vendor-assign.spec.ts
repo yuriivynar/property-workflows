@@ -160,6 +160,8 @@ test(
           // Розгортаємо той самий select у список (size = число пунктів), щоб кадр «Тоді» показав усі пункти вибору.
           await picker.evaluate((select: HTMLSelectElement) => {
             select.size = select.options.length;
+            // Фіксована висота h-10 обрізає розгорнутий список до двох рядків.
+            select.style.height = "auto";
           });
 
           const directory = await (await clientFor(managerA)).rpc("staff_directory");
