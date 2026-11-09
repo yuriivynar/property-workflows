@@ -156,6 +156,12 @@ test(
             await expect(page.locator("body")).not.toContainText(person.fullName);
           }
 
+          // Закритий нативний select на кадрі показує лише «Me (run manager)», а відкритого списку знімок не бачить.
+          // Розгортаємо той самий select у список (size = число пунктів), щоб кадр «Тоді» показав усі пункти вибору.
+          await picker.evaluate((select: HTMLSelectElement) => {
+            select.size = select.options.length;
+          });
+
           const directory = await (await clientFor(managerA)).rpc("staff_directory");
           expect(directory.error).toBeNull();
           for (const person of directory.data as Record<string, unknown>[]) {
