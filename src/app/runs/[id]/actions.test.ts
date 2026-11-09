@@ -9,6 +9,7 @@ const TASK = "10000000-0000-4000-8000-0000000000b1";
 const state = vi.hoisted(() => ({
   task: null as { run_id: string } | null,
   selectError: null as { message: string } | null,
+  profile: { role: "vendor" } as { role: string } | null,
   rpc: vi.fn(async () => ({ error: null })),
 }));
 
@@ -21,9 +22,12 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: { claims: { sub: "user-1" } } }) },
-    from: () => ({
+    from: (table: string) => ({
       select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: state.task, error: state.selectError }) }),
+        eq: () => ({
+          maybeSingle: async () =>
+            table === "profiles" ? { data: state.profile, error: null } : { data: state.task, error: state.selectError },
+        }),
       }),
     }),
     rpc: state.rpc,
@@ -49,7 +53,16 @@ describe("markTaskDone", () => {
   beforeEach(() => {
     state.task = null;
     state.selectError = null;
+    state.profile = { role: "vendor" };
     state.rpc.mockClear();
+  });
+
+  it("AC-TASK-03: користувач без профілю з відомою роллю — NOT_ALLOWED, mark_task_done не викликано", async () => {
+    state.profile = null;
+    state.task = { run_id: RUN };
+
+    expect(await redirectOf(markTaskDone(form(RUN, TASK)))).toBe(`REDIRECT:/runs/${RUN}?error=NOT_ALLOWED`);
+    expect(state.rpc).not.toHaveBeenCalled();
   });
 
   it("AC-TASK-03: задача з іншого запуску — NOT_ALLOWED на сторінці запуску з форми, mark_task_done не викликано", async () => {

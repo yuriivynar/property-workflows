@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { currentUser } from "@/lib/auth/require-role";
 import { errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,8 +13,8 @@ export async function markTaskDone(formData: FormData) {
   const taskId = String(formData.get("task_id") ?? "");
 
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) {
+  const user = await currentUser(supabase);
+  if (!user.ok && user.reason === "NOT_SIGNED_IN") {
     redirect("/login");
   }
 
@@ -22,6 +23,10 @@ export async function markTaskDone(formData: FormData) {
     redirect("/runs");
   }
   const runPath = `/runs/${runId}`;
+  // Без профілю з відомою роллю нічого не позначаємо; хто саме може позначити задачу, вирішує mark_task_done.
+  if (!user.ok) {
+    redirect(`${runPath}?error=NOT_ALLOWED`);
+  }
   if (!isUuid(taskId)) {
     redirect(`${runPath}?error=NOT_ALLOWED`);
   }

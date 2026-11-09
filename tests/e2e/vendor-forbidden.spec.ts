@@ -31,6 +31,7 @@ test(
       let taskOneId = "";
       let taskOneName = "";
       let rpcMessage: string | undefined;
+      let updateErrorCode: string | undefined;
       let updateRows: unknown[] = [];
 
       await given(
@@ -58,6 +59,7 @@ test(
         rpcMessage = rpc.error?.message;
         // І прямий запис у таблицю задач.
         const update = await vendorClient.from("run_tasks").update({ status: "done" }).eq("id", taskOneId).select();
+        updateErrorCode = update.error?.code;
         updateRows = update.data ?? [];
         await page.reload();
       });
@@ -83,6 +85,8 @@ test(
           await expect(page.getByTestId("run-progress")).toHaveText("0 of 5 done");
 
           expect(rpcMessage).toContain("NOT_ALLOWED");
+          // Прямий запис або відхилено правами (42501), або відфільтровано RLS без помилки; інша помилка (мережа) — не доказ.
+          expect(updateErrorCode ?? "42501").toBe("42501");
           expect(updateRows).toHaveLength(0);
           expect((await runTasks(runId)).map((task) => task.status)).toEqual(["to_do", "to_do", "to_do", "to_do", "to_do"]);
         },
@@ -148,15 +152,16 @@ test(
       let version = 0;
       let before: string[] = [];
       let launchMessage: string | undefined;
+      let insertErrorCode: string | undefined;
       let insertRows: unknown[] = [];
 
       await given("vendor V signed in and the template \"Tenant move-in\" with a current version", async () => {
         const manager = await cast.create("mgr-a", "manager");
         vendor = await cast.create("vnd", "vendor");
-        // «Current version 1» з AC: на цьому стеку поточна версія — та, що збережена в шаблоні (на проді після
-        // AC-EDITOR-07 це вже 2); важливо, що шаблон збережено й адміністратор чи менеджер його запустили б.
+        // «Current version 1» з AC: поточну версію читаємо з бази (currentTemplate кидає виняток, якщо шаблон ніколи не
+        // зберігали). На проді й у CI після фікстури AC-EDITOR-07 вона 2, а не 1 — це відхилення «Дано» від тексту AC
+        // описано в docs/qa/proof-pack.md; «Тоді» (запуск не створено) від версії не залежить.
         ({ version } = await currentTemplate(TENANT_MOVE_IN));
-        expect(version).toBeGreaterThanOrEqual(1);
         // У V є один запуск зі своєю задачею — щоб «список запусків не змінився» означало щось більше за порожній список.
         await launchApartment12(manager, vendor);
         await signInAs(page, vendor);
@@ -185,6 +190,7 @@ test(
             run_manager_id: vendor.id,
           })
           .select();
+        insertErrorCode = insert.error?.code;
         insertRows = insert.data ?? [];
         await page.goto("/runs");
       });
@@ -212,6 +218,7 @@ test(
           await expect(page.locator("body")).not.toContainText(attemptName);
 
           expect(launchMessage).toContain("LAUNCH_NOT_ALLOWED");
+          expect(insertErrorCode).toBe("42501");
           expect(insertRows).toHaveLength(0);
           expect(await countRuns({ runManagerId: vendor.id })).toBe(0);
           expect(await countRuns({ caseName: attemptName })).toBe(0);
