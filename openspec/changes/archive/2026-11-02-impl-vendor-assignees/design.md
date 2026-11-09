@@ -6,9 +6,12 @@
 `launch_run`, `mark_task_done`, `staff_directory`). Зріз 3 додає третю роль, яка бачить і змінює менше за менеджера:
 лише свої задачі. Головний ризик — розкрити вендору дані, які матриця прав закриває (шаблони, чужі задачі, email колег,
 назву й версію шаблону запуску, прогрес усього запуску), прямим запитом до REST, а не лише на сторінці («Припущення»
-PM: кожне обмеження матриці діє й для прямих запитів).
+PM: кожне обмеження матриці діє й для прямих запитів). Рішення згруповано за розділами «UI і компоненти», «Дані й RLS»
+і «Auth»; кожне — з AC ID.
 
 ## Decisions
+
+### Дані й RLS
 
 1. **Роль `vendor` — новою міграцією** `…_vendor_role.sql` (AC-VENDOR-01…10). Порядок — як у
    `20261012000000_profiles_and_roles.sql`: зняти `profiles_role_check` → новий з `'vendor'`. Наявні дані й `default`
@@ -39,19 +42,35 @@ PM: кожне обмеження матриці діє й для прямих �
    менеджеру змінять роль на `vendor` (питання solomchaak/property-workflows-spec#45), він позначатиме лише задачі, де
    він виконавець. Решта логіки (підтвердження останньої обов'язкової, завершення запуску) — без змін, як для всіх
    («Припущення» PM; питання solomchaak/property-workflows-spec#43 відкрите).
-7. **Застосунок:**
-   - `AppRole` += `vendor`; `currentUser()` приймає вендора, `requireAdmin()` — як раніше лише `admin`;
-   - `templatePageAccess(vendor, …)` — «Not enough rights» на кожній сторінці шаблонів, зокрема на списку
-     (AC-VENDOR-08); `/runs/new` — так само (матриця: «Launch a template» — «—»);
-   - `/runs` для вендора — `VendorRuns`: «Case», «Status», «Your tasks: N of K done»; порожньо — `EmptyState`
-     «No tasks assigned to you yet.» без посилання (AC-VENDOR-03, AC-VENDOR-10); без назви шаблону — робоче рішення до
-     solomchaak/property-workflows-spec#42;
-   - `/runs/[id]` для вендора — `VendorRun`: заголовок — назва випадку, рядок «Your tasks: N of K done», задачі за
-     розділами з `StatusBadge` і `MarkDoneButton`; без менеджера запуску, шаблону, версії, email і прогресу всього
-     запуску; без його задач — «Run not found» (AC-VENDOR-04…06; заголовок і рядок — робоче рішення до
-     solomchaak/property-workflows-spec#41);
-   - навігація без «Templates» для вендора, після входу без посилання — `/runs` (робоче рішення до
-     solomchaak/property-workflows-spec#44).
+7. **Права на колонки й функції** (AC-VENDOR-07, AC-VENDOR-09): прямий запис вендора в `runs` і `run_tasks` закрито
+   відсутністю `grant insert/update` (відмова `42501`), а не лише політикою; нові функції — `revoke execute … from
+   public, anon`, `grant execute … to authenticated`.
+
+### Auth
+
+8. **Роль — з `profiles.role`, ніколи з `user_metadata`** (AC-VENDOR-07, AC-VENDOR-08, AC-VENDOR-09): `AppRole` += `vendor`;
+   `currentUser()` читає роль з `profiles` за `claims.sub` після `getClaims()`; `requireAdmin()` — як раніше лише `admin`.
+9. **Server Action перевіряє вхід і роль до першого запису** (AC-VENDOR-09, AC-VENDOR-07): `launchRun` викликає
+   `currentUser()` і для вендора повертає `LAUNCH_NOT_ALLOWED` до `rpc("launch_run")`; `markTaskDone` читає роль до
+   `rpc("mark_task_done")`, а хто саме може позначити задачу — вирішує функція бази. База лишається другою лінією захисту
+   (правило проєкту, `scripts/check-actions-claims.mjs`).
+10. **Сторінки шаблонів і запуску** (AC-VENDOR-08, AC-VENDOR-09): `templatePageAccess(vendor, …)` — «Not enough rights»
+    на кожній сторінці шаблонів, зокрема на списку; `/runs/new` — так само (матриця: «Launch a template» — «—»).
+    Після входу вендор потрапляє на `/runs` (робоче рішення до solomchaak/property-workflows-spec#44).
+
+### UI і компоненти
+
+11. **`/runs` для вендора — `VendorRuns`** (AC-VENDOR-03, AC-VENDOR-10): колонки «Case», «Status», «Your tasks: N of K
+    done»; порожньо — `EmptyState` «No tasks assigned to you yet.» без посилання й без порожньої таблиці; без назви
+    шаблону — робоче рішення до solomchaak/property-workflows-spec#42.
+12. **`/runs/[id]` для вендора — `VendorRun`** (AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-06): заголовок — назва випадку,
+    рядок «Your tasks: N of K done», задачі за розділами з `StatusBadge` і `MarkDoneButton`; без менеджера запуску,
+    шаблону, версії, email і прогресу всього запуску; без його задач — «Run not found»; збій бази — повідомлення про
+    помилку, а не «Run not found»; заголовок і рядок — робоче рішення до solomchaak/property-workflows-spec#41.
+13. **Вибір виконавця в «Launch a template»** (AC-VENDOR-01, AC-VENDOR-02): нативний `NativeSelect` на задачу, пункти —
+    «Me (run manager)» і email колег з `staff_directory` (без імен і ролей).
+14. **Навігація** (AC-VENDOR-08): без «Templates» для вендора (`MainNav`); спільні компоненти дизайн-системи
+    (`StatusBadge`, `EmptyState`, `Notice`, `TextLink`), нових токенів немає.
 
 ## Risks / Trade-offs
 
@@ -60,3 +79,5 @@ PM: кожне обмеження матриці діє й для прямих �
 - `runs` для вендора закрито повністю: сторінки вендора читають лише функції, а не таблиці; спільний код сторінок
   менеджера для вендора не підходить, тому для вендора — окремі компоненти.
 - Тести обв'язки PGlite зі `stopBefore` ставлять роль `vendor` лише після `migrateRest()` — до міграції ролі ще немає.
+- Доказ відмов — тест бази на PGlite без моків і SQL-мутанти (`scripts/mutants.mjs`, V02–V09); тести дій із моками доказом
+  відмови не є.
