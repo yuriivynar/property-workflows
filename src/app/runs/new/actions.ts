@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { currentUser } from "@/lib/auth/require-role";
 import { errorCodeFrom, isUuid, validateCaseName } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,9 +16,14 @@ export async function launchRun(formData: FormData) {
     redirect(`/runs/new?template=${encodeURIComponent(templateId)}&error=${encodeURIComponent(code)}`);
 
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) {
+  const user = await currentUser(supabase);
+  if (!user.ok && user.reason === "NOT_SIGNED_IN") {
     redirect("/login");
+  }
+  // Запускати шаблон можуть лише менеджер і адміністратор; вендор — відмова до будь-якого запису (AC-VENDOR-09).
+  // База (launch_run) перевіряє те саме: вона друга лінія, а не перша.
+  if (!user.ok || user.role === "vendor") {
+    return back("LAUNCH_NOT_ALLOWED");
   }
 
   if (!isUuid(templateId)) {

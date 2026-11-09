@@ -187,10 +187,23 @@ function RunNotFound({ message }: { message?: string }) {
  */
 async function VendorRun({ id, message }: { id: string; message?: string }) {
   const supabase = await createClient();
-  const [{ data: runs }, { data: tasks }] = await Promise.all([
+  const [{ data: runs, error: runsError }, { data: tasks, error: tasksError }] = await Promise.all([
     supabase.rpc("vendor_runs"),
     supabase.rpc("vendor_run_tasks", { p_run_id: id }),
   ]);
+  // Збій бази — не «Run not found»: вендор не повинен вирішити, що його задачі зникли.
+  if (runsError || tasksError) {
+    return (
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+        <Alert variant="destructive">
+          <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
+        </Alert>
+        <TextLink href="/runs" className="w-fit text-sm">
+          {LABELS.backToRuns}
+        </TextLink>
+      </main>
+    );
+  }
   const run = runs?.find((candidate) => candidate.id === id);
   if (!run || !tasks?.length) return <RunNotFound message={message} />;
 
