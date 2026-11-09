@@ -1,0 +1,80 @@
+{
+  "kind": "uat",
+  "generatedAt": "2026-11-09T09:18:56.626Z",
+  "baseURL": "https://property-workflows-eta.vercel.app",
+  "deployedSha": "d37a9afdd16c2926499b4c524c28ffe59a5fc3f5",
+  "testsCommit": "aa0d6737614e6e2bb365df9108ea4683c64522ec",
+  "reviewer": {
+    "model": "claude-haiku-5-5",
+    "disputes": "claude-sonnet-5-5"
+  },
+  "note": "Відео й траси не в git (test-results/ локально, артефакт CI). check-recordings конвеєра WS9 вимагає відео на диску — для нього цей manifest треба доповнити.",
+  "results": [],
+  "negativeControls": [
+    {
+      "id": "NC-1",
+      "proof": "AC-EDITOR-07",
+      "title": "NC-1 (AC-EDITOR-07, навмисно хибне очікування в тесті: інший текст повідомлення)",
+      "screenshot": "test-results/uat-report-nc/frames/NC-1-then-1.png",
+      "video": "test-results/artifacts/negative-controls-NC-1-AC--f67a3-і-інший-текст-повідомлення--negative-controls/video.webm",
+      "trace": "test-results/artifacts/negative-controls-NC-1-AC--f67a3-і-інший-текст-повідомлення--negative-controls/trace.zip",
+      "asserted": false,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі видно заголовок «Not enough rights» під шапкою «Property workflows» і посилання «Back to templates»; список версій на сторінці відсутній. Текст збігається з критерієм посимвольно, тому видима частина «Тоді» виконана."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        }
+      ],
+      "verdict": "FAIL",
+      "factoryGate": "FAIL",
+      "rule": "R1: перевірка впала — FAIL завжди, агент не перекриває",
+      "playwrightMs": 10945,
+      "reviewCostUsd": 0.00168,
+      "reviewWallMs": 7829
+    },
+    {
+      "id": "NC-2",
+      "proof": "AC-EDITOR-07",
+      "title": "NC-2 (AC-EDITOR-07, текст «Тоді» у вимозі уточнено, тест і застосунок — ні)",
+      "screenshot": "test-results/uat-report-nc/frames/NC-2-then-1.png",
+      "video": "test-results/artifacts/negative-controls-NC-2-AC--4356d-ено-тест-і-застосунок-—-ні--negative-controls/video.webm",
+      "trace": "test-results/artifacts/negative-controls-NC-2-AC--4356d-ено-тест-і-застосунок-—-ні--negative-controls/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": false,
+        "readable": true,
+        "notes": "На кадрі сторінка з заголовком «Not enough rights» і посиланням «Back to templates»; версій не видно. Потрібного за критерієм тексту «Only administrators can see versions» на кадрі немає, тому частину не підтверджено."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "FAIL"
+      },
+      "escalated": true,
+      "quotesVerified": [],
+      "verdict": "NEEDS-HUMAN",
+      "factoryGate": "NOT-EARNED",
+      "rule": "R3: перевірки пройшли, агент не погоджується — вирішує людина",
+      "playwrightMs": 6223,
+      "reviewCostUsd": 0.0347,
+      "reviewWallMs": 27220
+    }
+  ],
+  "cleanup": {
+    "at": "2026-11-09T09:18:26.151Z",
+    "deleted": [],
+    "remaining": [],
+    "leftoverRequests": 0
+  }
+}

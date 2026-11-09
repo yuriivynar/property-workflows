@@ -57,7 +57,7 @@ describe("markTaskDone", () => {
     state.rpc.mockClear();
   });
 
-  it("AC-TASK-03: користувач без профілю з відомою роллю — NOT_ALLOWED, mark_task_done не викликано", async () => {
+  it("користувач без профілю з відомою роллю — NOT_ALLOWED, mark_task_done не викликано", async () => {
     state.profile = null;
     state.task = { run_id: RUN };
 

@@ -1,4 +1,4 @@
-// Server action launchRun: роль перевіряється до виклику launch_run (AGENTS.md, «Server Action перевіряє вхід і роль до
+// Server action launchRun: роль перевіряється (друга лінія захисту; докази AC-VENDOR-09 — тест бази на PGlite і UAT: тут моки, тож без AC ID) до виклику launch_run (AGENTS.md, «Server Action перевіряє вхід і роль до
 // першого запиту, що пише»). Next.js і Supabase замінено моками, як у src/app/runs/[id]/actions.test.ts.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -47,19 +47,19 @@ describe("launchRun", () => {
     state.rpc.mockClear();
   });
 
-  it("AC-VENDOR-09: вендор — LAUNCH_NOT_ALLOWED, launch_run не викликано", async () => {
+  it("вендор — LAUNCH_NOT_ALLOWED, launch_run не викликано", async () => {
     expect(await redirectOf(launchRun(form()))).toBe(`REDIRECT:/runs/new?template=${TEMPLATE}&error=LAUNCH_NOT_ALLOWED`);
     expect(state.rpc).not.toHaveBeenCalled();
   });
 
-  it("AC-VENDOR-09: користувач без профілю з відомою роллю — LAUNCH_NOT_ALLOWED, launch_run не викликано", async () => {
+  it("користувач без профілю з відомою роллю — LAUNCH_NOT_ALLOWED, launch_run не викликано", async () => {
     state.profile = null;
 
     expect(await redirectOf(launchRun(form()))).toBe(`REDIRECT:/runs/new?template=${TEMPLATE}&error=LAUNCH_NOT_ALLOWED`);
     expect(state.rpc).not.toHaveBeenCalled();
   });
 
-  it("AC-RUN-01: менеджер — launch_run викликано, перехід на сторінку нового запуску", async () => {
+  it("менеджер — launch_run викликано, перехід на сторінку нового запуску", async () => {
     state.profile = { role: "manager" };
 
     expect(await redirectOf(launchRun(form()))).toBe("REDIRECT:/runs/run-1");
