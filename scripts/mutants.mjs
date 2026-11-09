@@ -15,6 +15,8 @@ const RUNS = "supabase/migrations/20261020115705_workflow_runs.sql";
 const VERSIONS = "supabase/migrations/20261026133459_template_versions.sql";
 const EDITOR_DB = "tests/db/template-editor.test.ts";
 const CLARIFY_DB = "tests/db/template-clarify.test.ts";
+const VENDOR_ROLE = "supabase/migrations/20261102133035_vendor_role.sql";
+const VENDOR_DB = "tests/db/vendor-work.test.ts";
 
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
@@ -35,6 +37,52 @@ export const mutants = [
     what: "обмеження назви шаблону без btrim: назва лише з пробілів проходить базу",
     find: "add constraint templates_name_not_blank check (char_length(btrim(name)) > 0);",
     replace: "add constraint templates_name_not_blank check (char_length(name) > 0);",
+  },
+
+  // ── Мутанти правил у SQL за AC зрізу 3 (WS9): вендор — виконавець, бачить і змінює лише своє ───────────────────
+  // Кожен мутант послаблює правило до «дозволено» (а не видаляє політику: без політики RLS забороняє все, і тест
+  // відмови лишився б зеленим). Усі живуть у міграції vendor_role; правила доводить tests/db/vendor-work.test.ts (PGlite).
+  {
+    id: "V02", kind: "sql", ac: "AC-VENDOR-02", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "staff_directory: у виборі виконавця немає вендорів (лише manager і admin)",
+    find: "    and p.role in ('manager', 'admin', 'vendor')",
+    replace: "    and p.role in ('manager', 'admin')",
+  },
+  {
+    id: "V03", kind: "sql", ac: "AC-VENDOR-03", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "політика runs: вендор бачить рядки запусків напряму (мав би лише vendor_runs() зі своїми задачами)",
+    find: "using (private.can_see_run(id) and (select private.current_app_role()) is distinct from 'vendor');",
+    replace: "using (private.can_see_run(id));",
+  },
+  {
+    id: "V04", kind: "sql", ac: "AC-VENDOR-04", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "can_see_run_task: вендор бачить усі задачі запуску, де має хоч одну, а не лише свої",
+    find: "       or p_assignee_id = (select auth.uid())\n     );",
+    replace: "       or true\n     );",
+  },
+  {
+    id: "V06", kind: "sql", ac: "AC-VENDOR-06", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "vendor_run_tasks: задачі запуску повертаються не лише виконавцю — чужий запуск перестає бути «Run not found»",
+    find: "    and t.assignee_id = (select auth.uid())\n    and (select private.current_app_role()) = 'vendor'",
+    replace: "    and (select private.current_app_role()) = 'vendor'",
+  },
+  {
+    id: "V07", kind: "sql", ac: "AC-VENDOR-07", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "mark_task_done: вендор може позначити будь-яку задачу, а не лише свою",
+    find: "(v_role = 'manager' and v_run_manager_id = v_uid) or v_assignee_id = v_uid)",
+    replace: "(v_role = 'manager' and v_run_manager_id = v_uid) or v_role = 'vendor')",
+  },
+  {
+    id: "V08", kind: "sql", ac: "AC-VENDOR-08", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "політика templates: вендор бачить збережені шаблони нарівні з менеджером",
+    find: "or ((select private.current_app_role()) = 'manager' and current_version is not null)",
+    replace: "or ((select private.current_app_role()) in ('manager', 'vendor') and current_version is not null)",
+  },
+  {
+    id: "V09", kind: "sql", ac: "AC-VENDOR-09", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "launch_run: вендор може запустити шаблон (LAUNCH_NOT_ALLOWED не спрацьовує)",
+    find: "v_role is null or v_role not in ('manager', 'admin')",
+    replace: "v_role is null or v_role not in ('manager', 'admin', 'vendor')",
   },
 ];
 
