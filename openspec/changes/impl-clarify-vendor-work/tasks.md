@@ -7,7 +7,7 @@
 
 ## 1. Відмови вендору (`task/vendor-refusals`)
 
-- [ ] 1.1 `refusalBackLink(role)` для всіх сторінок відмови шаблонів і `/runs/new`; `vendorRunNotice(runFound,
+- [x] 1.1 `refusalBackLink(role)` для всіх сторінок відмови шаблонів і `/runs/new`; `vendorRunNotice(runFound,
   errorCode)` у `VendorRun`: на своєму запуску — текст AC-TASK-03, на запуску без своїх задач — лише «Run not found»;
   юніт-тести, тести бази (AC-VENDOR-07: код `NOT_ALLOWED`, статус «to do»; AC-VENDOR-15: те саме для запуску без
   задач), e2e `vendor-forbidden.spec.ts` (посилання «Back to runs» на п'яти сторінках, повідомлення AC-07/AC-15);
