@@ -1,17 +1,20 @@
-// AC-VENDOR-07, 08, 09 — відмови для вендора (зріз 3): чужу задачу не позначити, шаблонів не бачити, шаблон не
-// запустити — ні на сторінках, ні прямим запитом. «Прямий запит» тут — справжні виклики Supabase REST/RPC із сесією
+// AC-VENDOR-07, 08, 09, 14, 15 — відмови для вендора (зріз 3 і уточнення 10.11): чужу задачу не позначити, шаблонів
+// не бачити, шаблон не запустити — ні на сторінках, ні прямим запитом. «Прямий запит» тут — справжні виклики Supabase REST/RPC із сесією
 // самого вендора (publishable-ключ, мінуючи сторінки застосунку); після них відмову видно на екрані. Пишуть дані:
 // власні синтетичні користувачі uat-<run>-…@example.test й запуски, прибирання — Cast.dispose. Тег @writes.
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { attachRuntimeErrors, given, thenStep, when } from "./support/uat";
 import {
   APARTMENT_12,
+  APARTMENT_14,
   Cast,
+  REPAIR_REQUEST,
   TENANT_MOVE_IN,
   clientFor,
   countRuns,
   currentTemplate,
   launchApartment12,
+  launchAs,
   runTasks,
   signInAs,
   type Actor,
@@ -19,8 +22,26 @@ import {
 
 test.afterEach(async ({ page }) => attachRuntimeErrors(page));
 
+/**
+ * «В обхід сторінок» через саму дію позначки: вендор на сторінці свого запуску підмінює приховані поля форми своєї
+ * задачі (run_id, task_id) і надсилає її — як запит, зібраний вручну. Сторінка показує відповідь дії.
+ */
+async function submitMarkDoneFor(page: Page, target: { runId: string; taskId: string }) {
+  const form = page.getByTestId("run-task").first().locator("form");
+  await form.locator('input[name="run_id"]').evaluate((el, value) => {
+    (el as HTMLInputElement).value = value;
+  }, target.runId);
+  await form.locator('input[name="task_id"]').evaluate((el, value) => {
+    (el as HTMLInputElement).value = value;
+  }, target.taskId);
+  await form.getByRole("button", { name: "Mark as done" }).click();
+  await page.waitForURL(
+    (url) => url.pathname === `/runs/${target.runId}` && url.searchParams.get("error") === "NOT_ALLOWED",
+  );
+}
+
 test(
-  "AC-VENDOR-07: вендор V прямим запитом, в обхід сторінок, позначає задачу 1 менеджера A — відмова, задача 1 лишається «to do»",
+  "AC-VENDOR-07: вендор V прямим запитом, в обхід сторінок, позначає задачу 1 менеджера A — відмова, задача 1 лишається «to do», V бачить текст AC-TASK-03",
   { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-07" } },
   async ({ page }) => {
     const cast = new Cast("v07");
@@ -45,10 +66,9 @@ test(
           taskOneId = task1.id;
           taskOneName = task1.name;
           expect(task1).toMatchObject({ assigneeId: manager.id, status: "to_do" });
-          // Свідок результату — менеджер A: вендор чужу задачу не бачить, а A бачить її статус на сторінці запуску.
-          await signInAs(page, manager);
+          await signInAs(page, vendor);
           await page.goto(`/runs/${runId}`);
-          await expect(page.getByTestId("run-task").first().getByTestId("task-status")).toHaveText("to do");
+          await expect(page.getByTestId("run-task")).toHaveCount(2);
         },
       );
 
@@ -61,16 +81,18 @@ test(
         const update = await vendorClient.from("run_tasks").update({ status: "done" }).eq("id", taskOneId).select();
         updateErrorCode = update.error?.code;
         updateRows = update.data ?? [];
-        await page.reload();
+        // І дія позначки сторінки — з id задачі 1, підміненим у формі своєї задачі 3.
+        await submitMarkDoneFor(page, { runId, taskId: taskOneId });
       });
 
       await thenStep(
         page,
         {
-          clause: "task 1 stays \"to do\".",
+          clause:
+            "task 1 stays \"to do\", and V gets the message \"Only the task's assignee, the run manager, or an administrator can mark a task as done\".",
           visible: [
-            "на сторінці запуску менеджера A задача 1 «Sign the lease» зі статусом «to do»",
-            "прогрес запуску «0 of 5 done»",
+            "на сторінці запуску V повідомлення «Only the task's assignee, the run manager, or an administrator can mark a task as done»",
+            "V і далі бачить лише свої задачі 3 і 4 — задачі 1 на сторінці немає",
           ],
           hidden: [
             "запит через mark_task_done відхилено (NOT_ALLOWED), а не виконано",
@@ -79,10 +101,11 @@ test(
           ],
         },
         async () => {
-          const first = page.getByTestId("run-task").first();
-          await expect(first).toContainText(taskOneName);
-          await expect(first.getByTestId("task-status")).toHaveText("to do");
-          await expect(page.getByTestId("run-progress")).toHaveText("0 of 5 done");
+          await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+            "Only the task's assignee, the run manager, or an administrator can mark a task as done",
+          );
+          await expect(page.getByTestId("run-task")).toHaveCount(2);
+          await expect(page.getByRole("main")).not.toContainText(taskOneName);
 
           expect(rpcMessage).toContain("NOT_ALLOWED");
           // Прямий запис або відхилено правами (42501), або відфільтровано RLS без помилки; інша помилка (мережа) — не доказ.
@@ -98,7 +121,7 @@ test(
 );
 
 test(
-  "AC-VENDOR-08: вендор V за прямим посиланням на список шаблонів бачить «Not enough rights» і жодного шаблону",
+  "AC-VENDOR-08: вендор V за прямим посиланням на список шаблонів бачить «Not enough rights», посилання «Back to runs» і жодного шаблону",
   { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-08" } },
   async ({ page }) => {
     const cast = new Cast("v08");
@@ -115,7 +138,7 @@ test(
       await thenStep(
         page,
         {
-          clause: "V sees the message \"Not enough rights\" and no template.",
+          clause: "V sees the message \"Not enough rights\" and the link \"Back to runs\", and no template.",
           visible: ["повідомлення «Not enough rights»", "посилання «Back to runs»"],
           hidden: [
             "жодного шаблону: на сторінці немає таблиці й рядків шаблонів",
@@ -222,6 +245,118 @@ test(
           expect(insertRows).toHaveLength(0);
           expect(await countRuns({ runManagerId: vendor.id })).toBe(0);
           expect(await countRuns({ caseName: attemptName })).toBe(0);
+        },
+      );
+    } finally {
+      await cast.dispose();
+    }
+  },
+);
+
+test(
+  "AC-VENDOR-14: вендор V за прямим посиланням на форму запуску, сторінку шаблону, список версій і редактор бачить «Not enough rights» і «Back to runs», без вмісту шаблону",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-14" } },
+  async ({ page }) => {
+    const cast = new Cast("v14");
+    const targets = [
+      { name: "the launch form", path: `/runs/new?template=${TENANT_MOVE_IN}` },
+      { name: "the page of a template", path: `/templates/${TENANT_MOVE_IN}` },
+      { name: "the list of versions", path: `/templates/${TENANT_MOVE_IN}/versions` },
+      { name: "the editor", path: `/templates/${TENANT_MOVE_IN}/edit` },
+    ];
+    try {
+      let taskNames: string[] = [];
+      await given("vendor V signed in", async () => {
+        const vendor = await cast.create("vnd", "vendor");
+        taskNames = (await currentTemplate(TENANT_MOVE_IN)).tasks.map((task) => task.name);
+        await signInAs(page, vendor);
+      });
+
+      for (const target of targets) {
+        await when(`V opens ${target.name} by a direct link`, async () => {
+          await page.goto(target.path);
+        });
+
+        await thenStep(
+          page,
+          {
+            clause: `V sees the message "Not enough rights" and the link "Back to runs", and no content of the template (${target.name}).`,
+            visible: ["повідомлення «Not enough rights»", "посилання «Back to runs» веде на /runs"],
+            hidden: [
+              "посилання «Back to templates» немає",
+              "назви шаблону «Tenant move-in» і назв його задач на сторінці немає",
+              "жодної форми й таблиці",
+            ],
+          },
+          async () => {
+            const main = page.getByRole("main");
+            const notice = main.getByRole("status");
+            await expect(notice.getByRole("heading", { level: 1 })).toHaveText("Not enough rights");
+            await expect(notice.getByRole("link", { name: "Back to runs" })).toHaveAttribute("href", "/runs");
+            await expect(main.getByRole("link", { name: "Back to templates" })).toHaveCount(0);
+            await expect(main).not.toContainText("Tenant move-in");
+            for (const name of taskNames) await expect(main).not.toContainText(name);
+            await expect(main.locator("form, table")).toHaveCount(0);
+          },
+        );
+      }
+    } finally {
+      await cast.dispose();
+    }
+  },
+);
+
+test(
+  "AC-VENDOR-15: вендор V прямим запитом, в обхід сторінок, позначає задачу 1 менеджера A в «Apartment 14, repair», де в нього немає задач — задача 1 лишається «to do», V бачить лише «Run not found»",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-15" } },
+  async ({ page }) => {
+    const cast = new Cast("v15");
+    try {
+      let vendor!: Actor;
+      let repairId = "";
+      let taskOneId = "";
+      let rpcMessage: string | undefined;
+
+      await given(
+        "the run \"Apartment 14, repair\" in which vendor V has no task and task 1 is assigned to manager A",
+        async () => {
+          const manager = await cast.create("mgr-a", "manager");
+          vendor = await cast.create("vnd", "vendor");
+          repairId = await launchAs(manager, REPAIR_REQUEST, APARTMENT_14);
+          const [task1] = await runTasks(repairId);
+          taskOneId = task1.id;
+          expect(task1).toMatchObject({ assigneeId: manager.id, status: "to_do" });
+          // Свій запуск V — лише щоб на сторінці була форма позначки, поля якої він підмінить.
+          const { runId: ownRunId } = await launchApartment12(manager, vendor);
+          await signInAs(page, vendor);
+          await page.goto(`/runs/${ownRunId}`);
+          await expect(page.getByTestId("run-task")).toHaveCount(2);
+        },
+      );
+
+      await when("V tries to mark task 1 as done directly, bypassing the pages of the application", async () => {
+        const rpc = await (await clientFor(vendor)).rpc("mark_task_done", { p_task_id: taskOneId, p_confirmed: true });
+        rpcMessage = rpc.error?.message;
+        await submitMarkDoneFor(page, { runId: repairId, taskId: taskOneId });
+      });
+
+      await thenStep(
+        page,
+        {
+          clause: "task 1 stays \"to do\", and V gets the message \"Run not found\".",
+          visible: ["заголовок «Run not found»", "жодної задачі запуску й жодного іншого повідомлення"],
+          hidden: ["запит через mark_task_done відхилено (NOT_ALLOWED)", "у базі задача 1 лишилась «to_do»"],
+        },
+        async () => {
+          const main = page.getByRole("main");
+          await expect(main.getByRole("heading", { level: 1 })).toHaveText("Run not found");
+          await expect(main.getByRole("alert")).toHaveCount(0);
+          await expect(main).not.toContainText("Only the task's assignee");
+          await expect(page.getByTestId("run-task")).toHaveCount(0);
+          await expect(page.locator("body")).not.toContainText(APARTMENT_14);
+
+          expect(rpcMessage).toContain("NOT_ALLOWED");
+          expect((await runTasks(repairId)).find((task) => task.id === taskOneId)?.status).toBe("to_do");
         },
       );
     } finally {
