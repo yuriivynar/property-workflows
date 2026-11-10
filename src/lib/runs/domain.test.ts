@@ -15,6 +15,7 @@ import {
   taskBelongsToRun,
   validateCaseName,
   runsListState,
+  vendorRunNotice,
 } from "./domain";
 import { LABELS, MESSAGES } from "./messages";
 
@@ -190,6 +191,19 @@ describe("Задача й запуск з форми", () => {
 });
 
 describe("Вендор: список і сторінка запуску", () => {
+  it("AC-VENDOR-07: відмова позначки чужої задачі на своєму запуску — вендор бачить текст AC-TASK-03", () => {
+    expect(vendorRunNotice(true, errorCodeFrom("NOT_ALLOWED"))).toBe(
+      "Only the task's assignee, the run manager, or an administrator can mark a task as done",
+    );
+    // Без коду помилки сторінка нічого не показує.
+    expect(vendorRunNotice(true, undefined)).toBeUndefined();
+  });
+
+  it("AC-VENDOR-15: відмова позначки на запуску без задач вендора — лише «Run not found», без тексту відмови", () => {
+    expect(vendorRunNotice(false, "NOT_ALLOWED")).toBeUndefined();
+    expect(MESSAGES.runNotFound).toBe("Run not found");
+  });
+
   it("AC-VENDOR-03: рядок запуску вендора — «Your tasks: 0 of 2 done» (лише його задачі в запуску)", () => {
     expect(formatYourTasks(0, 2)).toBe("Your tasks: 0 of 2 done");
   });

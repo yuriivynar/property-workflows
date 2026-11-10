@@ -54,6 +54,16 @@ export function messageForError(code: string | null | undefined): string {
   return code && isRunErrorCode(code) ? MESSAGE_BY_CODE[code] : MESSAGES.unexpected;
 }
 
+/**
+ * Повідомлення на сторінці запуску вендора після відмови позначки: на запуску з його задачами — текст відмови
+ * (для NOT_ALLOWED — текст AC-TASK-03, AC-VENDOR-07); на запуску без його задач — нічого, лише «Run not found», щоб
+ * сторінка не підказувала, що запуск існує (AC-VENDOR-15; рішення PM solomchaak/property-workflows-spec#48).
+ */
+export function vendorRunNotice(runFound: boolean, errorCode: string | null | undefined): string | undefined {
+  if (!runFound || !errorCode) return undefined;
+  return messageForError(errorCode);
+}
+
 export function requiredLabel(isRequired: boolean): string {
   return isRequired ? REQUIRED_LABELS.required : REQUIRED_LABELS.optional;
 }

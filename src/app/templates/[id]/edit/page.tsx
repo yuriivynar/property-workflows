@@ -11,7 +11,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
-import { messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
+import { messageForTemplateError, refusalBackLink, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import {
   addSection,
   moveItem,
@@ -39,7 +39,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   if (templatePageAccess(user.role, "edit") !== "ok") {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/templates" backLabel={TEMPLATE_MESSAGES.backToTemplates} />
+        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref={refusalBackLink(user.role).href} backLabel={refusalBackLink(user.role).label} />
       </main>
     );
   }

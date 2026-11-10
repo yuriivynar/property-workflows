@@ -9,6 +9,7 @@ import {
   launchOptions,
   messageForTemplateError,
   newestFirst,
+  refusalBackLink,
   templateErrorCode,
   TEMPLATE_MESSAGES,
   templatePageAccess,
@@ -35,6 +36,16 @@ describe("Шаблони: правила екранів", () => {
     expect(templatePageAccess("manager", "list")).toBe("ok");
     expect(templatePageAccess("admin", "list")).toBe("ok");
     expect(TEMPLATE_MESSAGES.notEnoughRights).toBe("Not enough rights");
+    expect(refusalBackLink("vendor")).toEqual({ href: "/runs", label: "Back to runs" });
+  });
+
+  it("AC-VENDOR-14: форма запуску, сторінка шаблону, список версій і редактор — вендору «Not enough rights» і «Back to runs»", () => {
+    for (const page of ["view", "versions", "edit"] as const) {
+      expect(templatePageAccess("vendor", page)).toBe("not-enough-rights");
+    }
+    expect(refusalBackLink("vendor")).toEqual({ href: "/runs", label: "Back to runs" });
+    // Менеджеру на редакторі й списку версій лишається «Back to templates» (AC-DSYS-02, AC-EDITOR-07).
+    expect(refusalBackLink("manager")).toEqual({ href: "/templates", label: "Back to templates" });
   });
 
   it("AC-EDITOR-07: менеджер на списку версій — «Not enough rights», адміністратор бачить список", () => {

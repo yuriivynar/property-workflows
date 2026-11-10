@@ -10,7 +10,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
-import { launchOptions, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
+import { launchOptions, refusalBackLink, TEMPLATE_MESSAGES } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
@@ -35,7 +35,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   if (profile?.role === "vendor") {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
+        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref={refusalBackLink(profile.role).href} backLabel={refusalBackLink(profile.role).label} />
       </main>
     );
   }

@@ -14,6 +14,7 @@ import {
   needsConfirmation,
   requiredLabel,
   staffLabel,
+  vendorRunNotice,
 } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
@@ -36,7 +37,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
-  if (profile?.role === "vendor") return <VendorRun id={id} message={message} />;
+  if (profile?.role === "vendor") return <VendorRun id={id} errorCode={typeof error === "string" ? error : undefined} />;
 
   const { data: run } = await supabase
     .from("run_overview")
@@ -181,11 +182,12 @@ function RunNotFound({ message }: { message?: string }) {
 /**
  * Запуск очима вендора: назва випадку, «Your tasks: N of K done» і рівно його задачі за розділами — назва, розділ,
  * «required» / «optional», статус; без чужих задач, email інших користувачів, менеджера запуску, назви й версії шаблону
- * та прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05; заголовок і рядок прогресу — робоче рішення до
- * solomchaak/property-workflows-spec#41). Запуск без його задач — «Run not found» (AC-VENDOR-06). Дані — лише з функцій
+ * та прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-11; рішення PM solomchaak/property-workflows-spec#41). Запуск без його
+ * задач — лише «Run not found», без тексту відмови позначки (AC-VENDOR-06, AC-VENDOR-15); на своєму запуску відмова
+ * позначки чужої задачі — текст AC-TASK-03 (AC-VENDOR-07). Дані — лише з функцій
  * бази vendor_runs і vendor_run_tasks; позначка останньої обов'язкової задачі просить підтвердження («Припущення» PM).
  */
-async function VendorRun({ id, message }: { id: string; message?: string }) {
+async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) {
   const supabase = await createClient();
   const [{ data: runs, error: runsError }, { data: tasks, error: tasksError }] = await Promise.all([
     supabase.rpc("vendor_runs"),
@@ -207,6 +209,7 @@ async function VendorRun({ id, message }: { id: string; message?: string }) {
     );
   }
   const run = runs?.find((candidate) => candidate.id === id);
+  const message = vendorRunNotice(Boolean(run && tasks?.length), errorCode);
   if (!run || !tasks?.length) return <RunNotFound message={message} />;
 
   return (

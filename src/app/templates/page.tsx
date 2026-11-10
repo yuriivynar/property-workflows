@@ -10,8 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
-import { LABELS } from "@/lib/runs/messages";
-import { emptyTemplatesMessage, messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
+import { emptyTemplatesMessage, messageForTemplateError, refusalBackLink, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { createTemplate } from "./actions";
 
 // Список шаблонів. Що видно, вирішує RLS: admin — усі шаблони з позначкою «Unpublished changes»; manager — лише
@@ -26,7 +25,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   if (templatePageAccess(user.role, "list") !== "ok") {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
+        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref={refusalBackLink(user.role).href} backLabel={refusalBackLink(user.role).label} />
       </main>
     );
   }
