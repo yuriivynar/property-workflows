@@ -176,10 +176,10 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | solomchaak/property-workflows-spec#41 | очікуємо | у специфікації — текст PM, питання в Open questions зміни `add-vendor-assignees` |
-| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | solomchaak/property-workflows-spec#42 | очікуємо | до відповіді — буквально AC-VENDOR-03 (без назви шаблону); Open questions |
-| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | solomchaak/property-workflows-spec#43 | очікуємо | до відповіді — як у «Припущеннях» PM (лише остання обов'язкова); Open questions |
-| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | solomchaak/property-workflows-spec#44 | очікуємо | Open questions; AC-VENDOR-08 тестуємо прямим посиланням незалежно від відповіді |
+| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | solomchaak/property-workflows-spec#41 | A (10.11): назва випадку заголовком і «Your tasks: N of K done», без статусу запуску, назви й версії шаблону | AC-VENDOR-11 — ADDED у зміні `clarify-vendor-work` |
+| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | solomchaak/property-workflows-spec#42 | A (10.11): рядок — назва випадку, статус запуску й «Your tasks», без назви шаблону | AC-VENDOR-12 — ADDED у зміні `clarify-vendor-work` |
+| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | solomchaak/property-workflows-spec#43 | A (10.11), як написано: підтвердження лише на останній обов'язковій, розкриття стану інших задач прийнято | вимога без змін; рішення — в Assumptions зміни `clarify-vendor-work` |
+| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | solomchaak/property-workflows-spec#44 | A (10.11): лише «Runs» і «Profile», після входу — список запусків | AC-VENDOR-13 — ADDED у зміні `clarify-vendor-work` |
 
 ### Власні припущення (зріз 3)
 
@@ -190,3 +190,9 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 - Порядок рядків у списку запусків vendor — як у всіх (найновіші вгорі, AC-TASK-14).
 - Vendor-користувачі — початкові дані (`supabase/demo-users.json`), екрана створення користувачів немає (як Q2).
 - Менеджер бачить email vendor поруч із задачею так само, як email інших виконавців (матриця прав, AC-TASK-11).
+
+### Відповіді PM 10.11.2026 (зріз 3)
+
+PM закрив усі питання зрізу 3 (solomchaak/property-workflows-spec#41–#50) і оновив solomchaak/property-workflows-spec#39 і solomchaak/property-workflows-spec#3 (знімок 2026-11-10, PR «Оновлення вимог» #63). Питання колег, що вплинули на специфікацію: solomchaak/property-workflows-spec#45 (роль не змінюється в застосунку), solomchaak/property-workflows-spec#46 (AC-VENDOR-16, AC-TASK-19), solomchaak/property-workflows-spec#47 і solomchaak/property-workflows-spec#49 (AC-VENDOR-08, AC-VENDOR-14), solomchaak/property-workflows-spec#48 (AC-VENDOR-07, AC-VENDOR-15), solomchaak/property-workflows-spec#50 (AC-VENDOR-17, AC-VENDOR-18). Переклад — зміна `clarify-vendor-work` (archive 2026-11-10). Відкритих питань зрізу 3 немає.
+
+Вимогу solomchaak/property-workflows-spec#51 (AC-LOGIC-01…05) поки не перекладаємо й не реалізуємо — рішення розробника до окремої команди; `ac:coverage` попереджає про неї (WARN).
