@@ -29,11 +29,11 @@
 ## 3. Прямі читання вендора (`task/vendor-direct-reads`)
 
 - [ ] 3.1 Тести бази від імені вендора: `run_tasks`, `run_sections`, `runs`, `run_overview`, `profiles`,
-  `staff_directory()`, `vendor_run_tasks()` для свого й чужого запуску; мутанти V04 (і для AC-VENDOR-17), V17, V18;
+  `staff_directory()`, `vendor_run_tasks()` для свого й чужого запуску; мутанти V04, V06 (наявні, і для AC-VENDOR-17), V18, V18P;
   рядки матриці AC-VENDOR-17, 18.
   Done when: AC-VENDOR-17, AC-VENDOR-18 — прямий запит задач свого запуску повертає лише задачі 3 і 4; email, профілі
   інших і задачі «Apartment 14, repair» — нічого.
-  Рівень тесту: база (PGlite). Доказ відмови: мутанти V04, V17, V18.
+  Рівень тесту: база (PGlite). Доказ відмови: мутанти V04, V06, V18, V18P.
 
 ## 4. Необов'язкова задача завершеного запуску (`task/optional-after-completed`)
 

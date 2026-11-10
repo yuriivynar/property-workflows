@@ -18,8 +18,9 @@ e2e і мутанти для кожної відмови. Код змінюєт�
    `profiles` — лише власний; `staff_directory()` вендору — порожньо; `vendor_run_tasks(чужий запуск)` — порожньо.
    Тести в `tests/db/vendor-work.test.ts` (PGlite, без моків) від імені вендора `select` з `run_tasks`, `run_sections`,
    `runs`, `run_overview`, `profiles` і виклики `staff_directory()`, `vendor_run_tasks()` для обох запусків. Мутанти:
-   наявний V04 (`can_see_run_task`) — ще й для AC-VENDOR-17; нові V17 (`vendor_run_tasks` віддає всі задачі запуску) і
-   V18 (`staff_directory` віддає email і вендору / політика `profiles` — усі профілі).
+   наявні V04 (`can_see_run_task`) і V06 (`vendor_run_tasks` без перевірки виконавця) — ще й для AC-VENDOR-17 (окремий
+   мутант дублював би їх); нові V18 (`staff_directory` віддає email і вендору) і V18P (політика `profiles` — вендору всі
+   профілі).
 2. **Необов'язкова задача завершеного запуску** (AC-TASK-19, AC-VENDOR-16). `mark_task_done` уже не перевіряє статус
    запуску: позначає задачу, рахує її в прогресі й не змінює `completed`. Доводимо тестами бази для менеджера-виконавця
    й вендора; мутант T19 — `mark_task_done` відмовляє (`RUN_COMPLETED`), якщо запуск `completed`.
