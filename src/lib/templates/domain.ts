@@ -99,7 +99,7 @@ export type TemplatePage = "list" | "view" | "edit" | "versions";
  * запуску (AC-VENDOR-08, AC-VENDOR-14; рішення PM solomchaak/property-workflows-spec#49); іншим — «Back to templates»
  * (AC-DSYS-02, AC-EDITOR-07).
  */
-export function refusalBackLink(role: AppRole | null | undefined): { href: string; label: string } {
+export function refusalBackLink(role: string | null | undefined): { href: string; label: string } {
   return role === "vendor"
     ? { href: "/runs", label: LABELS.backToRuns }
     : { href: "/templates", label: TEMPLATE_MESSAGES.backToTemplates };

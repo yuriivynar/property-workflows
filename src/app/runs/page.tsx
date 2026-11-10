@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
+import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 
 // Рядок таблиці на телефоні стає карткою (сітка з двох колонок), а клітинки — її частинами (ADR 0007).
@@ -24,14 +25,12 @@ const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal max-sm:[overflow-
 // Вендор бачить окремий список (VendorRuns): лише запуски зі своїми задачами (AC-VENDOR-03, AC-VENDOR-10).
 export default async function RunsPage() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-  if (!claims) {
+  const viewer = await signedInViewer(supabase);
+  if (!viewer) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
-  if (profile?.role === "vendor") return <VendorRuns />;
+  if (viewer.role === "vendor") return <VendorRuns />;
 
   const { data: runs, error: loadError } = await supabase
     .from("run_overview")

@@ -5,13 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Notice } from "@/components/ui/notice";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
-import { messageForTemplateError, refusalBackLink, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
+import { messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import {
   addSection,
   moveItem,
@@ -25,6 +24,8 @@ import {
 } from "../../actions";
 import { AddTaskForm } from "./add-task-form";
 import { RemoveSectionButton } from "./remove-section-button";
+import { NotEnoughRights } from "@/components/not-enough-rights";
+import { Notice } from "@/components/ui/notice";
 
 // Редактор шаблону — лише адміністратор. Менеджер бачить «Not enough rights» і «Back to templates» у тому самому
 // макеті, без жодних даних редактора: дані для нього навіть не запитуються (AC-DSYS-02). Кожна зміна — окрема дія,
@@ -36,13 +37,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
 
-  if (templatePageAccess(user.role, "edit") !== "ok") {
-    return (
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref={refusalBackLink(user.role).href} backLabel={refusalBackLink(user.role).label} />
-      </main>
-    );
-  }
+  if (templatePageAccess(user.role, "edit") !== "ok") return <NotEnoughRights role={user.role} />;
 
   const [
     { data: template },

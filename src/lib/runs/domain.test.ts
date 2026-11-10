@@ -16,6 +16,7 @@ import {
   validateCaseName,
   runsListState,
   vendorRunNotice,
+  errorParam,
 } from "./domain";
 import { LABELS, MESSAGES } from "./messages";
 
@@ -200,7 +201,9 @@ describe("Вендор: список і сторінка запуску", () => 
   });
 
   it("AC-VENDOR-15: відмова позначки на запуску без задач вендора — лише «Run not found», без тексту відмови", () => {
-    expect(vendorRunNotice(false, "NOT_ALLOWED")).toBeUndefined();
+    expect(vendorRunNotice(false, errorParam("NOT_ALLOWED"))).toBeUndefined();
+    // Код з адреси — лише рядок: масив (?error=a&error=b) не дає повідомлення.
+    expect(errorParam(["NOT_ALLOWED", "x"])).toBeUndefined();
     expect(MESSAGES.runNotFound).toBe("Run not found");
   });
 

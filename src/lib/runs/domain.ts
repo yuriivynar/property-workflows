@@ -54,6 +54,11 @@ export function messageForError(code: string | null | undefined): string {
   return code && isRunErrorCode(code) ? MESSAGE_BY_CODE[code] : MESSAGES.unexpected;
 }
 
+/** Код помилки з адреси сторінки (?error=…): лише один рядок, інакше — немає. */
+export function errorParam(value: string | string[] | undefined): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 /**
  * Повідомлення на сторінці запуску вендора після відмови позначки: на запуску з його задачами — текст відмови
  * (для NOT_ALLOWED — текст AC-TASK-03, AC-VENDOR-07); на запуску без його задач — нічого, лише «Run not found», щоб

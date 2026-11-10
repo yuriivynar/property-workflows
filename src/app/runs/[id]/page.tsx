@@ -7,6 +7,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
+  errorParam,
   formatProgress,
   formatYourTasks,
   groupBySection,
@@ -16,6 +17,7 @@ import {
   staffLabel,
   vendorRunNotice,
 } from "@/lib/runs/domain";
+import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
@@ -27,17 +29,16 @@ import { MarkDoneButton } from "./mark-done-button";
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error } = await searchParams;
-  const message = typeof error === "string" ? messageForError(error) : undefined;
+  const errorCode = errorParam(error);
 
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-  if (!claims) {
+  const viewer = await signedInViewer(supabase);
+  if (!viewer) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
-  if (profile?.role === "vendor") return <VendorRun id={id} errorCode={typeof error === "string" ? error : undefined} />;
+  if (viewer.role === "vendor") return <VendorRun id={id} errorCode={errorCode} />;
+  const message = errorCode ? messageForError(errorCode) : undefined;
 
   const { data: run } = await supabase
     .from("run_overview")
@@ -136,8 +137,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                     </span>
                   </div>
                   {canMarkTask({
-                    userId: claims.sub,
-                    role: profile?.role,
+                    userId: viewer.userId,
+                    role: viewer.role,
                     runManagerId,
                     assigneeId: task.assignee_id,
                     status: task.status,
@@ -209,8 +210,8 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
     );
   }
   const run = runs?.find((candidate) => candidate.id === id);
-  const message = vendorRunNotice(Boolean(run && tasks?.length), errorCode);
-  if (!run || !tasks?.length) return <RunNotFound message={message} />;
+  if (!run || !tasks?.length) return <RunNotFound message={vendorRunNotice(false, errorCode)} />;
+  const message = vendorRunNotice(true, errorCode);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">

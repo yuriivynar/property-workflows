@@ -29,6 +29,19 @@ export async function currentUser(supabase: Client): Promise<RoleCheck> {
   return { ok: true, userId, role };
 }
 
+/**
+ * Хто відкрив сторінку, що показує різне за роллю (/runs, /runs/[id], /runs/new): id з getClaims() і роль із profiles
+ * (null — профілю немає). null замість об'єкта — не увійшов; redirect на /login робить сторінка. Права на дані
+ * перевіряють RLS і функції бази.
+ */
+export async function signedInViewer(supabase: Client): Promise<{ userId: string; role: string | null } | null> {
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) return null;
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  return { userId, role: profile?.role ?? null };
+}
+
 /** Лише адміністратор (шаблони змінює лише admin — матриця прав; AC-EDITOR-08, AC-DSYS-02, AC-EDITOR-07). */
 export async function requireAdmin(supabase: Client): Promise<RoleCheck> {
   const user = await currentUser(supabase);
