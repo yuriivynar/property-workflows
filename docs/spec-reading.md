@@ -1,4 +1,4 @@
-# Журнал читання вимог
+undefinedA — лише Runs і Profile, після входу — список запусків (AC-VENDOR-13), 10.11 | ADDED AC-VENDOR-13 у `clarify-vendor-work` |undefinedA — як написано: підтвердження лише на останній обов'язковій, розкриття прийнято, 10.11 | вимога без змін; у Assumptions зміни `clarify-vendor-work` |undefinedA — без назви шаблону (AC-VENDOR-12), 10.11 | ADDED AC-VENDOR-12 у `clarify-vendor-work` |undefinedA — назва випадку заголовком і «Your tasks», без статусу запуску й шаблону (AC-VENDOR-11), 10.11 | MODIFIED/ADDED у зміні `clarify-vendor-work` (AC-VENDOR-11) |# Журнал читання вимог
 
 <!--
 Ваш журнал — один файл: скан вимог PM за таксономією, питання до PM і власні припущення. Скіл spec-clarify заповнює його
@@ -190,3 +190,9 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 - Порядок рядків у списку запусків vendor — як у всіх (найновіші вгорі, AC-TASK-14).
 - Vendor-користувачі — початкові дані (`supabase/demo-users.json`), екрана створення користувачів немає (як Q2).
 - Менеджер бачить email vendor поруч із задачею так само, як email інших виконавців (матриця прав, AC-TASK-11).
+
+### Відповіді PM 10.11.2026 (зріз 3)
+
+PM закрив усі питання зрізу 3 (solomchaak/property-workflows-spec#41–#50) і оновив solomchaak/property-workflows-spec#39 і solomchaak/property-workflows-spec#3 (знімок 2026-11-10, PR «Оновлення вимог» #63). Питання колег, що вплинули на специфікацію: solomchaak/property-workflows-spec#45 (роль не змінюється в застосунку), solomchaak/property-workflows-spec#46 (AC-VENDOR-16, AC-TASK-19), solomchaak/property-workflows-spec#47 і solomchaak/property-workflows-spec#49 (AC-VENDOR-08, AC-VENDOR-14), solomchaak/property-workflows-spec#48 (AC-VENDOR-07, AC-VENDOR-15), solomchaak/property-workflows-spec#50 (AC-VENDOR-17, AC-VENDOR-18). Переклад — зміна `clarify-vendor-work` (archive 2026-11-10). Відкритих питань зрізу 3 немає.
+
+Вимогу solomchaak/property-workflows-spec#51 (AC-LOGIC-01…05) поки не перекладаємо й не реалізуємо — рішення розробника до окремої команди; `ac:coverage` попереджає про неї (WARN).
