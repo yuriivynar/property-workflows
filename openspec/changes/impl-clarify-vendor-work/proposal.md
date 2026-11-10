@@ -14,4 +14,4 @@ solomchaak/property-workflows-spec#3; рішення PM solomchaak/property-work
   AC-VENDOR-15, AC-VENDOR-16, AC-VENDOR-17, AC-VENDOR-18;
 - `run-progress`: AC-TASK-19.
 
-Вимога solomchaak/property-workflows-spec#51 (AC-LOGIC-01…05) — поза цим планом (рішення розробника).
+Вимога solomchaak/property-workflows-spec#51 — поза цим планом: її ще не перекладено в специфікацію (рішення розробника).

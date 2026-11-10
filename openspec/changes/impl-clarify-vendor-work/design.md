@@ -53,12 +53,18 @@ e2e і мутанти для кожної відмови. Код змінюєт�
    «Your tasks: N of K done», без статусу запуску, назви й версії шаблону) і `VendorRuns` (назва випадку, статус,
    «Your tasks…»; `vendor_runs()` не повертає назви шаблону). Доводимо: тест бази — колонки `vendor_runs()` без
    `template_name`/`template_version`; e2e — на сторінці немає `template-version` і назви «Tenant move-in», у рядку
-   списку немає назви шаблону. Мутант V12: `vendor_runs()` повертає `template_name`.
-8. **Тексти — дослівно з AC** через `LABELS`/`MESSAGES`/`TEMPLATE_MESSAGES` (`Back to runs`, `Not enough rights`,
-   `Run not found`, текст AC-TASK-03, `Your tasks: N of K done`). Компоненти — лише `@/components/ui` (`Notice`,
+   списку немає назви шаблону. Мутант V12: `vendor_runs()` дописує назву шаблону до назви випадку.
+8. **Тексти — дослівно з AC** (AC-VENDOR-07, AC-VENDOR-08, AC-VENDOR-11, AC-VENDOR-13, AC-VENDOR-14, AC-VENDOR-15,
+   AC-VENDOR-16) через `LABELS`/`MESSAGES`/`TEMPLATE_MESSAGES`: «Back to runs», «Not enough rights», «Run not found»,
+   текст AC-TASK-03, «Your tasks: N of K done», «Runs», «Profile». Компоненти — лише `@/components/ui` (`Notice`,
    `Alert`, `TextLink`), без нових кольорів (`npm run check:design`).
-9. **Оновлення UI v2 (палітра A, бічна панель, меню «Theme») — окремі задачі `task/ui-*` після цих**, щоб докази AC
-   зрізу 3 не змішувались зі зміною вигляду; селектори e2e (`data-testid`, ролі й тексти) у задачах UI не змінюються.
+
+## Межі плану
+
+- Оновлення UI v2 (палітра A, бічна панель, меню «Theme», сторінка входу) — не AC цього плану, а окремі задачі
+  `task/ui-*` після задач 1–4, щоб докази AC зрізу 3 не змішувались зі зміною вигляду; селектори e2e (`data-testid`,
+  ролі й тексти) у задачах UI не змінюються.
+- Вимога solomchaak/property-workflows-spec#51 — поза планом (не перекладена в специфікацію).
 
 ## Risks / Trade-offs
 
