@@ -1,4 +1,4 @@
-undefinedA — лише Runs і Profile, після входу — список запусків (AC-VENDOR-13), 10.11 | ADDED AC-VENDOR-13 у `clarify-vendor-work` |undefinedA — як написано: підтвердження лише на останній обов'язковій, розкриття прийнято, 10.11 | вимога без змін; у Assumptions зміни `clarify-vendor-work` |undefinedA — без назви шаблону (AC-VENDOR-12), 10.11 | ADDED AC-VENDOR-12 у `clarify-vendor-work` |undefinedA — назва випадку заголовком і «Your tasks», без статусу запуску й шаблону (AC-VENDOR-11), 10.11 | MODIFIED/ADDED у зміні `clarify-vendor-work` (AC-VENDOR-11) |# Журнал читання вимог
+# Журнал читання вимог
 
 <!--
 Ваш журнал — один файл: скан вимог PM за таксономією, питання до PM і власні припущення. Скіл spec-clarify заповнює його
@@ -176,10 +176,10 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | solomchaak/property-workflows-spec#41 | очікуємо | у специфікації — текст PM, питання в Open questions зміни `add-vendor-assignees` |
-| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | solomchaak/property-workflows-spec#42 | очікуємо | до відповіді — буквально AC-VENDOR-03 (без назви шаблону); Open questions |
-| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | solomchaak/property-workflows-spec#43 | очікуємо | до відповіді — як у «Припущеннях» PM (лише остання обов'язкова); Open questions |
-| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | solomchaak/property-workflows-spec#44 | очікуємо | Open questions; AC-VENDOR-08 тестуємо прямим посиланням незалежно від відповіді |
+| Q13 | AC-VENDOR-04, AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Що бачить vendor на сторінці запуску, крім своїх задач, і де «Your tasks: N of K done»? | A: назва випадку і «Your tasks», без статусу запуску й шаблону | solomchaak/property-workflows-spec#41 | A (10.11): назва випадку заголовком і «Your tasks: N of K done», без статусу запуску, назви й версії шаблону | AC-VENDOR-11 — ADDED у зміні `clarify-vendor-work` |
+| Q14 | AC-VENDOR-03, AC-TASK-14 (solomchaak/property-workflows-spec#39) | Чи бачить vendor назву шаблону в списку запусків? | A: ні — лише назва випадку, статус запуску й «Your tasks» | solomchaak/property-workflows-spec#42 | A (10.11): рядок — назва випадку, статус запуску й «Your tasks», без назви шаблону | AC-VENDOR-12 — ADDED у зміні `clarify-vendor-work` |
+| Q15 | AC-VENDOR-04, AC-TASK-16 (solomchaak/property-workflows-spec#39) | Підтвердження останньої обов'язкової задачі розкриває vendor стан чужих задач | B: для vendor підтвердження на кожній задачі | solomchaak/property-workflows-spec#43 | A (10.11), як написано: підтвердження лише на останній обов'язковій, розкриття стану інших задач прийнято | вимога без змін; рішення — в Assumptions зміни `clarify-vendor-work` |
+| Q16 | — (solomchaak/property-workflows-spec#39) | Навігація й сторінка після входу для vendor | A: лише Runs і Profile, після входу — список запусків | solomchaak/property-workflows-spec#44 | A (10.11): лише «Runs» і «Profile», після входу — список запусків | AC-VENDOR-13 — ADDED у зміні `clarify-vendor-work` |
 
 ### Власні припущення (зріз 3)
 
