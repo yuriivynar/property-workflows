@@ -30,8 +30,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   const signedIn = Boolean(claims);
-  // Вендору посилання «Templates» не показуємо: воно завжди вело б до «Not enough rights» (AC-VENDOR-08; робоче рішення
-  // до solomchaak/property-workflows-spec#44). Прямий запит однаково відхиляють сторінка й RLS.
+  // Пункти навігації — за роллю (navItems): вендору лише «Runs» і «Profile» (AC-VENDOR-13; solomchaak/property-workflows-spec#44).
   const { data: profile } = claims
     ? await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle()
     : { data: null };
@@ -45,7 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PageShell signedIn={signedIn} showTemplates={profile?.role !== "vendor"} theme={theme}>{children}</PageShell>
+        <PageShell signedIn={signedIn} role={profile?.role} theme={theme}>{children}</PageShell>
       </body>
     </html>
   );

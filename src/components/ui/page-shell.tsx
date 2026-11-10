@@ -1,5 +1,6 @@
 import { cn } from "cn"
 import { MainNav } from "@/components/ui/main-nav"
+import { navItems } from "@/lib/auth/nav"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
 import type { Theme } from "@/lib/theme"
 
@@ -9,22 +10,19 @@ import type { Theme } from "@/lib/theme"
 // На телефоні: назва й «Theme» в одному рядку, навігація — окремим рядком нижче.
 function PageShell({
   signedIn,
-  showTemplates = true,
+  role,
   theme,
   children,
   className,
 }: {
   signedIn: boolean
-  showTemplates?: boolean
+  /** Роль із profiles: від неї залежать пункти навігації (AC-VENDOR-13). */
+  role?: string | null
   theme: Theme
   children: React.ReactNode
   className?: string
 }) {
-  const items = [
-    ...(showTemplates ? [{ href: "/templates", label: "Templates" }] : []),
-    { href: "/runs", label: "Runs" },
-    { href: "/", label: "Profile" },
-  ]
+  const items = navItems(role)
   return (
     <div data-slot="page-shell" className={cn("flex min-h-full flex-1 flex-col", className)}>
       <header className="border-b border-hero-border bg-hero text-hero-foreground">
