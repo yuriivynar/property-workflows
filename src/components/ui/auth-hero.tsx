@@ -1,20 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "cn"
 
-// Декоративна панель сторінки входу: кільце процесу заповнюється, а слово в центрі змінюється «to do» → «in progress» →
-// «completed». Колір слова й кільця — ті самі за змістом, що й у StatusBadge. Слова задає CSS (content у globals.css),
-// тож у тексті сторінки їх немає: сторінка входу не містить жодних даних запусків. Анімації — у globals.css (auth-*),
-// вимкнені для prefers-reduced-motion. Малюнок — aria-hidden; рух довший за 5 секунд можна поставити на паузу кнопкою
-// (WCAG 2.2.2): кнопка поза aria-hidden, її стан — aria-pressed.
+// Декоративна панель сторінки входу (ADR 0007, ADR 0008): кільце процесу заповнюється третинами, три точки-задачі на
+// ньому по черзі стають зеленими, слово в центрі змінюється «to do» → «in progress» → «completed», під ним — лічильник
+// «N of 3 done», наприкінці — хвиля. Колір слів і кільця — ті самі за змістом, що й у StatusBadge. Слова й лічильник
+// задає CSS (content у globals.css), тож у тексті сторінки їх немає: сторінка входу не містить жодних даних запусків.
+// Рухаються лише transform, opacity і stroke-dashoffset; анімації — у globals.css (auth-*), вимкнені для
+// prefers-reduced-motion. Малюнок — aria-hidden. Рух довший за 5 секунд можна поставити на паузу кнопкою (WCAG 2.2.2,
+// стан — aria-pressed); коли вкладку сховано, рух стоїть сам.
+const NODES = [
+  { cx: 172.7, cy: 142 },
+  { cx: 27.3, cy: 142 },
+  { cx: 100, cy: 16 },
+]
+
 function AuthHero({ className }: { className?: string }) {
   const [paused, setPaused] = useState(false)
+  const [hidden, setHidden] = useState(false)
+
+  useEffect(() => {
+    const update = () => setHidden(document.visibilityState === "hidden")
+    update()
+    document.addEventListener("visibilitychange", update)
+    return () => document.removeEventListener("visibilitychange", update)
+  }, [])
+
   return (
     <div
       data-slot="auth-hero"
-      data-paused={paused}
-      className={cn("relative min-h-[480px] overflow-hidden rounded-3xl bg-hero text-hero-foreground shadow-card", className)}
+      data-paused={paused || hidden}
+      className={cn("relative h-full min-h-[520px] overflow-hidden bg-hero text-hero-foreground", className)}
     >
       <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
         <span className="auth-orb auth-orb-3" />
@@ -34,11 +51,17 @@ function AuthHero({ className }: { className?: string }) {
               strokeWidth="9"
               strokeLinecap="round"
             />
+            {NODES.map((node, index) => (
+              <circle key={index} className={`auth-node auth-node-${index + 1}`} cx={node.cx} cy={node.cy} r="7" strokeWidth="3" />
+            ))}
           </svg>
-          <div className="auth-core relative grid place-items-center">
-            <span className="auth-word auth-word-1 rounded-full bg-status-todo px-3.5 py-1 text-[15px] font-semibold text-status-todo-foreground" />
-            <span className="auth-word auth-word-2 rounded-full bg-status-in-progress px-3.5 py-1 text-[15px] font-semibold text-status-in-progress-foreground" />
-            <span className="auth-word auth-word-3 rounded-full bg-status-done px-3.5 py-1 text-[15px] font-semibold text-status-done-foreground" />
+          <div className="auth-core relative grid place-items-center gap-2">
+            <span className="grid">
+              <span className="auth-word auth-word-1 rounded-full bg-status-todo px-3.5 py-1 text-[15px] font-semibold text-status-todo-foreground" />
+              <span className="auth-word auth-word-2 rounded-full bg-status-in-progress px-3.5 py-1 text-[15px] font-semibold text-status-in-progress-foreground" />
+              <span className="auth-word auth-word-3 rounded-full bg-status-done px-3.5 py-1 text-[15px] font-semibold text-status-done-foreground" />
+            </span>
+            <span className="auth-count text-[13px] text-hero-muted tabular-nums" />
           </div>
         </div>
       </div>

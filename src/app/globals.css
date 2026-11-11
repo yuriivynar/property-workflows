@@ -444,17 +444,22 @@ main > *:nth-child(4) {
 }
 @keyframes auth-ringfill {
   0%,
-  20% {
-    stroke-dashoffset: 96;
+  8% {
+    stroke-dashoffset: 100;
     stroke: var(--hero-muted);
     opacity: 1;
   }
-  32%,
-  46% {
-    stroke-dashoffset: 52;
+  26%,
+  32% {
+    stroke-dashoffset: 66.7;
     stroke: var(--hero-progress);
   }
-  60%,
+  48%,
+  54% {
+    stroke-dashoffset: 33.3;
+    stroke: var(--hero-progress);
+  }
+  70%,
   92% {
     stroke-dashoffset: 0;
     stroke: var(--hero-done);
@@ -469,15 +474,15 @@ main > *:nth-child(4) {
 }
 @keyframes auth-burst {
   0%,
-  60% {
+  70% {
     opacity: 0;
     transform: scale(1);
   }
-  62% {
+  72% {
     opacity: 0.9;
     transform: scale(1);
   }
-  78%,
+  88%,
   100% {
     opacity: 0;
     transform: scale(1.7);
@@ -488,13 +493,13 @@ main > *:nth-child(4) {
 }
 @keyframes auth-corepop {
   0%,
-  60% {
+  70% {
     transform: scale(1);
   }
-  64% {
+  74% {
     transform: scale(1.12);
   }
-  70%,
+  80%,
   100% {
     transform: scale(1);
   }
@@ -526,12 +531,12 @@ main > *:nth-child(4) {
     opacity: 0;
     transform: translateY(8px);
   }
-  5%,
-  18% {
+  4%,
+  20% {
     opacity: 1;
     transform: none;
   }
-  24%,
+  25%,
   100% {
     opacity: 0;
     transform: translateY(-8px);
@@ -539,16 +544,16 @@ main > *:nth-child(4) {
 }
 @keyframes auth-word-2 {
   0%,
-  24% {
+  25% {
     opacity: 0;
     transform: translateY(8px);
   }
-  30%,
-  56% {
+  29%,
+  66% {
     opacity: 1;
     transform: none;
   }
-  62%,
+  70%,
   100% {
     opacity: 0;
     transform: translateY(-8px);
@@ -556,11 +561,11 @@ main > *:nth-child(4) {
 }
 @keyframes auth-word-3 {
   0%,
-  60% {
+  70% {
     opacity: 0;
     transform: translateY(8px);
   }
-  66%,
+  74%,
   92% {
     opacity: 1;
     transform: none;
@@ -569,6 +574,108 @@ main > *:nth-child(4) {
   100% {
     opacity: 0;
     transform: translateY(-8px);
+  }
+}
+
+/* Три точки-задачі на кільці: стають зеленими, коли кільце їх проходить (третини); лічильник «N of 3 done» під словом. */
+.auth-node {
+  fill: var(--hero);
+  stroke: var(--hero-muted);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.auth-node-1 {
+  animation: auth-node-1 10s infinite both;
+}
+.auth-node-2 {
+  animation: auth-node-2 10s infinite both;
+}
+.auth-node-3 {
+  animation: auth-node-3 10s infinite both;
+}
+@keyframes auth-node-1 {
+  0%,
+  25% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+    transform: scale(1);
+  }
+  28% {
+    transform: scale(1.5);
+  }
+  31%,
+  94% {
+    fill: var(--hero-done);
+    stroke: var(--hero-done);
+    transform: scale(1);
+  }
+  100% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+  }
+}
+@keyframes auth-node-2 {
+  0%,
+  47% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  53%,
+  94% {
+    fill: var(--hero-done);
+    stroke: var(--hero-done);
+    transform: scale(1);
+  }
+  100% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+  }
+}
+@keyframes auth-node-3 {
+  0%,
+  69% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+    transform: scale(1);
+  }
+  72% {
+    transform: scale(1.5);
+  }
+  75%,
+  94% {
+    fill: var(--hero-done);
+    stroke: var(--hero-done);
+    transform: scale(1);
+  }
+  100% {
+    fill: var(--hero);
+    stroke: var(--hero-muted);
+  }
+}
+.auth-count::after {
+  content: "0 of 3 done";
+  animation: auth-count 10s infinite both;
+}
+@keyframes auth-count {
+  0%,
+  27% {
+    content: "0 of 3 done";
+  }
+  28%,
+  49% {
+    content: "1 of 3 done";
+  }
+  50%,
+  71% {
+    content: "2 of 3 done";
+  }
+  72%,
+  100% {
+    content: "3 of 3 done";
   }
 }
 
@@ -589,6 +696,13 @@ main > *:nth-child(4) {
   .auth-ring-fill {
     stroke-dashoffset: 0;
     stroke: var(--hero-done);
+  }
+  .auth-node {
+    fill: var(--hero-done);
+    stroke: var(--hero-done);
+  }
+  .auth-count::after {
+    content: "3 of 3 done";
   }
   .brand-mark .brand-step {
     stroke-dashoffset: 0;
