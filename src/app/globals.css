@@ -296,6 +296,92 @@ main > *:nth-child(4) {
   pointer-events: auto;
 }
 
+/* Логотип (BrandMark, ADR 0008): сходинки прокреслюються один раз під час завантаження, крапка «вистрибує»; при наведенні
+   чи фокусі посилання .brand-link крапка стрибає сходинками вгору. Лише transform і stroke-dashoffset. */
+.brand-mark .brand-step {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: brand-draw 0.8s 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brand-mark .brand-end {
+  fill: var(--fill-done);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  animation: brand-pop 0.45s 1s ease-out forwards;
+}
+.brand-mark[data-tone="page"] .brand-tile {
+  fill: var(--hero);
+}
+.brand-mark[data-tone="page"] .brand-step {
+  stroke: var(--hero-foreground);
+}
+.brand-mark[data-tone="page"] .brand-start {
+  fill: var(--hero-muted);
+}
+.brand-mark[data-tone="hero"] .brand-tile {
+  fill: var(--hero-foreground);
+}
+.brand-mark[data-tone="hero"] .brand-step {
+  stroke: var(--hero);
+}
+.brand-mark[data-tone="hero"] .brand-start {
+  fill: var(--hero);
+}
+.brand-link:hover .brand-mark .brand-end,
+.brand-link:focus-visible .brand-mark .brand-end {
+  animation: brand-climb 0.9s ease-in-out both;
+}
+@keyframes brand-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes brand-pop {
+  60% {
+    transform: scale(1.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes brand-climb {
+  0% {
+    transform: translate(-20px, 20px) scale(1);
+  }
+  20% {
+    transform: translate(-15px, 17px);
+  }
+  30% {
+    transform: translate(-10px, 20px);
+  }
+  42% {
+    transform: translate(-10px, 15px);
+  }
+  52% {
+    transform: translate(-10px, 10px);
+  }
+  62% {
+    transform: translate(-5px, 7px);
+  }
+  72% {
+    transform: translate(0, 10px);
+  }
+  82% {
+    transform: translate(0, 4px);
+  }
+  90% {
+    transform: translate(0, 0) scale(1.35);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
 /* Вхід: кільце процесу заповнюється від «to do» до «completed» (декоративне, aria-hidden у розмітці). */
 .auth-orb {
   position: absolute;
@@ -504,6 +590,12 @@ main > *:nth-child(4) {
     stroke-dashoffset: 0;
     stroke: var(--hero-done);
   }
+  .brand-mark .brand-step {
+    stroke-dashoffset: 0;
+  }
+  .brand-mark .brand-end {
+    transform: none;
+  }
 }
 
 /* Пауза руху панелі входу (кнопка в AuthHero): WCAG 2.2.2 — рух довше за 5 секунд можна зупинити. */
@@ -517,6 +609,8 @@ main > *:nth-child(4) {
    контрастним на білому папері. Форми не ховаємо: у редакторі в них назви розділів і задач. */
 @media print {
   header,
+  [data-slot="app-sidebar"],
+  [data-slot="theme-switch"],
   [data-slot="button"] {
     display: none !important;
   }

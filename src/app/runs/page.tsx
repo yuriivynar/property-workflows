@@ -63,13 +63,13 @@ export default async function RunsPage() {
           <TableBody>
             {runs.map((run) => (
               <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
-                <TableCell className={CELL_STACK}>
+                <TableCell className={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}>
                   <TextLink href={`/runs/${run.id}`} className="font-medium">
                     {run.case_name}
                   </TextLink>
                   <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
                 </TableCell>
-                <TableCell className="hidden py-2.5 text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
+                <TableCell className="hidden py-2.5 whitespace-normal text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
                 <TableCell className={CELL_STACK}>
                   <StatusBadge status={run.status ?? ""} />
                 </TableCell>
@@ -126,7 +126,7 @@ async function VendorRuns() {
           <TableBody>
             {runs.map((run) => (
               <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
-                <TableCell className={CELL_STACK}>
+                <TableCell className={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}>
                   <TextLink href={`/runs/${run.id}`} className="font-medium">
                     {run.case_name}
                   </TextLink>
