@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PageShell signedIn={signedIn} role={profile?.role} theme={theme}>{children}</PageShell>
+        <PageShell signedIn={signedIn} role={profile?.role} email={typeof claims?.email === "string" ? claims.email : null} theme={theme}>{children}</PageShell>
       </body>
     </html>
   );
