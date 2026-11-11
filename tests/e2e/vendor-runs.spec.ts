@@ -394,6 +394,17 @@ test(
           await expect(page.getByRole("columnheader", { name: "Template" })).toHaveCount(0);
         },
       );
+
+      // Поза кадром AC: рядок клікабельний цілком (ADR 0008) — клік по лічильнику «Your tasks», не по назві, відкриває той самий запуск.
+      const row = page.getByTestId("run-row").first();
+      const href = await row.getByRole("link", { name: APARTMENT_12, exact: true }).getAttribute("href");
+      // Клік мишею в точку лічильника: її приймає розтягнуте над рядком посилання, а не сама клітинка.
+      const cell = await row.getByTestId("your-tasks").boundingBox();
+      expect(cell).not.toBeNull();
+      await page.mouse.click(cell!.x + cell!.width / 2, cell!.y + cell!.height / 2);
+      expect(href).toMatch(/^\/runs\/[0-9a-f-]{36}$/);
+      await expect(page).toHaveURL(new RegExp(`${href}$`));
+      await expect(page.getByTestId("case-name")).toHaveText(APARTMENT_12);
     } finally {
       await cast.dispose();
     }

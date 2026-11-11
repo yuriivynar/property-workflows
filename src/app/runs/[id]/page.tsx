@@ -130,7 +130,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                   className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
                 >
                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                    <span>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
                       {task.name}{" "}
                       <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
@@ -242,7 +242,7 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
                   className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
                 >
                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                    <span>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
                       {task.name} <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
                     <span data-testid="task-status">
