@@ -155,6 +155,44 @@ describe("База: що бачить вендор", () => {
   });
 });
 
+describe("База: заголовок запуску й рядок списку вендора", () => {
+  const TEMPLATE_NAME = "Tenant move-in";
+  const contains = (rows: Record<string, unknown>[], text: string) =>
+    rows.some((row) => Object.values(row).some((value) => typeof value === "string" && value.includes(text)));
+
+  it("AC-VENDOR-11: вендор отримує для сторінки запуску назву випадку й «Your tasks: 1 of 2 done» — без статусу запуску в задачах, назви й версії шаблону", async () => {
+    const { runId, tasks } = await apartment12("AC-VENDOR-11 Apartment 12, move-in");
+    const own = tasks.filter((task) => task.assignee_id === VENDOR_V);
+    expect(own).toHaveLength(2);
+    // Задача 3 — «done», задача 4 — «to do», як у «Дано».
+    expect(await errorOf(t.asUser(VENDOR_V, "select public.mark_task_done($1, true)", [own[0].id]))).toBe("");
+
+    const [run] = await t.asUser<Record<string, unknown>>(VENDOR_V, "select * from public.vendor_runs() where id = $1", [runId]);
+    expect(run).toMatchObject({ case_name: "AC-VENDOR-11 Apartment 12, move-in", my_done: 1, my_total: 2 });
+    expect(Object.keys(run).sort()).toEqual(["case_name", "created_at", "id", "my_done", "my_total", "status"]);
+    const runTasks = await t.asUser<Record<string, unknown>>(VENDOR_V, "select * from public.vendor_run_tasks($1)", [runId]);
+    expect(runTasks).toHaveLength(2);
+    for (const row of runTasks) {
+      expect(Object.keys(row)).not.toEqual(expect.arrayContaining(["template_name"]));
+      expect(Object.keys(row)).not.toEqual(expect.arrayContaining(["template_version"]));
+    }
+    expect(contains([run, ...runTasks], TEMPLATE_NAME)).toBe(false);
+    // Рядки runs і run_overview (там назва й версія шаблону, статус і прогрес усього запуску) вендору закрито.
+    expect(await t.asUser(VENDOR_V, "select template_name, template_version from public.runs where id = $1", [runId])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select * from public.run_overview where id = $1", [runId])).toEqual([]);
+  });
+
+  it("AC-VENDOR-12: рядок списку запусків вендора — назва випадку, статус запуску й «Your tasks: 0 of 2 done», без назви шаблону «Tenant move-in»", async () => {
+    const { runId } = await apartment12("AC-VENDOR-12 Apartment 12, move-in");
+
+    const rows = await t.asUser<Record<string, unknown>>(VENDOR_V, "select * from public.vendor_runs()");
+    const row = rows.find((candidate) => candidate.id === runId);
+    expect(row).toMatchObject({ case_name: "AC-VENDOR-12 Apartment 12, move-in", status: "in_progress", my_done: 0, my_total: 2 });
+    expect(Object.keys(row!).sort()).toEqual(["case_name", "created_at", "id", "my_done", "my_total", "status"]);
+    expect(contains(rows, TEMPLATE_NAME)).toBe(false);
+  });
+});
+
 describe("База: позначка задач вендором", () => {
   it("AC-VENDOR-05: вендор V позначає свою задачу 3 (не остання обов'язкова) — «done» і «Your tasks: 1 of 2 done»", async () => {
     const { runId, tasks } = await apartment12("AC-VENDOR-05 Apartment 12, move-in");

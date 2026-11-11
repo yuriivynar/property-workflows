@@ -1,4 +1,4 @@
-// AC-VENDOR-03, 04, 05, 06, 10 — що вендор бачить і що робить у своїх запусках (зріз 3). Пишуть дані: створюють
+// AC-VENDOR-03, 04, 05, 06, 10, 11, 12, 13 — що вендор бачить і що робить у своїх запусках (зріз 3 і уточнення 10.11). Пишуть дані: створюють
 // синтетичних користувачів uat-<run>-…@example.test і запуски (через справжню launch_run від імені менеджера),
 // а по собі прибирають (Cast.dispose). Тег @writes: на проді — лише з синтетичними користувачами й прибиранням.
 import { expect, test } from "@playwright/test";
@@ -9,6 +9,7 @@ import {
   Cast,
   REPAIR_REQUEST,
   TENANT_MOVE_IN,
+  clientFor,
   currentTemplate,
   launchApartment12,
   launchAs,
@@ -291,6 +292,151 @@ test(
           await expect(page.getByRole("table")).toHaveCount(0);
           await expect(page.getByTestId("run-row")).toHaveCount(0);
           await expect(page.locator("body")).not.toContainText(APARTMENT_14);
+        },
+      );
+    } finally {
+      await cast.dispose();
+    }
+  },
+);
+
+test(
+  "AC-VENDOR-11: вендор V із задачами 3 («done») і 4 («to do») відкриває «Apartment 12, move-in» — заголовок сторінки — назва випадку, «Your tasks: 1 of 2 done», без статусу запуску, назви й версії шаблону",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-11" } },
+  async ({ page }) => {
+    const cast = new Cast("v11");
+    try {
+      let runId = "";
+      await given(
+        'vendor V who is the assignee of tasks 3 ("done") and 4 ("to do") in the run "Apartment 12, move-in" (5 tasks)',
+        async () => {
+          const manager = await cast.create("mgr-a", "manager");
+          const vendor = await cast.create("vnd", "vendor");
+          const launched = await launchApartment12(manager, vendor);
+          runId = launched.runId;
+          const own = launched.tasks.filter((task) => task.assigneeId === vendor.id);
+          // Задачу 3 V позначає сам — справжньою функцією бази з його сесією.
+          const { error } = await (await clientFor(vendor)).rpc("mark_task_done", { p_task_id: own[0].id, p_confirmed: false });
+          expect(error).toBeNull();
+          expect((await runTasks(runId)).map((task) => task.status)).toEqual(["to_do", "to_do", "done", "to_do", "to_do"]);
+          await signInAs(page, vendor);
+        },
+      );
+
+      await when("V opens this run", async () => {
+        await page.goto(`/runs/${runId}`);
+      });
+
+      await thenStep(
+        page,
+        {
+          clause:
+            'V sees the case name "Apartment 12, move-in" as the title of the page and "Your tasks: 1 of 2 done", and does not see the run status, the template name or the template version.',
+          visible: ["заголовок сторінки (h1) — «Apartment 12, move-in»", "«Your tasks: 1 of 2 done» під заголовком"],
+          hidden: [
+            "статусу запуску («in progress» / «completed») на сторінці немає",
+            "назви шаблону «Tenant move-in» і «Template version …» на сторінці немає",
+          ],
+        },
+        async () => {
+          const main = page.getByRole("main");
+          await expect(main.getByRole("heading", { level: 1 })).toHaveText(APARTMENT_12);
+          await expect(page.getByTestId("your-tasks")).toHaveText("Your tasks: 1 of 2 done");
+          await expect(main.getByText("in progress", { exact: true })).toHaveCount(0);
+          await expect(main.getByText("completed", { exact: true })).toHaveCount(0);
+          await expect(page.locator("body")).not.toContainText("Tenant move-in");
+          await expect(page.getByTestId("template-version")).toHaveCount(0);
+          await expect(page.locator("body")).not.toContainText("Template version");
+        },
+      );
+    } finally {
+      await cast.dispose();
+    }
+  },
+);
+
+test(
+  "AC-VENDOR-12: вендор V відкриває список запусків — рядок «Apartment 12, move-in» показує назву випадку, статус запуску й «Your tasks: 0 of 2 done», без назви шаблону «Tenant move-in»",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-12" } },
+  async ({ page }) => {
+    const cast = new Cast("v12");
+    try {
+      await given(
+        'vendor V who is the assignee of 2 tasks in the run "Apartment 12, move-in", launched from the template "Tenant move-in"',
+        async () => {
+          const manager = await cast.create("mgr-a", "manager");
+          const vendor = await cast.create("vnd", "vendor");
+          await launchApartment12(manager, vendor);
+          await signInAs(page, vendor);
+        },
+      );
+
+      await when("V opens the list of runs", async () => {
+        await page.goto("/runs");
+      });
+
+      await thenStep(
+        page,
+        {
+          clause:
+            'the row of this run shows the case name, the run status and "Your tasks: 0 of 2 done", and does not show the template name "Tenant move-in".',
+          visible: ["у рядку — назва випадку «Apartment 12, move-in»", "статус «in progress»", "«Your tasks: 0 of 2 done»"],
+          hidden: ["назви шаблону «Tenant move-in» у рядку й на сторінці немає, як і колонки «Template»"],
+        },
+        async () => {
+          const row = page.getByTestId("run-row").first();
+          await expect(page.getByTestId("run-row")).toHaveCount(1);
+          await expect(row.getByRole("link", { name: APARTMENT_12, exact: true })).toBeVisible();
+          await expect(row.getByText("in progress", { exact: true })).toBeVisible();
+          await expect(row.getByTestId("your-tasks")).toHaveText("Your tasks: 0 of 2 done");
+          await expect(row).not.toContainText("Tenant move-in");
+          await expect(page.locator("body")).not.toContainText("Tenant move-in");
+          await expect(page.getByRole("columnheader", { name: "Template" })).toHaveCount(0);
+        },
+      );
+    } finally {
+      await cast.dispose();
+    }
+  },
+);
+
+test(
+  "AC-VENDOR-13: вендор V входить — бачить список запусків, а навігація показує лише «Runs» і «Profile»",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-13" } },
+  async ({ page }) => {
+    const cast = new Cast("v13");
+    try {
+      let vendor!: Actor;
+      await given('vendor V who is the assignee of 2 tasks in the run "Apartment 12, move-in"', async () => {
+        const manager = await cast.create("mgr-a", "manager");
+        vendor = await cast.create("vnd", "vendor");
+        await launchApartment12(manager, vendor);
+      });
+
+      await when("V signs in", async () => {
+        // Звичайний вхід через форму (без прямого посилання): signInAs далі відкриває «/», тож тут — вручну.
+        await page.goto("/login");
+        await page.getByLabel("Email").fill(vendor.email);
+        await page.getByLabel("Password").evaluate((el, value) => {
+          (el as HTMLInputElement).value = value;
+        }, vendor.password);
+        await page.getByRole("button", { name: "Sign in" }).click();
+        await page.waitForURL((url) => url.pathname === "/runs");
+      });
+
+      await thenStep(
+        page,
+        {
+          clause: 'V sees the list of runs, and the navigation shows only "Runs" and "Profile".',
+          visible: ["сторінка «Runs» зі запуском «Apartment 12, move-in»", "у навігації рівно два пункти: «Runs» і «Profile»"],
+          hidden: ["пункту «Templates» у навігації немає"],
+        },
+        async () => {
+          await expect(page.getByRole("heading", { level: 1, name: "Runs" })).toBeVisible();
+          await expect(page.getByTestId("run-row").first().getByRole("link", { name: APARTMENT_12, exact: true })).toBeVisible();
+          const nav = page.getByRole("navigation", { name: "Main" });
+          await expect(nav.getByRole("link")).toHaveText(["Runs", "Profile"]);
+          await expect(nav.getByRole("link", { name: "Templates" })).toHaveCount(0);
         },
       );
     } finally {

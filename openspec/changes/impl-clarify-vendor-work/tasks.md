@@ -19,7 +19,7 @@
 
 ## 2. Що бачить вендор (`task/vendor-views`)
 
-- [ ] 2.1 `navItems(role)` у `src/lib/auth/nav.ts` (бере `PageShell`); тест бази: колонки `vendor_runs()` без назви й
+- [x] 2.1 `navItems(role)` у `src/lib/auth/nav.ts` (бере `PageShell`); тест бази: колонки `vendor_runs()` без назви й
   версії шаблону; юніт-тест навігації й дії входу; e2e: заголовок сторінки запуску — назва випадку, «Your tasks: 1 of 2
   done», без статусу запуску, назви й версії шаблону; рядок списку без «Tenant move-in»; після входу — список і лише
   «Runs», «Profile»; мутанти V12 (SQL), TS-V13; рядки матриці AC-VENDOR-11, 12, 13.

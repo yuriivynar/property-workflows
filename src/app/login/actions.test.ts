@@ -56,6 +56,12 @@ describe("Дія входу", () => {
     expect(await redirectOf(login(form({ ...credentials, next: RUN })))).toBe(`REDIRECT:${RUN}`);
   });
 
+  it("AC-VENDOR-13: вендор V входить — потрапляє на список запусків", async () => {
+    // Рішення PM solomchaak/property-workflows-spec#44: після входу вендор бачить список запусків.
+    state.role = "vendor";
+    expect(await redirectOf(login(form({ email: "vendor@example.test", password: "synthetic" })))).toBe("REDIRECT:/runs");
+  });
+
   it("AC-DSYS-08: невдалий вхід лишає повернення на запуск для наступної спроби", async () => {
     state.signInError = { message: "Invalid login credentials" };
     expect(await redirectOf(login(form({ email: "manager.b@example.test", password: "wrong", next: RUN })))).toBe(

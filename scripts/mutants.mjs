@@ -100,6 +100,19 @@ export const mutants = [
     find: "if (!runFound || !errorCode) return undefined;",
     replace: "if (!errorCode) return undefined;",
   },
+  // ── Уточнення зрізу 3 (10.11): що бачить вендор — заголовок запуску, рядок списку, навігація ───────────────────
+  {
+    id: "V12", kind: "sql", ac: "AC-VENDOR-12", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "vendor_runs: до назви випадку дописано назву шаблону — вендор бачить «Tenant move-in» у рядку списку й заголовку",
+    find: "  select r.id, r.case_name, r.status, r.created_at,",
+    replace: "  select r.id, r.case_name || ' · ' || r.template_name, r.status, r.created_at,",
+  },
+  {
+    id: "TS-V13", kind: "ts", ac: "AC-VENDOR-13", file: "src/lib/auth/nav.ts", tests: ["src/lib/auth/nav.test.ts"],
+    what: "navItems: вендору показано й «Templates» (посилання на сторінку, що завжди відмовляє)",
+    find: 'role === "vendor" ? []',
+    replace: 'role === "nobody" ? []',
+  },
 ];
 
 // Приклади з демо (інша схема — у вашому репо цих файлів немає, тож не розкоментовуйте як є):
