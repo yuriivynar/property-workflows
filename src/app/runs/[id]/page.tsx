@@ -3,7 +3,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { TextLink } from "@/components/ui/text-link";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
@@ -21,6 +20,8 @@ import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { BackLink } from "@/components/ui/back-link";
 
 // Сторінка запуску: прогрес «N of M done», задачі за розділами з виконавцем, позначкою обов'язковості й статусом
 // (AC-TASK-05, AC-TASK-08; робоче рішення до solomchaak/property-workflows-spec#11), кнопка позначки — лише там, де
@@ -70,8 +71,9 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <Breadcrumb items={[{ href: "/runs", label: LABELS.runsTitle }]} current={run.case_name} />
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold" data-testid="case-name">
+        <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]" data-testid="case-name">
           {run.case_name}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -81,8 +83,10 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           ) : null}
         </p>
       </div>
-      <Card className="gap-0 py-0">
-        <dl className="grid divide-y divide-border text-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка прогресу праворуч (ADR 0008). */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+      <Card className="gap-0 py-0 lg:sticky lg:top-6 lg:order-2">
+        <dl className="grid divide-y divide-border text-sm max-lg:sm:grid-cols-3 max-lg:sm:divide-x max-lg:sm:divide-y-0">
           <div className="flex flex-col gap-1.5 px-4 py-3.5">
             <dt className="text-muted-foreground">{LABELS.runManager}</dt>
             <dd className="font-medium break-all" data-testid="run-manager">
@@ -105,6 +109,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         </dl>
       </Card>
 
+      <div className="flex min-w-0 flex-col gap-6 lg:order-1">
       {message ? (
         <Alert variant="destructive">
           <AlertDescription>{message}</AlertDescription>
@@ -125,7 +130,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                   className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
                 >
                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                    <span>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
                       {task.name}{" "}
                       <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
@@ -156,10 +161,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           </Card>
         </section>
       ))}
-
-      <TextLink href="/runs" className="w-fit text-sm">
-        {LABELS.backToRuns}
-      </TextLink>
+      </div>
+      </div>
     </main>
   );
 }
@@ -173,9 +176,7 @@ function RunNotFound({ message }: { message?: string }) {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
-      <TextLink href="/runs" className="w-fit text-sm">
-        {LABELS.backToRuns}
-      </TextLink>
+      <BackLink href="/runs">{LABELS.backToRuns}</BackLink>
     </main>
   );
 }
@@ -203,9 +204,7 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
             <h1 className="text-base font-semibold">{MESSAGES.unexpected}</h1>
           </AlertDescription>
         </Alert>
-        <TextLink href="/runs" className="w-fit text-sm">
-          {LABELS.backToRuns}
-        </TextLink>
+        <BackLink href="/runs">{LABELS.backToRuns}</BackLink>
       </main>
     );
   }
@@ -215,8 +214,9 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <Breadcrumb items={[{ href: "/runs", label: LABELS.runsTitle }]} current={run.case_name} />
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold" data-testid="case-name">
+        <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]" data-testid="case-name">
           {run.case_name}
         </h1>
         <p className="text-sm tabular-nums text-muted-foreground" data-testid="your-tasks">
@@ -242,7 +242,7 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
                   className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
                 >
                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                    <span>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
                       {task.name} <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
                     </span>
                     <span data-testid="task-status">
@@ -258,10 +258,6 @@ async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) 
           </Card>
         </section>
       ))}
-
-      <TextLink href="/runs" className="w-fit text-sm">
-        {LABELS.backToRuns}
-      </TextLink>
     </main>
   );
 }

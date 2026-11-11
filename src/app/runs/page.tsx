@@ -62,9 +62,9 @@ export default async function RunsPage() {
           {/* На телефоні рядок — картка: назва (з шаблоном під нею) і статус зверху, прогрес на всю ширину нижче. */}
           <TableBody>
             {runs.map((run) => (
-              <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
+              <TableRow key={run.id} data-testid="run-row" className={`${ROW_STACK} relative cursor-pointer`}>
                 <TableCell className={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}>
-                  <TextLink href={`/runs/${run.id}`} className="font-medium">
+                  <TextLink href={`/runs/${run.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">
                     {run.case_name}
                   </TextLink>
                   <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
@@ -90,9 +90,6 @@ export default async function RunsPage() {
       ) : (
         <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
       )}
-      <TextLink href="/" className="w-fit text-sm">
-        {LABELS.backToProfile}
-      </TextLink>
     </main>
   );
 }
@@ -125,9 +122,9 @@ async function VendorRuns() {
           </TableHeader>
           <TableBody>
             {runs.map((run) => (
-              <TableRow key={run.id} data-testid="run-row" className={ROW_STACK}>
+              <TableRow key={run.id} data-testid="run-row" className={`${ROW_STACK} relative cursor-pointer`}>
                 <TableCell className={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}>
-                  <TextLink href={`/runs/${run.id}`} className="font-medium">
+                  <TextLink href={`/runs/${run.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">
                     {run.case_name}
                   </TextLink>
                 </TableCell>
@@ -144,9 +141,6 @@ async function VendorRuns() {
       ) : (
         <EmptyState message={MESSAGES.noVendorTasks} />
       )}
-      <TextLink href="/" className="w-fit text-sm">
-        {LABELS.backToProfile}
-      </TextLink>
     </main>
   );
 }

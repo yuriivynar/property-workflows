@@ -240,7 +240,6 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
 
       <p className="flex gap-4 text-sm">
         <TextLink href={`/templates/${template.id}/versions`}>Versions</TextLink>
-        <TextLink href="/templates">{TEMPLATE_MESSAGES.backToTemplates}</TextLink>
       </p>
     </main>
   );
