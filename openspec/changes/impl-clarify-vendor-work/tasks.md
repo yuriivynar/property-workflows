@@ -28,7 +28,7 @@
 
 ## 3. Прямі читання вендора (`task/vendor-direct-reads`)
 
-- [ ] 3.1 Тести бази від імені вендора: `run_tasks`, `run_sections`, `runs`, `run_overview`, `profiles`,
+- [x] 3.1 Тести бази від імені вендора: `run_tasks`, `run_sections`, `runs`, `run_overview`, `profiles`,
   `staff_directory()`, `vendor_run_tasks()` для свого й чужого запуску; мутанти V04, V06 (наявні, і для AC-VENDOR-17), V18, V18P;
   рядки матриці AC-VENDOR-17, 18.
   Рівень тесту: база (PGlite). Доказ відмови: мутанти V04, V06, V18, V18P.
