@@ -113,6 +113,19 @@ export const mutants = [
     find: 'role === "vendor" ? []',
     replace: 'role === "nobody" ? []',
   },
+  // ── Уточнення зрізу 3 (10.11): прямі читання вендора (AC-VENDOR-17 доводять ще й наявні V04 і V06) ────────────────
+  {
+    id: "V18", kind: "sql", ac: "AC-VENDOR-18", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    what: "staff_directory: довідник колег (id, email) віддає і вендору",
+    find: "  where (select private.current_app_role()) in ('manager', 'admin')\n    and p.role in ('manager', 'admin', 'vendor')",
+    replace: "  where (select private.current_app_role()) in ('manager', 'admin', 'vendor')\n    and p.role in ('manager', 'admin', 'vendor')",
+  },
+  {
+    id: "V18P", kind: "sql", ac: "AC-VENDOR-18", file: "supabase/migrations/20261012000000_profiles_and_roles.sql", tests: [VENDOR_DB],
+    what: "політика profiles: вендор читає профілі всіх користувачів (email, роль), як адміністратор",
+    find: "    or (select private.current_app_role()) = 'admin'\n  );",
+    replace: "    or (select private.current_app_role()) in ('admin', 'vendor')\n  );",
+  },
 ];
 
 // Приклади з демо (інша схема — у вашому репо цих файлів немає, тож не розкоментовуйте як є):

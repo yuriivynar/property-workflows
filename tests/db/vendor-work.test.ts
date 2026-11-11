@@ -193,6 +193,45 @@ describe("База: заголовок запуску й рядок списку
   });
 });
 
+describe("База: прямі запити вендора на читання", () => {
+  it("AC-VENDOR-17: вендор V прямим запитом задач «Apartment 12, move-in» (5 задач) отримує лише задачі 3 і 4", async () => {
+    const { runId, tasks } = await apartment12("AC-VENDOR-17 Apartment 12, move-in");
+    expect(tasks).toHaveLength(5);
+    const own = tasks.filter((task) => task.assignee_id === VENDOR_V).map((task) => task.id).sort();
+    expect(own).toEqual([tasks[2].id, tasks[3].id].sort());
+
+    // Таблиця задач напряму (REST), функція сторінки запуску і задачі за розділами — щоразу лише його дві задачі.
+    const direct = await t.asUser<{ id: string }>(VENDOR_V, "select id from public.run_tasks where run_id = $1", [runId]);
+    expect(direct.map((row) => row.id).sort()).toEqual(own);
+    const viaFunction = await t.asUser<{ id: string }>(VENDOR_V, "select id from public.vendor_run_tasks($1)", [runId]);
+    expect(viaFunction.map((row) => row.id).sort()).toEqual(own);
+    // І без фільтра за запуском — лише задачі, де виконавець він.
+    const all = await t.asUser<{ assignee_id: string }>(VENDOR_V, "select assignee_id from public.run_tasks");
+    expect(all.length).toBeGreaterThan(0);
+    expect(all.every((row) => row.assignee_id === VENDOR_V)).toBe(true);
+  });
+
+  it("AC-VENDOR-18: вендор V прямим запитом email і профілів інших користувачів і задач «Apartment 14, repair» не отримує нічого", async () => {
+    await apartment12("AC-VENDOR-18 Apartment 12, move-in");
+    const repairId = await launch(MANAGER_A, REPAIR_REQUEST, "AC-VENDOR-18 Apartment 14, repair");
+
+    // Профілі: лише власний (матриця прав: See own profile — yes); email колег — нічого, ні з таблиці, ні з довідника.
+    const profiles = await t.asUser<{ id: string }>(VENDOR_V, "select id, email, role from public.profiles");
+    expect(profiles.map((row) => row.id)).toEqual([VENDOR_V]);
+    expect(await t.asUser(VENDOR_V, "select id from public.profiles where id = $1", [MANAGER_A])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select * from public.staff_directory()")).toEqual([]);
+
+    // Запуск без його задач: жодної задачі, розділу, рядка запуску чи огляду.
+    expect(await t.asUser(VENDOR_V, "select id from public.run_tasks where run_id = $1", [repairId])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select id from public.vendor_run_tasks($1)", [repairId])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select id from public.run_sections where run_id = $1", [repairId])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select id from public.runs where id = $1", [repairId])).toEqual([]);
+    expect(await t.asUser(VENDOR_V, "select id from public.run_overview where id = $1", [repairId])).toEqual([]);
+    const runs = await t.asUser<{ id: string }>(VENDOR_V, "select id from public.vendor_runs()");
+    expect(runs.some((run) => run.id === repairId)).toBe(false);
+  });
+});
+
 describe("База: позначка задач вендором", () => {
   it("AC-VENDOR-05: вендор V позначає свою задачу 3 (не остання обов'язкова) — «done» і «Your tasks: 1 of 2 done»", async () => {
     const { runId, tasks } = await apartment12("AC-VENDOR-05 Apartment 12, move-in");
