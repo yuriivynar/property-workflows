@@ -8,6 +8,10 @@ import { applyTheme } from "@/lib/theme-dom"
 
 const ICONS: Record<Theme, LucideIcon> = { system: Monitor, light: Sun, dark: Moon }
 
+// PageShell монтує два перемикачі (смуга телефону й рядок над вмістом від lg): вибір в одному сповіщає інший,
+// щоб після зміни ширини вікна обидва показували ту саму тему.
+const THEME_EVENT = "theme-switch:change"
+
 // Вибір «Theme» (ADR 0004, ADR 0008; AC-DSYS-05, AC-DSYS-06): компактне меню в правому верхньому куті кожної сторінки.
 // Закрите показує «Theme» і поточне значення («Theme System»), відкрите — три справжні радіокнопки System · Light ·
 // Dark з іконкою й словом. Меню — нативні <details>/<summary>: відкривається клавіатурою й без JavaScript; Escape і
@@ -26,17 +30,21 @@ function ThemeSwitch({ value, tone = "surface", name = "theme" }: { value: Theme
         if (event instanceof KeyboardEvent) details.querySelector("summary")?.focus()
       }
     }
+    const sync = (event: Event) => setTheme((event as CustomEvent<Theme>).detail)
     document.addEventListener("pointerdown", close)
     document.addEventListener("keydown", close)
+    window.addEventListener(THEME_EVENT, sync)
     return () => {
       document.removeEventListener("pointerdown", close)
       document.removeEventListener("keydown", close)
+      window.removeEventListener(THEME_EVENT, sync)
     }
   }, [])
 
   function choose(next: Theme) {
     setTheme(next)
     applyTheme(next)
+    window.dispatchEvent(new CustomEvent<Theme>(THEME_EVENT, { detail: next }))
     if (menu.current) menu.current.open = false
   }
 

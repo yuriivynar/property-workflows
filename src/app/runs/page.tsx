@@ -69,7 +69,7 @@ export default async function RunsPage() {
                   </TextLink>
                   <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
                 </TableCell>
-                <TableCell className="hidden py-2.5 whitespace-normal text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
+                <TableCell className="hidden py-2.5 whitespace-normal [overflow-wrap:anywhere] text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
                 <TableCell className={CELL_STACK}>
                   <StatusBadge status={run.status ?? ""} />
                 </TableCell>
