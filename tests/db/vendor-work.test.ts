@@ -2,6 +2,7 @@
 // і запусків, staff_directory, launch_run, mark_task_done, vendor_runs і vendor_run_tasks (міграція vendor_role), — на
 // справжньому Postgres (PGlite) з усіма міграціями. Покривають AC-VENDOR-* у docs/conformance.md.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { formatYourTasks } from "../../src/lib/runs/domain";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
 const TENANT_MOVE_IN = "10000000-0000-4000-8000-000000000001";
@@ -229,6 +230,35 @@ describe("База: прямі запити вендора на читання",
     expect(await t.asUser(VENDOR_V, "select id from public.run_overview where id = $1", [repairId])).toEqual([]);
     const runs = await t.asUser<{ id: string }>(VENDOR_V, "select id from public.vendor_runs()");
     expect(runs.some((run) => run.id === repairId)).toBe(false);
+  });
+});
+
+describe("База: необов'язкова задача вендора в завершеному запуску", () => {
+  it("AC-VENDOR-16: вендор V позначає свою необов'язкову задачу 3 у запуску «completed» — «done», «Your tasks: 1 of 1 done», запуск лишається «completed»", async () => {
+    const ids = await templateTaskIds(TENANT_MOVE_IN);
+    const runId = await launch(MANAGER_A, TENANT_MOVE_IN, "AC-VENDOR-16 Apartment 12, move-in", { [ids[2]]: VENDOR_V });
+    const tasks = await tasksOf(runId);
+    const task3 = tasks.find((task) => task.assignee_id === VENDOR_V)!;
+    expect(task3.is_required).toBe(false);
+    for (const task of tasks.filter((candidate) => candidate.is_required)) {
+      expect(await errorOf(t.asUser(MANAGER_A, "select public.mark_task_done($1, true)", [task.id]))).toBe("");
+    }
+    const status = async () =>
+      (await t.asService<{ status: string }>("select status from public.runs where id = $1", [runId]))[0].status;
+    expect(await status()).toBe("completed");
+
+    expect(await errorOf(t.asUser(VENDOR_V, "select public.mark_task_done($1, false)", [task3.id]))).toBe("");
+
+    const [task] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [task3.id]);
+    expect(task.status).toBe("done");
+    const [mine] = await t.asUser<{ status: string; my_done: number; my_total: number }>(
+      VENDOR_V,
+      "select status, my_done, my_total from public.vendor_runs() where id = $1",
+      [runId],
+    );
+    expect(formatYourTasks(mine.my_done, mine.my_total)).toBe("Your tasks: 1 of 1 done");
+    expect(mine.status).toBe("completed");
+    expect(await status()).toBe("completed");
   });
 });
 

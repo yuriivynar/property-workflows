@@ -191,6 +191,25 @@ describe("Задача й запуск з форми", () => {
   });
 });
 
+describe("Необов'язкова задача завершеного запуску", () => {
+  it("AC-TASK-19: виконавцю необов'язкової задачі «to do» позначку пропонують і в завершеному запуску, без підтвердження", () => {
+    // Статус запуску на рішення не впливає: canMarkTask його не бере, а «completed» не робить задачу «done».
+    expect(canMarkTask({ userId: "b", role: "manager", runManagerId: "a", assigneeId: "b", status: "to_do" })).toBe(true);
+    const tasks = [
+      { id: "req-1", is_required: true, status: "done" },
+      { id: "req-2", is_required: true, status: "done" },
+      { id: "opt", is_required: false, status: "to_do" },
+    ];
+    expect(needsConfirmation(tasks, "opt")).toBe(false);
+    expect(formatProgress(3, 3)).toBe("3 of 3 done");
+  });
+
+  it("AC-VENDOR-16: після позначки необов'язкової задачі завершеного запуску вендор бачить «Your tasks: 1 of 1 done»", () => {
+    expect(canMarkTask({ userId: "v", role: "vendor", runManagerId: "a", assigneeId: "v", status: "to_do" })).toBe(true);
+    expect(formatYourTasks(1, 1)).toBe("Your tasks: 1 of 1 done");
+  });
+});
+
 describe("Вендор: список і сторінка запуску", () => {
   it("AC-VENDOR-07: відмова позначки чужої задачі на своєму запуску — вендор бачить текст AC-TASK-03", () => {
     expect(vendorRunNotice(true, errorCodeFrom("NOT_ALLOWED"))).toBe(

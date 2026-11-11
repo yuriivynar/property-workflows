@@ -126,6 +126,13 @@ export const mutants = [
     find: "    or (select private.current_app_role()) = 'admin'\n  );",
     replace: "    or (select private.current_app_role()) in ('admin', 'vendor')\n  );",
   },
+  // ── Уточнення 10.11: необов'язкова задача завершеного запуску (AC-TASK-19, AC-VENDOR-16) ──────────────────────────
+  {
+    id: "T19", kind: "sql", ac: "AC-TASK-19", file: VENDOR_ROLE, tests: [VENDOR_DB, "tests/db/run-progress.test.ts"],
+    what: "mark_task_done: у запуску «completed» позначку відхилено — необов'язкову задачу вже не позначити",
+    find: "  if v_status = 'done' then\n    return;\n  end if;",
+    replace: "  if v_status = 'done' then\n    return;\n  end if;\n  if exists (select 1 from public.runs where id = v_run_id and status = 'completed') then\n    raise exception 'RUN_COMPLETED' using errcode = '22023';\n  end if;",
+  },
 ];
 
 // Приклади з демо (інша схема — у вашому репо цих файлів немає, тож не розкоментовуйте як є):

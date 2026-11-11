@@ -274,3 +274,35 @@ describe("База: видимість запусків", () => {
     expect(seenByAdmin).toEqual(expect.arrayContaining([firstOfA, secondOfA, ownOfB]));
   });
 });
+
+describe("База: необов'язкова задача завершеного запуску", () => {
+  it("AC-TASK-19: виконавець необов'язкової задачі «to do» позначає її в запуску «completed» — задача «done», запуск лишається «completed», прогрес її рахує", async () => {
+    const ids = await templateTaskIds();
+    const template = await t.asService<{ id: string; is_required: boolean }>(
+      "select id, is_required from public.template_tasks where template_id = $1",
+      [TENANT_MOVE_IN],
+    );
+    const optionalTemplateTask = ids.find((id) => !template.find((task) => task.id === id)!.is_required)!;
+    const runId = await launch(MANAGER_A, "AC-TASK-19 Apartment 12, move-in", { [optionalTemplateTask]: MANAGER_B });
+    const tasks = await tasksOf(runId);
+    const optionalOfB = tasks.find((task) => task.assignee_id === MANAGER_B)!;
+    expect(optionalOfB.is_required).toBe(false);
+
+    // Запуск завершено: усі обов'язкові задачі «done» (менеджер запуску A, остання — з підтвердженням).
+    for (const task of tasks.filter((candidate) => candidate.is_required)) expect(await mark(MANAGER_A, task.id)).toBe("");
+    expect(await runStatus(runId)).toBe("completed");
+    expect(await taskStatus(optionalOfB.id)).toBe("to_do");
+
+    expect(await mark(MANAGER_B, optionalOfB.id)).toBe("");
+
+    expect(await taskStatus(optionalOfB.id)).toBe("done");
+    expect(await runStatus(runId)).toBe("completed");
+    const [overview] = await t.asUser<{ done_count: number; total_count: number }>(
+      MANAGER_B,
+      "select done_count, total_count from public.run_overview where id = $1",
+      [runId],
+    );
+    const required = tasks.filter((task) => task.is_required).length;
+    expect(formatProgress(overview.done_count, overview.total_count)).toBe(formatProgress(required + 1, tasks.length));
+  });
+});
