@@ -282,8 +282,9 @@ test(
           page,
           {
             clause: `V sees the message "Not enough rights" and the link "Back to runs", and no content of the template (${target.name}).`,
-            visible: ["повідомлення «Not enough rights»", "посилання «Back to runs» веде на /runs"],
+            visible: ["повідомлення «Not enough rights»", "посилання «Back to runs»"],
             hidden: [
+              "посилання «Back to runs» веде на /runs (адресу на кадрі не видно — перевіряє тест)",
               "посилання «Back to templates» немає",
               "назви шаблону «Tenant move-in» і назв його задач на сторінці немає",
               "жодної форми й таблиці",
