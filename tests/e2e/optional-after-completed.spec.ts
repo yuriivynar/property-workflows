@@ -65,14 +65,16 @@ test(
         await expect(row.getByTestId("task-status")).toHaveText("done");
       });
 
+      // AC називає задачу «Order a part»; у шаблоні «Tenant move-in» на проді такої немає, тож тест бере його
+      // необов'язкову задачу. «Visible» — лише те, що видно на кадрі; стан до дії перевірено в «Дано» (hidden).
       await thenStep(
         page,
         {
           clause: 'the task has status "done", the run stays "completed", and the progress counts the task as done.',
           visible: [
-            `необов'язкова задача «${optionalName}» (optional) зі статусом «done» — на місці «Order a part» з AC: такої задачі в шаблоні «Tenant move-in» на проді немає, тож тест бере його необов'язкову задачу`,
+            `задача «${optionalName}» (optional) зі статусом «done»`,
             "статус запуску «completed»",
-            `прогрес «${required + 1} of ${total} done»: ${required} обов'язкові задачі були «done» ще до дії (тому запуск «completed»), +1 — ця задача`,
+            `прогрес «${required + 1} of ${total} done»`,
           ],
           hidden: [
             `до дії прогрес був «${required} of ${total} done», а задача — «to do» (перевірено в «Дано»)`,
@@ -134,6 +136,9 @@ test(
         async () => {
           await expect(page.getByTestId("run-task").filter({ hasText: task3Name }).getByTestId("task-status")).toHaveText("done");
           await expect(page.getByTestId("your-tasks")).toHaveText("Your tasks: 1 of 1 done");
+          const main = page.getByRole("main");
+          await expect(main.getByText("completed", { exact: true })).toHaveCount(0);
+          await expect(main.getByText("in progress", { exact: true })).toHaveCount(0);
         },
       );
 
