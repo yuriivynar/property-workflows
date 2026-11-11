@@ -28,6 +28,7 @@ test.afterEach(async ({ page }) => attachRuntimeErrors(page));
  */
 async function submitMarkDoneFor(page: Page, target: { runId: string; taskId: string }) {
   const form = page.getByTestId("run-task").first().locator("form");
+  await expect(form, "перша задача сторінки має форму позначки").toHaveCount(1);
   await form.locator('input[name="run_id"]').evaluate((el, value) => {
     (el as HTMLInputElement).value = value;
   }, target.runId);
