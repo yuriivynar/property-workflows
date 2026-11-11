@@ -77,9 +77,9 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
           </TableHeader>
           <TableBody>
             {templates.map((template) => (
-              <TableRow key={template.id} data-testid="template-row">
+              <TableRow key={template.id} data-testid="template-row" className="relative cursor-pointer">
                 <TableCell className="py-2">
-                  <TextLink href={`/templates/${template.id}`}>{template.name}</TextLink>
+                  <TextLink href={`/templates/${template.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">{template.name}</TextLink>
                 </TableCell>
                 <TableCell className="py-2 tabular-nums">
                   {template.current_version ? TEMPLATE_MESSAGES.version(template.current_version) : "—"}
@@ -101,9 +101,6 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
         />
       )}
 
-      <TextLink href="/runs" className="w-fit text-sm">
-        Runs
-      </TextLink>
     </main>
   );
 }

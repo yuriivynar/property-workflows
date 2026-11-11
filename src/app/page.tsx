@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { TextLink } from "@/components/ui/text-link";
-import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "./login/actions";
 
@@ -33,14 +31,6 @@ export default async function Home() {
         <dt className="text-muted-foreground">Role</dt>
         <dd data-testid="user-role">{profile?.role ?? "profile not found"}</dd>
       </dl>
-      <p className="flex gap-4 text-sm">
-        <TextLink href="/templates" data-testid="templates-link">
-          Templates
-        </TextLink>
-        <TextLink href="/runs" data-testid="runs-link">
-          {LABELS.runsTitle}
-        </TextLink>
-      </p>
       <form action={signOut}>
         <Button type="submit" variant="outline">
           Sign out

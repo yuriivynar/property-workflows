@@ -132,7 +132,9 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | `Button` | `default`, `secondary`, `outline`, `ghost`, `destructive`, `link` | `default` (primary) — **одна** головна дія на екран; текст кнопки починається з дієслова («Launch», «Save»); `destructive` — суцільна червона, лише з підтвердженням «This cannot be undone»; другорядні дії в рядках (Move up, Remove) — `ghost` `sm`; наведення піднімає кнопку на 1 px |
 | `Input` + `Label` | — | у кожного поля `Label` з `htmlFor`; placeholder — не замість підпису; фокус — межа кольору тексту й підсвітка `ring-glow` |
 | `NativeSelect` | — | вибір шаблону й виконавця в серверних формах (нативний `<select>` працює без JavaScript); з `Label`. Клієнтського `Select` (Base UI) поки немає: знадобиться — `npx shadcn@4.22.1 add select`, лише в клієнтських компонентах |
-| `TextLink` | — | текстові посилання («Back to runs», назва випадку в таблиці): колір `foreground`, приглушене підкреслення — **не** `primary` |
+| `TextLink` | — | текстові посилання в тексті й таблицях (назва випадку, «Edit», «Versions»): колір `foreground`, **не** `primary`; у таблицях — без підкреслення, `font-medium`, посилання розтягнуто на весь рядок (`after:absolute after:inset-0`, рядок `relative`) — рядок клікабельний цілком (ADR 0008) |
+| `Breadcrumb` | — | хлібні крихти над заголовком сторінки («Runs › Apartment 12, move-in», «Templates › Tenant move-in») замість посилань «Back to …» унизу звичайних сторінок; поточна сторінка — без посилання, `aria-current="page"` (ADR 0008) |
+| `BackLink` | — | посилання назад на відмові й «не знайдено»: текст дослівно з AC («Back to runs», «Back to templates»), вигляд — кнопка-контур зі стрілкою; роль лишається `link` (ADR 0008) |
 | `Card` | — | панель деталей запуску, форма входу, секції редактора |
 | `Table` | — | списки запусків і шаблонів; контейнер — картка з тінню; щільні рядки (розділ 4) |
 | `StatusBadge` | статуси домену | статус — **завжди з текстом**; колір і слово бере з однієї мапи статусів (`src/components/ui/status-badge.tsx`) (AC-DSYS-01); «пігулка» з крапкою; done/completed «вистрибує» один раз |
@@ -142,7 +144,7 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | `PageShell` + `MainNav` | — | спільний макет у `src/app/layout.tsx` (ADR 0008): увійшов — від `lg` графітова бічна панель (логотип, навігація Templates · Runs · Profile з іконкою й словом, поточний — фон і `aria-current`, внизу email і роль), на телефоні — графітова смуга з логотипом і «Theme» та нижні вкладки; один `<nav aria-label="Main">`, пункти за роллю (`navItems`, AC-VENDOR-13). Вхід — той самий макет без навігації: великий логотип і «Theme» на тлі сторінки (AC-DSYS-02, AC-DSYS-03) |
 | `ThemeSwitch` | System · Light · Dark | меню в правому верхньому куті кожної сторінки (ADR 0008): закрите показує «Theme» і поточне значення (AC-DSYS-05/06), відкрите — три нативні радіокнопки з іконкою, словом і галочкою; `<details>`/`<summary>`, Escape і клік поза меню закривають; на графітовій смузі телефону напис «Theme» прихований візуально |
 | `BrandMark` | `page`, `hero` | логотип: плитка зі «сходинками» і зеленою крапкою («done»); сходинки прокреслюються один раз, при наведенні чи фокусі посилання крапка стрибає сходинками вгору (CSS `brand-*`, вимикається `prefers-reduced-motion`) |
-| `Notice` | — | відмова чи «не знайдено»: повідомлення заголовком + `TextLink` назад, жодних даних («Not enough rights», «Template not found», «Run not found») |
+| `Notice` | — | відмова чи «не знайдено»: повідомлення заголовком + `BackLink` назад, жодних даних («Not enough rights», «Template not found», «Run not found») |
 | `EmptyState` | — | порожній список: малюнок-сходинки (декоративний), повідомлення `text-muted-foreground` + посилання на наступну дію, без порожньої таблиці (AC-DSYS-04) |
 | `Skeleton` | — | заглушка в `loading.tsx` на час завантаження сторінки: форма майбутнього вмісту, без видимих слів; `<main aria-busy>` разом із прихованим `role="status"` «Loading…» поруч (не всередині `main`: окрема live-region озвучується надійніше) |
 | `AuthHero` | — | декоративна панель входу (ADR 0008): кільце процесу заповнюється третинами, три точки-задачі на ньому по черзі стають зеленими, слово «to do» → «in progress» → «completed» і лічильник «N of 3 done» задає CSS (у тексті сторінки їх немає); панель і форма — дві половини однієї картки однакової висоти; від `lg`; рух стоїть, коли вкладку сховано, і кнопкою «Pause animation» (WCAG 2.2.2) |
@@ -153,7 +155,7 @@ Light) і обрана Dark. Статуси в обох темах мають т
 |---|---|---|
 | Порожній список | малюнок, `text-muted-foreground` + посилання на наступну дію; **без порожньої таблиці** | «No runs yet. Launch a template to start one.» + «Launch a template» (AC-DSYS-04) |
 | Помилка дії | `Alert variant="destructive"` над формою; введене лишається | «Enter a case name» (AC-RUN-03), «A template needs at least one required task» (AC-EDITOR-04) |
-| Відмова в доступі | той самий макет сторінки, повідомлення й посилання назад, без даних | «Not enough rights» + «Back to templates» (AC-DSYS-02, AC-EDITOR-07) |
+| Відмова в доступі | той самий макет сторінки, повідомлення й `BackLink` назад, без даних | «Not enough rights» + «Back to templates» (AC-DSYS-02, AC-EDITOR-07) |
 | Не знайдено | той самий макет, без даних | «Run not found» (AC-TASK-10) |
 | Не увійшов | сторінка входу в тому самому макеті | (AC-DSYS-03, AC-EDITOR-09) |
 | Незбережені зміни | `StatusBadge` «Unpublished changes» (теплий жовтий); у редакторі рядок із «Save» липне до верху | «Unpublished changes» (AC-EDITOR-01) |

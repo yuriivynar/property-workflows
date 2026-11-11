@@ -12,6 +12,7 @@ import { parseVersionContent } from "@/lib/templates/version";
 import Link from "next/link";
 import { NotEnoughRights } from "@/components/not-enough-rights";
 import { Notice } from "@/components/ui/notice";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 // Шаблон лише для читання: поточна збережена версія — «Version N», розділи й задачі з «required» / «optional»
 // (AC-EDITOR-02; робоче рішення до solomchaak/property-workflows-spec#25). Незбереженого шаблону менеджер не бачить:
@@ -51,6 +52,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <Breadcrumb items={[{ href: "/templates", label: "Templates" }]} current={template.name} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{template.name}</h1>
@@ -94,9 +96,6 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
         </section>
       ))}
 
-      <TextLink href="/templates" className="w-fit text-sm">
-        {TEMPLATE_MESSAGES.backToTemplates}
-      </TextLink>
     </main>
   );
 }

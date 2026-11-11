@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { TextLink } from "@/components/ui/text-link";
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { NotEnoughRights } from "@/components/not-enough-rights";
@@ -15,6 +14,7 @@ import { launchOptions } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import { SubmitButton } from "../submit-button";
 import { launchRun } from "./actions";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 // Запуск шаблону: спершу вибір шаблону, потім назва випадку і виконавець кожної задачі (за розділами).
 // За замовчуванням виконавець — менеджер запуску (AC-RUN-04, AC-RUN-08, AC-RUN-09).
@@ -62,6 +62,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      <Breadcrumb items={[{ href: "/runs", label: LABELS.runsTitle }]} current={LABELS.launchTemplate} />
       <h1 className="text-2xl font-semibold">{LABELS.launchTemplate}</h1>
 
       <form action="/runs/new" className="flex flex-wrap items-end gap-3">
@@ -154,9 +155,6 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         </form>
       ) : null}
 
-      <TextLink href="/runs" className="w-fit text-sm">
-        {LABELS.backToRuns}
-      </TextLink>
     </main>
   );
 }

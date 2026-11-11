@@ -76,7 +76,6 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
 
       <p className="flex gap-4 text-sm">
         <TextLink href={`/templates/${template.id}/edit`}>Edit</TextLink>
-        <TextLink href="/templates">{TEMPLATE_MESSAGES.backToTemplates}</TextLink>
       </p>
     </main>
   );
