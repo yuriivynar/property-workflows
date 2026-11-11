@@ -200,6 +200,25 @@ test(
           for (const name of repairTaskNames) await expect(page.locator("body")).not.toContainText(name);
         },
       );
+
+      await when("V opens the page of \"Apartment 14, repair\" by a direct link", async () => {
+        await page.goto(`/runs/${repairId}`);
+      });
+
+      await thenStep(
+        page,
+        {
+          clause: "V receives nothing about \"Apartment 14, repair\" (the page of the run by a direct link).",
+          visible: ["заголовок-повідомлення «Run not found»"],
+          hidden: ["жодної задачі запуску й назви випадку «Apartment 14, repair» на сторінці немає"],
+        },
+        async () => {
+          await expect(page.getByRole("heading", { level: 1, name: "Run not found" })).toBeVisible();
+          await expect(page.getByTestId("run-task")).toHaveCount(0);
+          await expect(page.locator("body")).not.toContainText(APARTMENT_14);
+          for (const name of repairTaskNames) await expect(page.locator("body")).not.toContainText(name);
+        },
+      );
     } finally {
       await cast.dispose();
     }
