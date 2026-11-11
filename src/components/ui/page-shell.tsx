@@ -25,7 +25,7 @@ function PageShell({
   const items = navItems(role)
   return (
     <div data-slot="page-shell" className={cn("flex min-h-full flex-1 flex-col", className)}>
-      <header className="border-b border-hero-border bg-hero text-hero-foreground">
+      <header className="bg-hero text-hero-foreground">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 sm:gap-x-6 sm:min-h-[60px] sm:px-6 sm:py-0">
           <span className="flex items-center gap-2.5 text-[15px] font-semibold whitespace-nowrap sm:text-base">
             <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0 sm:size-7">

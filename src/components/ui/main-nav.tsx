@@ -21,7 +21,7 @@ function MainNav({ items }: { items: NavItem[] }) {
             aria-current={current ? "page" : undefined}
             className={cn(
               "rounded-full px-3 py-2.5 text-sm font-medium text-hero-muted outline-none transition-colors hover:bg-hero-hover hover:text-hero-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-foreground sm:py-1.5",
-              current && "bg-hero-hover text-hero-foreground ring-1 ring-hero-border ring-inset"
+              current && "bg-hero-hover text-hero-foreground"
             )}
           >
             {item.label}
