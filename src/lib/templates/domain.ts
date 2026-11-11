@@ -1,4 +1,5 @@
 import type { AppRole } from "@/lib/auth/require-role";
+import { LABELS } from "@/lib/runs/messages";
 
 // Чисті правила екранів шаблонів (без Supabase) — тестуються окремо (src/lib/templates/domain.test.ts).
 
@@ -93,6 +94,17 @@ export type TemplatePage = "list" | "view" | "edit" | "versions";
  * жодних даних (AC-DSYS-02, AC-EDITOR-07). Список і поточну версію бачать менеджер і адміністратор (AC-EDITOR-02);
  * вендор не бачить жодної сторінки шаблонів (AC-VENDOR-08).
  */
+/**
+ * Посилання на відмові «Not enough rights»: вендору — «Back to runs», бо закриті йому всі сторінки шаблонів і форма
+ * запуску (AC-VENDOR-08, AC-VENDOR-14; рішення PM solomchaak/property-workflows-spec#49); іншим — «Back to templates»
+ * (AC-DSYS-02, AC-EDITOR-07).
+ */
+export function refusalBackLink(role: string | null | undefined): { href: string; label: string } {
+  return role === "vendor"
+    ? { href: "/runs", label: LABELS.backToRuns }
+    : { href: "/templates", label: TEMPLATE_MESSAGES.backToTemplates };
+}
+
 export function templatePageAccess(role: AppRole, page: TemplatePage): "ok" | "not-enough-rights" {
   if (role === "vendor") return "not-enough-rights";
   if (page === "list" || page === "view") return "ok";

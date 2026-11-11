@@ -2,16 +2,16 @@ import { redirect } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { Notice } from "@/components/ui/notice";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
-import { LABELS } from "@/lib/runs/messages";
 import { createClient } from "@/lib/supabase/server";
 import { TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import Link from "next/link";
+import { NotEnoughRights } from "@/components/not-enough-rights";
+import { Notice } from "@/components/ui/notice";
 
 // Шаблон лише для читання: поточна збережена версія — «Version N», розділи й задачі з «required» / «optional»
 // (AC-EDITOR-02; робоче рішення до solomchaak/property-workflows-spec#25). Незбереженого шаблону менеджер не бачить:
@@ -22,13 +22,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
   // Вендор не бачить жодного шаблону (AC-VENDOR-08) — і за прямим посиланням на шаблон.
-  if (templatePageAccess(user.role, "view") !== "ok") {
-    return (
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <Notice message={TEMPLATE_MESSAGES.notEnoughRights} backHref="/runs" backLabel={LABELS.backToRuns} />
-      </main>
-    );
-  }
+  if (templatePageAccess(user.role, "view") !== "ok") return <NotEnoughRights role={user.role} />;
   const isAdmin = user.role === "admin";
 
   const { data: template } = await supabase

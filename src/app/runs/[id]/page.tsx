@@ -7,6 +7,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
   canMarkTask,
+  errorParam,
   formatProgress,
   formatYourTasks,
   groupBySection,
@@ -14,7 +15,9 @@ import {
   needsConfirmation,
   requiredLabel,
   staffLabel,
+  vendorRunNotice,
 } from "@/lib/runs/domain";
+import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
@@ -26,17 +29,16 @@ import { MarkDoneButton } from "./mark-done-button";
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error } = await searchParams;
-  const message = typeof error === "string" ? messageForError(error) : undefined;
+  const errorCode = errorParam(error);
 
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-  if (!claims) {
+  const viewer = await signedInViewer(supabase);
+  if (!viewer) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
-  if (profile?.role === "vendor") return <VendorRun id={id} message={message} />;
+  if (viewer.role === "vendor") return <VendorRun id={id} errorCode={errorCode} />;
+  const message = errorCode ? messageForError(errorCode) : undefined;
 
   const { data: run } = await supabase
     .from("run_overview")
@@ -135,8 +137,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                     </span>
                   </div>
                   {canMarkTask({
-                    userId: claims.sub,
-                    role: profile?.role,
+                    userId: viewer.userId,
+                    role: viewer.role,
                     runManagerId,
                     assigneeId: task.assignee_id,
                     status: task.status,
@@ -181,11 +183,12 @@ function RunNotFound({ message }: { message?: string }) {
 /**
  * Запуск очима вендора: назва випадку, «Your tasks: N of K done» і рівно його задачі за розділами — назва, розділ,
  * «required» / «optional», статус; без чужих задач, email інших користувачів, менеджера запуску, назви й версії шаблону
- * та прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05; заголовок і рядок прогресу — робоче рішення до
- * solomchaak/property-workflows-spec#41). Запуск без його задач — «Run not found» (AC-VENDOR-06). Дані — лише з функцій
+ * та прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05, AC-VENDOR-11; рішення PM solomchaak/property-workflows-spec#41). Запуск без його
+ * задач — лише «Run not found», без тексту відмови позначки (AC-VENDOR-06, AC-VENDOR-15); на своєму запуску відмова
+ * позначки чужої задачі — текст AC-TASK-03 (AC-VENDOR-07). Дані — лише з функцій
  * бази vendor_runs і vendor_run_tasks; позначка останньої обов'язкової задачі просить підтвердження («Припущення» PM).
  */
-async function VendorRun({ id, message }: { id: string; message?: string }) {
+async function VendorRun({ id, errorCode }: { id: string; errorCode?: string }) {
   const supabase = await createClient();
   const [{ data: runs, error: runsError }, { data: tasks, error: tasksError }] = await Promise.all([
     supabase.rpc("vendor_runs"),
@@ -207,7 +210,8 @@ async function VendorRun({ id, message }: { id: string; message?: string }) {
     );
   }
   const run = runs?.find((candidate) => candidate.id === id);
-  if (!run || !tasks?.length) return <RunNotFound message={message} />;
+  if (!run || !tasks?.length) return <RunNotFound message={vendorRunNotice(false, errorCode)} />;
+  const message = vendorRunNotice(true, errorCode);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">

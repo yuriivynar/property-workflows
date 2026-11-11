@@ -206,6 +206,26 @@ describe("База: позначка задач вендором", () => {
   });
 });
 
+describe("База: задача запуску без задач вендора", () => {
+  it("AC-VENDOR-15: вендор V прямим запитом позначає задачу 1 менеджера A в «Apartment 14, repair», де в нього немає задач — відмова, задача лишається «to do»", async () => {
+    const repairId = await launch(MANAGER_A, REPAIR_REQUEST, "AC-VENDOR-15 Apartment 14, repair");
+    const [taskOfA] = await t.asService<{ id: string }>(
+      "select id from public.run_tasks where run_id = $1 and assignee_id = $2 order by position limit 1",
+      [repairId, MANAGER_A],
+    );
+
+    expect(await errorOf(t.asUser(VENDOR_V, "select public.mark_task_done($1, true)", [taskOfA.id]))).toMatch(/NOT_ALLOWED/);
+    expect(
+      await errorOf(t.asUser(VENDOR_V, "update public.run_tasks set status = 'done' where id = $1", [taskOfA.id])),
+    ).toMatch(/permission denied/);
+    const [task] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [taskOfA.id]);
+    expect(task.status).toBe("to_do");
+    // Сторінка показує «Run not found»: запуску немає серед vendor_runs() вендора (vendorRunNotice без тексту відмови).
+    const runs = await t.asUser<{ id: string }>(VENDOR_V, "select id from public.vendor_runs()");
+    expect(runs.some((run) => run.id === repairId)).toBe(false);
+  });
+});
+
 describe("База: колишній менеджер запуску з роллю vendor", () => {
   it("AC-VENDOR-07: менеджер запуску, якому змінили роль на vendor, не позначає чужу задачу свого колишнього запуску", async () => {
     // Рецензія CodeRabbit (CWE-863): право менеджера запуску — лише за поточної ролі manager (solomchaak/property-workflows-spec#45).

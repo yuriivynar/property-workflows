@@ -84,6 +84,22 @@ export const mutants = [
     find: "v_role is null or v_role not in ('manager', 'admin')",
     replace: "v_role is null or v_role not in ('manager', 'admin', 'vendor')",
   },
+
+  // ── Уточнення зрізу 3 (10.11, impl-clarify-vendor-work): відмови вендору на сторінках ───────────────────────────
+  // Правило «що бачить вендор на відмові» живе в чистих функціях (сторінки лише рендерять їх результат); мутант
+  // послаблює правило, юніт-тест має впасти. Відмову позначки в базі для AC-VENDOR-15 доводить наявний V07.
+  {
+    id: "TS-V14", kind: "ts", ac: "AC-VENDOR-14", file: "src/lib/templates/domain.ts", tests: ["src/lib/templates/domain.test.ts"],
+    what: "refusalBackLink: вендору на відмові — «Back to templates» (веде на ще одну відмову) замість «Back to runs»",
+    find: 'return role === "vendor"',
+    replace: 'return role === "nobody"',
+  },
+  {
+    id: "TS-V15", kind: "ts", ac: "AC-VENDOR-15", file: "src/lib/runs/domain.ts", tests: ["src/lib/runs/domain.test.ts"],
+    what: "vendorRunNotice: текст відмови позначки й на запуску без задач вендора — сторінка підказує, що запуск існує",
+    find: "if (!runFound || !errorCode) return undefined;",
+    replace: "if (!errorCode) return undefined;",
+  },
 ];
 
 // Приклади з демо (інша схема — у вашому репо цих файлів немає, тож не розкоментовуйте як є):
