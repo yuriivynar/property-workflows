@@ -17,9 +17,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const message = typeof error === "string" ? ERRORS[error] : undefined;
 
   return (
-    <main className="mx-auto grid w-full max-w-5xl flex-1 gap-8 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
-      <AuthHero className="hidden lg:block" />
-      <Card className="mx-auto w-full max-w-sm self-center [--card-spacing:--spacing(6)] sm:[--card-spacing:--spacing(8)]">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 items-center px-4 py-6 sm:px-6 sm:py-10">
+      {/* Панель і форма — дві половини однієї картки: однакова висота (ADR 0008). На вузьких екранах — лише форма. */}
+      <Card className="mx-auto w-full max-w-sm gap-0 rounded-3xl py-0 lg:grid lg:max-w-none lg:grid-cols-[1.1fr_1fr]">
+        <AuthHero className="hidden lg:block" />
+        <div className="flex flex-col justify-center gap-6 py-8 [--card-spacing:--spacing(6)] sm:py-12 sm:[--card-spacing:--spacing(10)]">
         <CardHeader>
           <CardTitle>
             <h1 className="text-2xl font-semibold">Sign in</h1>
@@ -53,6 +55,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             </Button>
           </form>
         </CardContent>
+        </div>
       </Card>
     </main>
   );
