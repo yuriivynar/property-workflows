@@ -1,0 +1,997 @@
+{
+  "kind": "uat",
+  "generatedAt": "2026-11-11T21:54:05.187Z",
+  "baseURL": "https://property-workflows-eta.vercel.app",
+  "deployedSha": "d2867c4b245afe732afb2aacaeb40f7e6381f400",
+  "testsCommit": "d2867c4b245afe732afb2aacaeb40f7e6381f400",
+  "reviewer": {
+    "model": "claude-haiku-5-5",
+    "disputes": "claude-sonnet-5-5"
+  },
+  "note": "Відео й траси не в git (test-results/ локально, артефакт CI). check-recordings конвеєра WS9 вимагає відео на диску — для нього цей manifest треба доповнити.",
+  "results": [
+    {
+      "id": "AC-EDITOR-07",
+      "proof": "AC-EDITOR-07",
+      "title": "AC-EDITOR-07: менеджер B за прямим посиланням на список версій бачить «Not enough rights» і жодної версії",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-EDITOR-07-then-1.png",
+      "video": "test-results/artifacts/template-versions-forbidde-2f920-ugh-rights»-і-жодної-версії-chromium/video.webm",
+      "trace": "test-results/artifacts/template-versions-forbidde-2f920-ugh-rights»-і-жодної-версії-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png видно сторінку з заголовком «Not enough rights» і кнопкою «Back to templates» з іконкою стрілки; текст повністю читабельний і збігається з критерієм посимвольно. Список версій на кадрі відсутній, але це з розділу «Не з кадрів», тому не оцінюється. Адресної строки в кадрі немає, тож перехід/лишення на тій самій адресі перевірити з кадрів не можна."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to templates",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 6552,
+      "reviewCostUsd": 0.00269,
+      "reviewWallMs": 10576
+    },
+    {
+      "id": "AC-EDITOR-09",
+      "proof": "AC-EDITOR-09",
+      "title": "AC-EDITOR-09: відвідувач без входу за прямим посиланням на редактор бачить сторінку входу й жодного вмісту шаблону",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-EDITOR-09-then-1.png",
+      "video": "test-results/artifacts/template-editor-signed-out-e4907-ду-й-жодного-вмісту-шаблону-chromium/video.webm",
+      "trace": "test-results/artifacts/template-editor-signed-out-e4907-ду-й-жодного-вмісту-шаблону-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png видно сторінку входу Property workflows із заголовком «Sign in», полями «Email» і «Password» та кнопкою «Sign in». Вмісту шаблону «Tenant move-in» (назви, розділів, задач) на кадрі немає; анімація «to do / 0 of 3 done» — це декоративна графіка входу, а не вміст шаблону."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Sign in",
+          "onPage": true
+        },
+        {
+          "quote": "Email",
+          "onPage": true
+        },
+        {
+          "quote": "Password",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 3678,
+      "reviewCostUsd": 0.00261,
+      "reviewWallMs": 9781
+    },
+    {
+      "id": "AC-EDITOR-19",
+      "proof": "AC-EDITOR-19",
+      "title": "AC-EDITOR-19: адміністратор створює шаблон з порожньою назвою чи лише з пробілів — шаблон не створено, «Enter a template name»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-EDITOR-19-then-1.png",
+      "video": "test-results/artifacts/template-name-required-AC--7c5fa-ено-«Enter-a-template-name»-chromium/video.webm",
+      "trace": "test-results/artifacts/template-name-required-AC--7c5fa-ено-«Enter-a-template-name»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На обох кадрах (/templates) над списком шаблонів видно червоний напис «Enter a template name», поле вводу підсвічене червоним. На кадрі 2 поле виглядає порожнім, але пробіли візуально не відрізнити, тому цю частину (назва з пробілів) не оцінюю. Кількість рядків у таблиці та створення шаблону перевіряються автоматично, не з кадрів."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Enter a template name",
+          "onPage": true
+        },
+        {
+          "quote": "Enter a template name",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 13283,
+      "reviewCostUsd": 0.00311,
+      "reviewWallMs": 11236
+    },
+    {
+      "id": "AC-TASK-19",
+      "proof": "AC-TASK-19",
+      "title": "AC-TASK-19: виконавець позначає необов'язкову задачу «to do» запуску «completed» — задача «done», запуск лишається «completed», прогрес її рахує",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-TASK-19-then-1.png",
+      "video": "test-results/artifacts/optional-after-completed-A-0a10c-completed»-прогрес-її-рахує-chromium/video.webm",
+      "trace": "test-results/artifacts/optional-after-completed-A-0a10c-completed»-прогрес-її-рахує-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png задача «Order cleaning (optional)» має статус «done», запуск має статус «completed», а прогрес показано як «4 of 5 done», тож усі три видимі частини «Тоді» виконано. Зауваження щодо самого критерію: у «Дано» та «Коли» згадано задачу «Order a part», а в «Тоді» і в journey.md — «Order cleaning»; PM варто уточнити назву задачі, бо це може означати, що тест виконано не на тій задачі, яку описує критерій."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "done",
+          "onPage": true
+        },
+        {
+          "quote": "Status",
+          "onPage": true
+        },
+        {
+          "quote": "completed",
+          "onPage": true
+        },
+        {
+          "quote": "Progress",
+          "onPage": true
+        },
+        {
+          "quote": "4 of 5 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 21794,
+      "reviewCostUsd": 0.00239,
+      "reviewWallMs": 10700
+    },
+    {
+      "id": "AC-VENDOR-01",
+      "proof": "AC-VENDOR-01",
+      "title": "AC-VENDOR-01: менеджер A запускає «Tenant move-in» для «Apartment 12, move-in» і призначає вендора V на задачі 3 і 4 — вони за V, а задачі 1, 2 і 5 за A",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-01-then-1.png",
+      "video": "test-results/artifacts/vendor-assign-AC-VENDOR-01-f0642--за-V-а-задачі-1-2-і-5-за-A-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-assign-AC-VENDOR-01-f0642--за-V-а-задачі-1-2-і-5-за-A-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі заголовок «Apartment 12, move-in». Задачі «Order cleaning» і «Hand over the keys» мають виконавця з email ...-vnd@example.test (V). Задачі «Sign the lease», «Collect the deposit» і «Record meter readings» мають email ...-mgr-a@example.test (A), що збігається з менеджером запуску."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Order cleaning (optional) uat-261111214558-v01-vnd@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "Hand over the keys (required) uat-261111214558-v01-vnd@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "Sign the lease (required) uat-261111214558-v01-mgr-a@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "Collect the deposit (required) uat-261111214558-v01-mgr-a@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "Record meter readings (optional) uat-261111214558-v01-mgr-a@example.test",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 26111,
+      "reviewCostUsd": 0.04686,
+      "reviewWallMs": 27996
+    },
+    {
+      "id": "AC-VENDOR-02",
+      "proof": "AC-VENDOR-02",
+      "title": "AC-VENDOR-02: у виборі виконавця менеджер A бачить email менеджера B, адміністратора й вендора V — і жодних імен, ролей чи інших даних профілю",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-02-then-1.png",
+      "video": "test-results/artifacts/vendor-assign-AC-VENDOR-02-6a9c2-олей-чи-інших-даних-профілю-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-assign-AC-VENDOR-02-6a9c2-олей-чи-інших-даних-профілю-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На frame-then-1.png відкритий список виконавця для задачі «Sign the lease» з рядками «Me (run manager)», admin@example.test, manager.a@example.test, manager.b@example.test, manager.c@example.test, pm-admin@example.test, pm-manager@example.test, pm-vendor@example.test, uat-261111214558-v02-adm@example.test, uat-261111214558-v02-mgr-b@example.test, uat-261111214558-v02-vnd@example.test, vendor@example.test; три потрібні email присутні дослівно. Лише перша задача має відкритий список; дві інші («Collect the deposit», «Order cleaning») на кадрі закриті й показують «Me (run manager)», тож їхній вміст на кадрі не видно. Список містить також інші email (зокрема admin@example.test і vendor@example.test), що в критерії прямо не заборонено, але варто перевірити людиною, чи це очікувана поведінка."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "uat-261111214558-v02-mgr-b@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "uat-261111214558-v02-adm@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "uat-261111214558-v02-vnd@example.test",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 22686,
+      "reviewCostUsd": 0.00302,
+      "reviewWallMs": 15776
+    },
+    {
+      "id": "AC-VENDOR-03",
+      "proof": "AC-VENDOR-03",
+      "title": "AC-VENDOR-03: вендор V із двома задачами в «Apartment 12, move-in» і без задач в «Apartment 14, repair» бачить у списку лише перший запуск, його статус і «Your tasks: 0 of 2 done»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-03-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-03-в-597b4--і-«Your-tasks-0-of-2-done»-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-03-в-597b4--і-«Your-tasks-0-of-2-done»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінки /runs видно один рядок таблиці з «Apartment 12, move-in», статусом «in progress» і «Your tasks: 0 of 2 done». Інших рядків на кадрі немає, «Apartment 14, repair» не видно. Відсутність запуску 14 у даних не перевіряв, бо це поза кадрами."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "in progress",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 13953,
+      "reviewCostUsd": 0.00249,
+      "reviewWallMs": 8947
+    },
+    {
+      "id": "AC-VENDOR-04",
+      "proof": "AC-VENDOR-04",
+      "title": "AC-VENDOR-04: вендор V відкриває «Apartment 12, move-in» (5 задач) і бачить рівно задачі 3 і 4 — назва, розділ, «required» чи «optional» і статус, без чужих задач, email інших користувачів і прогресу всього запуску",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-04-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-04-в-9b0aa-в-і-прогресу-всього-запуску-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-04-в-9b0aa-в-і-прогресу-всього-запуску-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі видно рівно дві картки задач: «Order cleaning (optional)» у розділі «Before move-in» і «Hand over the keys (required)» у розділі «Move-in day», обидві зі статусом «to do». Лічильник «Your tasks: 0 of 2 done» стосується лише задач цього користувача і відповідає двом задачам; задач 1, 2 і 5 та загального прогресу запуску на кадрі немає. Кадр чіткий, не обрізаний."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        },
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "Hand over the keys (required)",
+          "onPage": true
+        },
+        {
+          "quote": "Before move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "to do",
+          "onPage": true
+        },
+        {
+          "quote": "Move-in day",
+          "onPage": true
+        },
+        {
+          "quote": "Hand over the keys (required)",
+          "onPage": true
+        },
+        {
+          "quote": "to do",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 16868,
+      "reviewCostUsd": 0.00225,
+      "reviewWallMs": 8265
+    },
+    {
+      "id": "AC-VENDOR-05",
+      "proof": "AC-VENDOR-05",
+      "title": "AC-VENDOR-05: вендор V позначає виконаною свою задачу 3 (не остання обов'язкова) — вона «done», а V бачить «Your tasks: 1 of 2 done»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-05-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-05-в-e392a-ть-«Your-tasks-1-of-2-done»-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-05-в-e392a-ть-«Your-tasks-1-of-2-done»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінка «Apartment 12, move-in»: у блоці «Before move-in» задача «Order cleaning (optional)» має бейдж «done», а під заголовком видно «Your tasks: 1 of 2 done», що збігається з критерієм посимвольно. Частини з розділу «Не з кадрів» (база, підтвердження, стан задачі 4) не оцінювались."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "done",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 1 of 2 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 19013,
+      "reviewCostUsd": 0.0021,
+      "reviewWallMs": 7379
+    },
+    {
+      "id": "AC-VENDOR-06",
+      "proof": "AC-VENDOR-06",
+      "title": "AC-VENDOR-06: вендор V за прямим посиланням на «Apartment 14, repair», де в нього немає задач, бачить «Run not found» і жодної задачі запуску",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-06-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-06-в-f3fdf-nd»-і-жодної-задачі-запуску-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-06-в-f3fdf-nd»-і-жодної-задачі-запуску-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png видно великий заголовок «Run not found» і кнопку з написом «Back to runs» на сторінці без жодних рядків задач. Обидва написи збігаються з критерієм посимвольно. Частини «жодної задачі» та «адреса лишилась прямим посиланням» не з кадрів, тому не оцінювалися."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Run not found",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 13868,
+      "reviewCostUsd": 0.00233,
+      "reviewWallMs": 7533
+    },
+    {
+      "id": "AC-VENDOR-07",
+      "proof": "AC-VENDOR-07",
+      "title": "AC-VENDOR-07: вендор V прямим запитом, в обхід сторінок, позначає задачу 1 менеджера A — відмова, задача 1 лишається «to do», V бачить текст AC-TASK-03",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-07-then-1.png",
+      "video": "test-results/artifacts/vendor-forbidden-AC-VENDOR-f562a-»-V-бачить-текст-AC-TASK-03-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-forbidden-AC-VENDOR-f562a-»-V-бачить-текст-AC-TASK-03-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На сторінці «Apartment 12, move-in» червоний банер містить точний текст із критерію. Видно лише дві задачі («Order cleaning» і «Hand over the keys», обидві «to do»), лічильник «Your tasks: 0 of 2 done». Номерів задач на кадрі немає, тому відповідність задачам 3 і 4 випливає з того, що їх дві і що інших задач немає."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Only the task's assignee, the run manager, or an administrator can mark a task as done",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        },
+        {
+          "quote": "Order cleaning",
+          "onPage": true
+        },
+        {
+          "quote": "Hand over the keys",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 15895,
+      "reviewCostUsd": 0.04181,
+      "reviewWallMs": 26814
+    },
+    {
+      "id": "AC-VENDOR-08",
+      "proof": "AC-VENDOR-08",
+      "title": "AC-VENDOR-08: вендор V за прямим посиланням на список шаблонів бачить «Not enough rights», посилання «Back to runs» і жодного шаблону",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-08-then-1.png",
+      "video": "test-results/artifacts/vendor-forbidden-AC-VENDOR-28ad3--to-runs»-і-жодного-шаблону-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-forbidden-AC-VENDOR-28ad3--to-runs»-і-жодного-шаблону-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png видно заголовок «Not enough rights» і кнопку з написом «Back to runs» із стрілкою назад; текст збігається з критерієм посимвольно. Сторінка показує відмову, а не список шаблонів, а в боковому меню є «Runs» і «Profile». Частини «Не з кадрів» (відсутність шаблонів, адреса, буфер) не оцінювалися."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 12238,
+      "reviewCostUsd": 0.002,
+      "reviewWallMs": 7064
+    },
+    {
+      "id": "AC-VENDOR-09",
+      "proof": "AC-VENDOR-09",
+      "title": "AC-VENDOR-09: вендор V прямим запитом, в обхід сторінок, запускає «Tenant move-in» — запуск не створено, список запусків не змінився",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-09-then-1.png",
+      "video": "test-results/artifacts/vendor-forbidden-AC-VENDOR-01f35-список-запусків-не-змінився-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-forbidden-AC-VENDOR-01f35-список-запусків-не-змінився-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінки /runs видно лише один рядок у списку: «Apartment 12, move-in» зі статусом «in progress» і «Your tasks: 0 of 2 done»; рядка «Apartment 16, move-in» немає, а в лівому нижньому куті показано вхід як vendor. Відсутність запуску спроби я оцінив за тим, що в списку немає жодного іншого рядка, крім наявного. Порівняти список із станом до спроби за одним кадром неможливо, тому стан «не змінився» підтверджено лише видимим результатом."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        },
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 16537,
+      "reviewCostUsd": 0.00314,
+      "reviewWallMs": 15557
+    },
+    {
+      "id": "AC-VENDOR-10",
+      "proof": "AC-VENDOR-10",
+      "title": "AC-VENDOR-10: вендор V, якому не призначено жодної задачі, відкриває список запусків і бачить «No tasks assigned to you yet.» без порожньої таблиці",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-10-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-10-в-75084-yet-»-без-порожньої-таблиці-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-10-в-75084-yet-»-без-порожньої-таблиці-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінки /runs (заголовок «Runs», користувач vendor) видно повідомлення «No tasks assigned to you yet.» у пунктирній рамці без жодної таблиці чи рядка запуску. Поруч з текстом стоїть декоративна іконка-крапки, а не індикатор завантаження, тож кадр не виглядає як стан очікування. Частини «Не з кадрів» (відсутність таблиці, чужий запуск) не оцінювалися."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "No tasks assigned to you yet.",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 12061,
+      "reviewCostUsd": 0.00212,
+      "reviewWallMs": 8244
+    },
+    {
+      "id": "AC-VENDOR-11",
+      "proof": "AC-VENDOR-11",
+      "title": "AC-VENDOR-11: вендор V із задачами 3 («done») і 4 («to do») відкриває «Apartment 12, move-in» — заголовок сторінки — назва випадку, «Your tasks: 1 of 2 done», без статусу запуску, назви й версії шаблону",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-11-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-11-в-96627-уску-назви-й-версії-шаблону-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-11-в-96627-уску-назви-й-версії-шаблону-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі frame-then-1.png великий заголовок сторінки — «Apartment 12, move-in», під ним сірим — «Your tasks: 1 of 2 done». Обидві видимі частини «Тоді» збігаються посимвольно. Статус запуску, назву шаблону та версію на кадрі не видно, але це за розділом «Не з кадрів» не оцінюється."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 1 of 2 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 15764,
+      "reviewCostUsd": 0.00222,
+      "reviewWallMs": 8201
+    },
+    {
+      "id": "AC-VENDOR-12",
+      "proof": "AC-VENDOR-12",
+      "title": "AC-VENDOR-12: вендор V відкриває список запусків — рядок «Apartment 12, move-in» показує назву випадку, статус запуску й «Your tasks: 0 of 2 done», без назви шаблону «Tenant move-in»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-12-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-12-в-7c4c2-ви-шаблону-«Tenant-move-in»-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-12-в-7c4c2-ви-шаблону-«Tenant-move-in»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінки Runs видно один рядок із назвою «Apartment 12, move-in», статусом «in progress» і написом «Your tasks: 0 of 2 done». Колонки таблиці — Case, Status, Your tasks; колонки «Template» немає. Відсутність назви шаблону «Tenant move-in» за критерієм не оцінюю, бо це частина «Не з кадрів»."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "in progress",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 15904,
+      "reviewCostUsd": 0.00211,
+      "reviewWallMs": 7199
+    },
+    {
+      "id": "AC-VENDOR-13",
+      "proof": "AC-VENDOR-13",
+      "title": "AC-VENDOR-13: вендор V входить — бачить список запусків, а навігація показує лише «Runs» і «Profile»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-13-then-1.png",
+      "video": "test-results/artifacts/vendor-runs-AC-VENDOR-13-в-9311d-зує-лише-«Runs»-і-«Profile»-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-runs-AC-VENDOR-13-в-9311d-зує-лише-«Runs»-і-«Profile»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі видно сторінку «Runs» з одним рядком «Apartment 12, move-in» (статус «in progress», «Your tasks: 0 of 2 done»). Бічна навігація містить лише два пункти: «Runs» і «Profile»; «Templates» на кадрі відсутній. Кадр повний, без обрізання і завантаження."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Runs",
+          "onPage": true
+        },
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Runs",
+          "onPage": true
+        },
+        {
+          "quote": "Profile",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 9416,
+      "reviewCostUsd": 0.00202,
+      "reviewWallMs": 7127
+    },
+    {
+      "id": "AC-VENDOR-14",
+      "proof": "AC-VENDOR-14",
+      "title": "AC-VENDOR-14: вендор V за прямим посиланням на форму запуску, сторінку шаблону, список версій і редактор бачить «Not enough rights» і «Back to runs», без вмісту шаблону",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-14-then-1.png",
+      "video": "test-results/artifacts/vendor-forbidden-AC-VENDOR-c5338-to-runs»-без-вмісту-шаблону-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-forbidden-AC-VENDOR-c5338-to-runs»-без-вмісту-шаблону-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На всіх чотирьох кадрах (/runs/new, сторінка шаблону, список версій, редактор) видно однаковий екран з написом «Not enough rights» і кнопкою «Back to runs», без форми, таблиці чи назви шаблону. Видимі частини «Тоді» підтверджено дослівним збігом; адресу переходу «Back to runs», відсутність «Back to templates» і відсутність назв шаблону/задач не оцінював, бо за правилами вони не з кадрів."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        },
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        },
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        },
+        {
+          "quote": "Not enough rights",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 21674,
+      "reviewCostUsd": 0.00441,
+      "reviewWallMs": 15531
+    },
+    {
+      "id": "AC-VENDOR-15",
+      "proof": "AC-VENDOR-15",
+      "title": "AC-VENDOR-15: вендор V прямим запитом, в обхід сторінок, позначає задачу 1 менеджера A в «Apartment 14, repair», де в нього немає задач — задача 1 лишається «to do», V бачить лише «Run not found»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-15-then-1.png",
+      "video": "test-results/artifacts/vendor-forbidden-AC-VENDOR-85777-бачить-лише-«Run-not-found»-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-forbidden-AC-VENDOR-85777-бачить-лише-«Run-not-found»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі видно заголовок «Run not found» і кнопку «Back to runs», більше нічого в області контенту: ні списку задач, ні додаткових повідомлень. Цитата для другої частини — єдиний інший напис (кнопка навігації), а не повідомлення; відсутність задач і повідомлень зафіксована тим, що сторінка порожня, тому рішення — з невеликим запасом довіри. Стан задачі 1 («to_do») на кадрі не видно і не оцінювався."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Run not found",
+          "onPage": true
+        },
+        {
+          "quote": "Back to runs",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 18138,
+      "reviewCostUsd": 0.00239,
+      "reviewWallMs": 10169
+    },
+    {
+      "id": "AC-VENDOR-16",
+      "proof": "AC-VENDOR-16",
+      "title": "AC-VENDOR-16: вендор V позначає свою необов'язкову задачу 3 у «Apartment 12, move-in» зі статусом «completed» — «done», «Your tasks: 1 of 1 done», запуск лишається «completed»",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-16-then-1.png",
+      "video": "test-results/artifacts/optional-after-completed-A-e6c2b-апуск-лишається-«completed»-chromium/video.webm",
+      "trace": "test-results/artifacts/optional-after-completed-A-e6c2b-апуск-лишається-«completed»-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На frame-then-1.png сторінка запуску «Apartment 12, move-in» показує задачу «Order cleaning (optional)» зі статусом «done» і напис «Your tasks: 1 of 1 done». На frame-then-2.png список запусків містить рядок «Apartment 12, move-in» зі статусом «completed» і «Your tasks: 1 of 1 done». Усі видимі частини «Тоді» збігаються з критерієм посимвольно; статус запуску в базі та статус задачі в базі не оцінювалися, бо це не з кадрів."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "done",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 1 of 1 done",
+          "onPage": true
+        },
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "completed",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 1 of 1 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 20507,
+      "reviewCostUsd": 0.00295,
+      "reviewWallMs": 9482
+    },
+    {
+      "id": "AC-VENDOR-17",
+      "proof": "AC-VENDOR-17",
+      "title": "AC-VENDOR-17: вендор V прямим запитом, в обхід сторінок, задач «Apartment 12, move-in» (5 задач) отримує лише задачі 3 і 4",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-17-then-1.png",
+      "video": "test-results/artifacts/vendor-direct-reads-AC-VEN-7b450-ч-отримує-лише-задачі-3-і-4-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-direct-reads-AC-VEN-7b450-ч-отримує-лише-задачі-3-і-4-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі сторінки «Apartment 12, move-in» видно рівно дві задачі: «Order cleaning (optional)» у блоці «Before move-in» і «Hand over the keys (required)» у блоці «Move-in day»; лічильник «Your tasks: 0 of 2 done» узгоджується з двома задачами. Номерів 3 і 4 на кадрі немає, тож відповідність номерів перевіряється лише за назвами, які збігаються з критерієм."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Order cleaning (optional)",
+          "onPage": true
+        },
+        {
+          "quote": "Hand over the keys (required)",
+          "onPage": true
+        },
+        {
+          "quote": "Your tasks: 0 of 2 done",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 15611,
+      "reviewCostUsd": 0.00243,
+      "reviewWallMs": 9831
+    },
+    {
+      "id": "AC-VENDOR-18",
+      "proof": "AC-VENDOR-18",
+      "title": "AC-VENDOR-18: вендор V прямим запитом, в обхід сторінок, email і профілів інших користувачів і задач «Apartment 14, repair» не отримує нічого",
+      "screenshot": "docs/qa/uat/2026-11-11/frames/AC-VENDOR-18-then-1.png",
+      "video": "test-results/artifacts/vendor-direct-reads-AC-VEN-a5a71-4-repair»-не-отримує-нічого-chromium/video.webm",
+      "trace": "test-results/artifacts/vendor-direct-reads-AC-VEN-a5a71-4-repair»-не-отримує-нічого-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі профілю видно лише email V (uat-261111214558-v18-vnd@example.test) без інших користувачів. На списку запусків є один рядок «Apartment 12, move-in», рядка «Apartment 14, repair» немає. Сторінка запуску за прямим посиланням показує «Run not found». Частина «рядка немає» є відсутністю елемента, тому цитати там немає; вона підтверджена візуально."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "uat-261111214558-v18-vnd@example.test",
+          "onPage": true
+        },
+        {
+          "quote": "Apartment 12, move-in",
+          "onPage": true
+        },
+        {
+          "quote": "Run not found",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 19600,
+      "reviewCostUsd": 0.0031,
+      "reviewWallMs": 9315
+    }
+  ],
+  "negativeControls": [],
+  "cleanup": {
+    "at": "2026-11-11T21:52:32.937Z",
+    "deleted": [
+      "uat-261111214558-t19-mgr-a@example.test",
+      "uat-261111214558-t19-mgr-b@example.test",
+      "uat-261111214558-v16-mgr-a@example.test",
+      "uat-261111214558-v16-vnd@example.test",
+      "uat-261111214558-v01-mgr-a@example.test",
+      "uat-261111214558-v01-vnd@example.test",
+      "uat-261111214558-v02-mgr-a@example.test",
+      "uat-261111214558-v02-mgr-b@example.test",
+      "uat-261111214558-v02-adm@example.test",
+      "uat-261111214558-v02-vnd@example.test",
+      "uat-261111214558-v17-mgr-a@example.test",
+      "uat-261111214558-v17-vnd@example.test",
+      "uat-261111214558-v18-mgr-a@example.test",
+      "uat-261111214558-v18-mgr-b@example.test",
+      "uat-261111214558-v18-vnd@example.test",
+      "uat-261111214558-v07-mgr-a@example.test",
+      "uat-261111214558-v07-vnd@example.test",
+      "uat-261111214558-v08-vnd@example.test",
+      "uat-261111214558-v09-mgr-a@example.test",
+      "uat-261111214558-v09-vnd@example.test",
+      "uat-261111214558-v14-vnd@example.test",
+      "uat-261111214558-v15-mgr-a@example.test",
+      "uat-261111214558-v15-vnd@example.test",
+      "uat-261111214558-v03-mgr-a@example.test",
+      "uat-261111214558-v03-vnd@example.test",
+      "uat-261111214558-v04-mgr-a@example.test",
+      "uat-261111214558-v04-vnd@example.test",
+      "uat-261111214558-v05-mgr-a@example.test",
+      "uat-261111214558-v05-vnd@example.test",
+      "uat-261111214558-v06-mgr-a@example.test",
+      "uat-261111214558-v06-vnd@example.test",
+      "uat-261111214558-v10-mgr-a@example.test",
+      "uat-261111214558-v10-vnd@example.test",
+      "uat-261111214558-v11-mgr-a@example.test",
+      "uat-261111214558-v11-vnd@example.test",
+      "uat-261111214558-v12-mgr-a@example.test",
+      "uat-261111214558-v12-vnd@example.test",
+      "uat-261111214558-v13-mgr-a@example.test",
+      "uat-261111214558-v13-vnd@example.test"
+    ],
+    "remaining": [],
+    "leftoverRequests": 0
+  }
+}
