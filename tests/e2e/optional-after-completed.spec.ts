@@ -55,6 +55,7 @@ test(
           await signInAs(page, assignee);
           await page.goto(`/runs/${runId}`);
           await expect(page.getByTestId("run-status")).toHaveText("completed");
+          await expect(page.getByTestId("run-progress")).toHaveText(`${required} of ${total} done`);
         },
       );
 
@@ -64,12 +65,21 @@ test(
         await expect(row.getByTestId("task-status")).toHaveText("done");
       });
 
+      // AC називає задачу «Order a part»; у шаблоні «Tenant move-in» на проді такої немає, тож тест бере його
+      // необов'язкову задачу. «Visible» — лише те, що видно на кадрі; стан до дії перевірено в «Дано» (hidden).
       await thenStep(
         page,
         {
           clause: 'the task has status "done", the run stays "completed", and the progress counts the task as done.',
-          visible: ["задача зі статусом «done»", "статус запуску «completed»", "прогрес рахує задачу виконаною"],
-          hidden: ["у базі задача «done», запуск «completed»"],
+          visible: [
+            `задача «${optionalName}» (optional) зі статусом «done»`,
+            "статус запуску «completed»",
+            `прогрес «${required + 1} of ${total} done»`,
+          ],
+          hidden: [
+            `до дії прогрес був «${required} of ${total} done», а задача — «to do» (перевірено в «Дано»)`,
+            "у базі задача «done», запуск «completed»",
+          ],
         },
         async () => {
           await expect(page.getByTestId("run-task").filter({ hasText: optionalName }).getByTestId("task-status")).toHaveText("done");
@@ -119,14 +129,31 @@ test(
       await thenStep(
         page,
         {
-          clause: 'task 3 has status "done", V sees "Your tasks: 1 of 1 done", and the run stays "completed".',
-          visible: ["задача 3 зі статусом «done»", "«Your tasks: 1 of 1 done»", "у списку запусків — статус «completed»"],
-          hidden: ["у базі запуск «completed», задача 3 «done»"],
+          clause: 'task 3 has status "done", V sees "Your tasks: 1 of 1 done" (the run page).',
+          visible: [`задача 3 «${task3Name}» (optional) зі статусом «done»`, "«Your tasks: 1 of 1 done»"],
+          hidden: ["статусу запуску на сторінці вендора немає (AC-VENDOR-11) — він на наступному кадрі, у списку запусків"],
         },
         async () => {
           await expect(page.getByTestId("run-task").filter({ hasText: task3Name }).getByTestId("task-status")).toHaveText("done");
           await expect(page.getByTestId("your-tasks")).toHaveText("Your tasks: 1 of 1 done");
-          await page.goto("/runs");
+          const main = page.getByRole("main");
+          await expect(main.getByText("completed", { exact: true })).toHaveCount(0);
+          await expect(main.getByText("in progress", { exact: true })).toHaveCount(0);
+        },
+      );
+
+      await when("V opens the list of runs", async () => {
+        await page.goto("/runs");
+      });
+
+      await thenStep(
+        page,
+        {
+          clause: 'the run stays "completed" (the list of runs), and V still sees "Your tasks: 1 of 1 done".',
+          visible: ["рядок «Apartment 12, move-in» зі статусом «completed»", "«Your tasks: 1 of 1 done»"],
+          hidden: ["у базі запуск «completed», задача 3 «done»"],
+        },
+        async () => {
           const row = page.getByTestId("run-row").filter({ hasText: APARTMENT_12 });
           await expect(row.getByText("completed", { exact: true })).toBeVisible();
           await expect(row.getByTestId("your-tasks")).toHaveText("Your tasks: 1 of 1 done");
