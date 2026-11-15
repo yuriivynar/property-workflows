@@ -118,9 +118,14 @@ export class Cast {
   /** Прибирання: спершу контексти й синтетичні шаблони, потім користувачі — менеджери й адміністратори (власники запусків) раніше за вендорів. */
   async dispose() {
     await Promise.all(this.contexts.map((context) => context.close().catch(() => undefined)));
-    if (this.templateIds.length) await deleteUatTemplates(this.templateIds);
-    const ordered = [...this.actors.filter((a) => a.role !== "vendor"), ...this.actors.filter((a) => a.role === "vendor")];
-    for (const actor of ordered) await deleteUatUsers(actor.email);
+    // Помилка видалення шаблонів не має лишити синтетичних користувачів: їх прибираємо у finally, а помилка шаблонів
+    // однаково дійде до тесту (залишки шаблонів добере teardown за префіксом uat-).
+    try {
+      if (this.templateIds.length) await deleteUatTemplates(this.templateIds);
+    } finally {
+      const ordered = [...this.actors.filter((a) => a.role !== "vendor"), ...this.actors.filter((a) => a.role === "vendor")];
+      for (const actor of ordered) await deleteUatUsers(actor.email);
+    }
   }
 }
 

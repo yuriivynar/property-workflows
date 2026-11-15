@@ -7,9 +7,16 @@ import { deleteUatTemplates, deleteUatUsers, deletedThisRun, hasAdminKey } from 
 
 if (hasAdminKey()) {
   teardown("прибирання: синтетичні uat-*@example.test", async () => {
-    // Спершу залишки синтетичних шаблонів uat-* (Cast.template), якщо тест обірвався до dispose.
-    await deleteUatTemplates();
-    expect(await deleteUatTemplates(), "лишились синтетичні шаблони").toEqual([]);
+    // Спершу залишки синтетичних шаблонів uat-* (Cast.template), якщо тест обірвався до dispose. Помилку запам'ятовуємо,
+    // а не кидаємо одразу: користувачів прибираємо за будь-якого результату, потім тест падає з тим самим повідомленням.
+    let templatesLeft: string[] = [];
+    let templatesError: unknown = null;
+    try {
+      await deleteUatTemplates();
+      templatesLeft = await deleteUatTemplates();
+    } catch (error) {
+      templatesError = error;
+    }
     const result = await deleteUatUsers();
     writeFileSync(
       "test-results/uat-cleanup.json",
@@ -18,5 +25,7 @@ if (hasAdminKey()) {
     );
     expect(result.remaining, "лишились синтетичні користувачі").toEqual([]);
     expect(result.leftoverRequests, "лишились заявки синтетичних користувачів").toBe(0);
+    if (templatesError) throw templatesError;
+    expect(templatesLeft, "лишились синтетичні шаблони").toEqual([]);
   });
 }
