@@ -33,7 +33,7 @@ const kind = option("--kind");
 const jsonOut = option("--json");
 const markdown = args.includes("--markdown");
 const maxWorkers = option("--max-workers");
-if (maxWorkers !== null && !/^[1-9]d*$/.test(maxWorkers)) {
+if (maxWorkers !== null && !/^[1-9]\d*$/.test(maxWorkers)) {
   console.error("✗ --max-workers очікує додатне ціле число");
   process.exit(2);
 }

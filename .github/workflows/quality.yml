@@ -76,8 +76,12 @@ jobs:
           fetch-depth: 0
       - name: Чи змінились міграції або мутанти
         id: changed
+        # База: для PR — базова гілка; для push — github.event.before (увесь діапазон push, а не лише останній коміт),
+        # а для нової гілки (нульовий SHA) — HEAD~1.
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then BASE="origin/${{ github.base_ref }}"; else BASE="HEAD~1"; fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then BASE="origin/${{ github.base_ref }}";
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then BASE="HEAD~1";
+          else BASE="${{ github.event.before }}"; fi
           if git diff --name-only "$BASE"...HEAD -- supabase/migrations scripts/mutants.mjs scripts/mutation-check.mjs | grep -q .; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
