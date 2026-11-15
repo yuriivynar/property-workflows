@@ -238,6 +238,8 @@ describe("Дії редактора шаблону", () => {
       );
       expect(state.writes).toEqual([write]);
       expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
+      // Запис обмежено саме цим елементом: фільтр за його id теж є (рев'ю CodeRabbit, PR #79).
+      expect(state.filters).toContainEqual(["id", "section_id" in fields ? fields.section_id : fields.task_id]);
       const { messageForTemplateError } = await import("@/lib/templates/domain");
       expect(messageForTemplateError("CHANGE_NOT_KEPT")).toBe("Your last change was not kept. Try again.");
 
