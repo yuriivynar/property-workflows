@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test";
 import { attachRuntimeErrors, given, thenStep, when } from "./support/uat";
 import {
   APARTMENT_12,
+  APARTMENT_14,
   Cast,
   TENANT_MOVE_IN,
   clientFor,
@@ -17,6 +18,9 @@ import {
 } from "./support/vendor";
 
 test.afterEach(async ({ page }) => attachRuntimeErrors(page));
+
+/** Назва необов'язкової задачі — дослівно з AC-TASK-19. */
+const ORDER_A_PART = "Order a part";
 
 /** Менеджер запуску позначає всі обов'язкові задачі справжньою mark_task_done (остання — з підтвердженням). */
 async function completeRequired(manager: Actor, runId: string) {
@@ -34,58 +38,77 @@ test(
     const cast = new Cast("t19");
     try {
       let runId = "";
-      let optionalName = "";
       let total = 0;
       let required = 0;
 
       await given(
-        'a run with status "completed" that has an optional task with status "to do", and the assignee of this task',
+        `a run with status "completed" that has the optional task "${ORDER_A_PART}" with status "to do", and the assignee of this task`,
         async () => {
+          // «Order a part» у шаблонах проду немає, тож «Дано» відтворює синтетичний шаблон: версія 1, збережена
+          // справжньою save_template_version (рев'ю WS9, koldovsky/2026-quitcode-09-software-factory-hw#9).
+          const admin = await cast.create("adm", "admin");
           const manager = await cast.create("mgr-a", "manager");
           const assignee = await cast.create("mgr-b", "manager");
-          const { tasks: templateTasks } = await currentTemplate(TENANT_MOVE_IN);
-          const optional = templateTasks.find((task) => !task.isRequired)!;
-          optionalName = optional.name;
-          runId = await launchAs(manager, TENANT_MOVE_IN, APARTMENT_12, { [optional.id]: assignee.id });
+          const template = await cast.template(admin, "tpl", [
+            {
+              name: "Repair",
+              tasks: [
+                { name: "Inspect the boiler", isRequired: true },
+                { name: "Fix the leak", isRequired: true },
+                { name: ORDER_A_PART, isRequired: false },
+              ],
+            },
+          ]);
+          expect(template.version).toBe(1);
+          const optional = template.tasks.find((task) => task.name === ORDER_A_PART)!;
+          expect(optional.isRequired).toBe(false);
+          runId = await launchAs(manager, template.id, APARTMENT_14, { [optional.id]: assignee.id });
           await completeRequired(manager, runId);
           const tasks = await runTasks(runId);
           total = tasks.length;
           required = tasks.filter((task) => task.isRequired).length;
-          expect(tasks.find((task) => task.name === optionalName)?.status).toBe("to_do");
+          const task = tasks.find((candidate) => candidate.name === ORDER_A_PART);
+          expect(task?.status).toBe("to_do");
+          expect(task?.assigneeId).toBe(assignee.id);
           await signInAs(page, assignee);
           await page.goto(`/runs/${runId}`);
           await expect(page.getByTestId("run-status")).toHaveText("completed");
           await expect(page.getByTestId("run-progress")).toHaveText(`${required} of ${total} done`);
+          await expect(page.getByTestId("run-task").filter({ hasText: ORDER_A_PART }).getByTestId("task-status")).toHaveText(
+            "to do",
+          );
         },
       );
 
-      await when(`the assignee marks "${optionalName || "the optional task"}" as done`, async () => {
-        const row = page.getByTestId("run-task").filter({ hasText: optionalName });
+      await when(`the assignee marks "${ORDER_A_PART}" as done`, async () => {
+        const row = page.getByTestId("run-task").filter({ hasText: ORDER_A_PART });
         await row.getByRole("button", { name: "Mark as done" }).click();
         await expect(row.getByTestId("task-status")).toHaveText("done");
       });
 
-      // AC називає задачу «Order a part»; у шаблоні «Tenant move-in» на проді такої немає, тож тест бере його
-      // необов'язкову задачу. «Visible» — лише те, що видно на кадрі; стан до дії перевірено в «Дано» (hidden).
+      // «Visible» — лише те, що видно на кадрі; стан до дії перевірено в «Дано» (hidden).
       await thenStep(
         page,
         {
           clause: 'the task has status "done", the run stays "completed", and the progress counts the task as done.',
           visible: [
-            `задача «${optionalName}» (optional) зі статусом «done»`,
+            `задача «${ORDER_A_PART}» (optional) зі статусом «done»`,
             "статус запуску «completed»",
             `прогрес «${required + 1} of ${total} done»`,
           ],
           hidden: [
             `до дії прогрес був «${required} of ${total} done», а задача — «to do» (перевірено в «Дано»)`,
+            "шаблон із задачею — синтетичний, версія 1 (save_template_version)",
             "у базі задача «done», запуск «completed»",
           ],
         },
         async () => {
-          await expect(page.getByTestId("run-task").filter({ hasText: optionalName }).getByTestId("task-status")).toHaveText("done");
+          await expect(page.getByTestId("run-task").filter({ hasText: ORDER_A_PART }).getByTestId("task-status")).toHaveText(
+            "done",
+          );
           await expect(page.getByTestId("run-status")).toHaveText("completed");
           await expect(page.getByTestId("run-progress")).toHaveText(`${required + 1} of ${total} done`);
-          expect((await runTasks(runId)).find((task) => task.name === optionalName)?.status).toBe("done");
+          expect((await runTasks(runId)).find((task) => task.name === ORDER_A_PART)?.status).toBe("done");
         },
       );
     } finally {
@@ -129,8 +152,12 @@ test(
       await thenStep(
         page,
         {
-          clause: 'task 3 has status "done", V sees "Your tasks: 1 of 1 done" (the run page).',
-          visible: [`задача 3 «${task3Name}» (optional) зі статусом «done»`, "«Your tasks: 1 of 1 done»"],
+          // clause — дослівна частина «Тоді» AC-VENDOR-16; де саме це видно — у visible.
+          clause: 'task 3 has status "done", V sees "Your tasks: 1 of 1 done",',
+          visible: [
+            `сторінка запуску V: задача 3 «${task3Name}» (optional) зі статусом «done»`,
+            "сторінка запуску V: «Your tasks: 1 of 1 done»",
+          ],
           hidden: ["статусу запуску на сторінці вендора немає (AC-VENDOR-11) — він на наступному кадрі, у списку запусків"],
         },
         async () => {
@@ -149,8 +176,11 @@ test(
       await thenStep(
         page,
         {
-          clause: 'the run stays "completed" (the list of runs), and V still sees "Your tasks: 1 of 1 done".',
-          visible: ["рядок «Apartment 12, move-in» зі статусом «completed»", "«Your tasks: 1 of 1 done»"],
+          clause: 'and the run stays "completed".',
+          visible: [
+            "список запусків V: рядок «Apartment 12, move-in» зі статусом «completed»",
+            "той самий рядок: «Your tasks: 1 of 1 done»",
+          ],
           hidden: ["у базі запуск «completed», задача 3 «done»"],
         },
         async () => {

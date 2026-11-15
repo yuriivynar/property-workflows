@@ -4,7 +4,7 @@
 // Ніколи не друкуємо паролі й токени: вони живуть лише в пам'яті тесту.
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { adminClient, deleteUatUsers, randomPassword, uatEmail } from "./admin";
+import { adminClient, deleteUatTemplates, deleteUatUsers, randomPassword, uatEmail, uatTemplateName } from "./admin";
 
 // Довідкові шаблони зі стабільними id (supabase/migrations/20261020115709_workflow_templates_reference_data.sql).
 export const TENANT_MOVE_IN = "10000000-0000-4000-8000-000000000001";
@@ -15,6 +15,11 @@ export const APARTMENT_12 = "Apartment 12, move-in";
 export const APARTMENT_14 = "Apartment 14, repair";
 
 export type Role = "manager" | "admin" | "vendor";
+
+/** Розділи синтетичного шаблону для Cast.template: задачі — у порядку позицій. */
+export type TemplateSections = { name: string; tasks: { name: string; isRequired: boolean }[] }[];
+
+export type SavedTemplate = { id: string; name: string; version: number; tasks: TemplateTask[] };
 
 export type Actor = { id: string; email: string; fullName: string; role: Role; password: string };
 
@@ -41,6 +46,7 @@ export type RunTask = {
 export class Cast {
   private readonly actors: Actor[] = [];
   private readonly contexts: BrowserContext[] = [];
+  private readonly templateIds: string[] = [];
 
   constructor(private readonly slug: string) {}
 
@@ -62,6 +68,44 @@ export class Cast {
     return actor;
   }
 
+  /**
+   * Синтетичний шаблон для «Дано», якого на проді немає (задача «Order a part», «current version 1»): назва
+   * uat-<run>-<слаг тесту>-<ключ>, розділи й задачі пише service role, а версію 1 зберігає справжня
+   * save_template_version від імені синтетичного адміністратора — так само, як кнопка Save редактора.
+   */
+  async template(admin: Actor, key: string, sections: TemplateSections): Promise<SavedTemplate> {
+    const service = adminClient();
+    const name = uatTemplateName(`${this.slug}-${key}`);
+    const { data: template, error } = await service.from("templates").insert({ name }).select("id").single();
+    if (error || !template) throw new Error(`Не вдалося створити шаблон ${name}: ${error?.message ?? "без відповіді"}`);
+    const id = template.id as string;
+    this.templateIds.push(id);
+    for (const [sectionIndex, section] of sections.entries()) {
+      const { data: row, error: sectionError } = await service
+        .from("template_sections")
+        .insert({ template_id: id, name: section.name, position: sectionIndex + 1 })
+        .select("id")
+        .single();
+      if (sectionError || !row) throw new Error(`Не вдалося створити розділ «${section.name}»: ${sectionError?.message}`);
+      const { error: tasksError } = await service.from("template_tasks").insert(
+        section.tasks.map((task, taskIndex) => ({
+          template_id: id,
+          section_id: row.id,
+          name: task.name,
+          is_required: task.isRequired,
+          position: taskIndex + 1,
+        })),
+      );
+      if (tasksError) throw new Error(`Не вдалося створити задачі розділу «${section.name}»: ${tasksError.message}`);
+    }
+    const { data: saved, error: saveError } = await (await clientFor(admin)).rpc("save_template_version", {
+      p_template_id: id,
+    });
+    if (saveError || saved !== 1) throw new Error(`save_template_version не зберіг версію 1: ${saveError?.message ?? saved}`);
+    const { version, tasks } = await currentTemplate(id);
+    return { id, name, version, tasks };
+  }
+
   /** Окремий браузерний контекст, у якому актор увійшов через форму входу (а не через спільні storageState). */
   async page(browser: Browser, actor: Actor): Promise<Page> {
     const context = await browser.newContext();
@@ -71,9 +115,10 @@ export class Cast {
     return page;
   }
 
-  /** Прибирання: спершу контексти, потім користувачі — менеджери й адміністратори (власники запусків) раніше за вендорів. */
+  /** Прибирання: спершу контексти й синтетичні шаблони, потім користувачі — менеджери й адміністратори (власники запусків) раніше за вендорів. */
   async dispose() {
     await Promise.all(this.contexts.map((context) => context.close().catch(() => undefined)));
+    if (this.templateIds.length) await deleteUatTemplates(this.templateIds);
     const ordered = [...this.actors.filter((a) => a.role !== "vendor"), ...this.actors.filter((a) => a.role === "vendor")];
     for (const actor of ordered) await deleteUatUsers(actor.email);
   }

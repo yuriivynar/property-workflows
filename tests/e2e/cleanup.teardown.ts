@@ -3,10 +3,13 @@
 // Без SUPABASE_SECRET_KEY (прогін лише AC, що нічого не пишуть: --grep-invert '@writes') прибирати нічого — тесту немає.
 import { writeFileSync } from "node:fs";
 import { expect, test as teardown } from "@playwright/test";
-import { deleteUatUsers, deletedThisRun, hasAdminKey } from "./support/admin";
+import { deleteUatTemplates, deleteUatUsers, deletedThisRun, hasAdminKey } from "./support/admin";
 
 if (hasAdminKey()) {
   teardown("прибирання: синтетичні uat-*@example.test", async () => {
+    // Спершу залишки синтетичних шаблонів uat-* (Cast.template), якщо тест обірвався до dispose.
+    await deleteUatTemplates();
+    expect(await deleteUatTemplates(), "лишились синтетичні шаблони").toEqual([]);
     const result = await deleteUatUsers();
     writeFileSync(
       "test-results/uat-cleanup.json",

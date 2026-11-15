@@ -2,6 +2,8 @@
 //   npm run uat -- --url https://<ваш-прод>.vercel.app      (або змінна UAT_BASE_URL; без неї — локальна збірка)
 //   npm run uat -- --url … --grep-invert '@writes'          (лише AC, що нічого не пишуть; решта аргументів → Playwright)
 //   npm run uat:nc -- --url …                               (негативні контролі; звіт у test-results/uat-report-nc/)
+//   … --out docs/qa/uat/<дата>-nc                            (тека звіту: шляхи кадрів у manifest.json — саме від неї,
+//                                                             тож звіт для git пишіть одразу туди, а не копіюйте)
 // Кроки: playwright test → pack.mjs → review.mjs (claude -p) → combine.mjs → report.mjs.
 // Звіт пишеться завжди, навіть якщо тести червоні: FAIL — теж результат для PM. Код виходу 1, якщо є FAIL.
 import { execFileSync, spawnSync } from "node:child_process";
@@ -29,6 +31,7 @@ const flag = (name) => {
 const url = (take("--url") ?? process.env.UAT_BASE_URL)?.replace(/\/+$/, "");
 const negativeControls = flag("--negative-controls");
 const skipReview = flag("--skip-review");
+const outDirArg = take("--out");
 const git = (...a) => {
   try {
     return execFileSync("git", a, { encoding: "utf8" }).trim();
@@ -90,7 +93,7 @@ if (!cases.length) {
   process.exitCode = 1;
 } else {
   if (!skipReview) await review();
-  const { outDir, rows } = report(combine(), { out: negativeControls ? "test-results/uat-report-nc" : undefined });
+  const { outDir, rows } = report(combine(), { out: outDirArg ?? (negativeControls ? "test-results/uat-report-nc" : undefined) });
   console.log(`\nЗвіт: ${rel(outDir)}/report.md`);
   for (const r of rows) console.log(`  ${r.caseId}: ${r.verdict} — ${r.ruleText}`);
   const real = rows.filter((r) => !r.negativeControl);
