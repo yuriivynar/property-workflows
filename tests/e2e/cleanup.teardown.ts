@@ -25,7 +25,7 @@ if (hasAdminKey()) {
     );
     expect(result.remaining, "лишились синтетичні користувачі").toEqual([]);
     expect(result.leftoverRequests, "лишились заявки синтетичних користувачів").toBe(0);
-    if (templatesError) throw templatesError;
+    expect(templatesError, "помилка прибирання синтетичних шаблонів").toBeNull();
     expect(templatesLeft, "лишились синтетичні шаблони").toEqual([]);
   });
 }
