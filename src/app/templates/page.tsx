@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { unpublishedTemplateIds } from "@/lib/templates/queries";
 import { emptyTemplatesMessage, messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { createTemplate } from "./actions";
 import { NotEnoughRights } from "@/components/not-enough-rights";
@@ -27,10 +28,10 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   // Помилка назви пов'язана з полем (DESIGN.md, розділ 7; рев'ю CodeRabbit, PR #23).
   const nameError = error === "TEMPLATE_NAME_REQUIRED" || error === "NAME_TAKEN";
 
-  const { data: templates, error: loadError } = await supabase
-    .from("templates")
-    .select("id, name, current_version, has_unpublished_changes")
-    .order("name");
+  const [{ data: templates, error: loadError }, unpublished] = await Promise.all([
+    supabase.from("templates").select("id, name, current_version").order("name"),
+    unpublishedTemplateIds(supabase, isAdmin),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -86,7 +87,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
                 </TableCell>
                 {isAdmin ? (
                   <TableCell className="py-2">
-                    {template.has_unpublished_changes ? <StatusBadge status="unpublished" /> : null}
+                    {unpublished.has(template.id) ? <StatusBadge status="unpublished" /> : null}
                   </TableCell>
                 ) : null}
               </TableRow>

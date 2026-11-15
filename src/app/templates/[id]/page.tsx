@@ -7,6 +7,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
+import { unpublishedTemplateIds } from "@/lib/templates/queries";
 import { TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
 import Link from "next/link";
@@ -26,11 +27,10 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   if (templatePageAccess(user.role, "view") !== "ok") return <NotEnoughRights role={user.role} />;
   const isAdmin = user.role === "admin";
 
-  const { data: template } = await supabase
-    .from("templates")
-    .select("id, name, current_version, has_unpublished_changes")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: template }, unpublished] = await Promise.all([
+    supabase.from("templates").select("id, name, current_version").eq("id", id).maybeSingle(),
+    unpublishedTemplateIds(supabase, isAdmin),
+  ]);
 
   if (!template) {
     return (
@@ -58,7 +58,7 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
           <h1 className="text-2xl font-semibold">{template.name}</h1>
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {template.current_version ? TEMPLATE_MESSAGES.version(template.current_version) : "—"}
-            {isAdmin && template.has_unpublished_changes ? <StatusBadge status="unpublished" /> : null}
+            {unpublished.has(template.id) ? <StatusBadge status="unpublished" /> : null}
           </p>
         </div>
         {template.current_version ? (

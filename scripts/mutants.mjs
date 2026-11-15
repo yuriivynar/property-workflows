@@ -17,6 +17,8 @@ const EDITOR_DB = "tests/db/template-editor.test.ts";
 const CLARIFY_DB = "tests/db/template-clarify.test.ts";
 const VENDOR_ROLE = "supabase/migrations/20261102133035_vendor_role.sql";
 const VENDOR_DB = "tests/db/vendor-work.test.ts";
+const WS7_RULES = "supabase/migrations/20261115134842_ws7_review_template_rules.sql";
+const RULES_DB = "tests/db/template-rules-review.test.ts";
 
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
@@ -35,9 +37,10 @@ export const mutants = [
     replace: "  public.runs, public.run_sections, public.run_tasks\n  to anon, authenticated;",
   },
   {
-    id: "E19", kind: "sql", ac: "AC-EDITOR-19", file: VERSIONS, tests: [CLARIFY_DB],
-    what: "обмеження назви шаблону без btrim: назва лише з пробілів проходить базу",
-    find: "add constraint templates_name_not_blank check (char_length(btrim(name)) > 0);",
+    // Обмеження перевизначено в 20261115134842 (clean_name замість btrim, рев'ю WS7 №4): мутуємо чинне визначення.
+    id: "E19", kind: "sql", ac: "AC-EDITOR-19", file: WS7_RULES, tests: [CLARIFY_DB, RULES_DB],
+    what: "обмеження назви шаблону без clean_name: назва лише з пробільних символів проходить базу",
+    find: "add constraint templates_name_not_blank check (char_length(private.clean_name(name)) > 0);",
     replace: "add constraint templates_name_not_blank check (char_length(name) > 0);",
   },
 
@@ -167,6 +170,31 @@ export const mutants = [
     what: "mark_task_done: у запуску «completed» позначку відхилено — необов'язкову задачу вже не позначити",
     find: "  if v_status = 'done' then\n    return;\n  end if;",
     replace: "  if v_status = 'done' then\n    return;\n  end if;\n  if exists (select 1 from public.runs where id = v_run_id and status = 'completed') then\n    raise exception 'RUN_COMPLETED' using errcode = '22023';\n  end if;",
+  },
+  // ── Правила шаблонів за рев'ю WS7 (міграція 20261115134842) ─────────────────────────────────────────────────────
+  {
+    id: "U29", kind: "sql", ac: "AC-EDITOR-29", file: WS7_RULES, tests: [RULES_DB],
+    what: "templates_with_unpublished_changes(): без перевірки ролі — менеджер дізнається про незбережені зміни",
+    find: "  where (select private.current_app_role()) = 'admin' and t.has_unpublished_changes;",
+    replace: "  where t.has_unpublished_changes;",
+  },
+  {
+    id: "U29G", kind: "sql", ac: "AC-EDITOR-29", file: WS7_RULES, tests: [RULES_DB],
+    what: "grant select на всю таблицю templates — менеджер читає has_unpublished_changes прямим запитом",
+    find: "grant select (id, name, created_at, current_version) on table public.templates to authenticated;",
+    replace: "grant select on table public.templates to authenticated;",
+  },
+  {
+    id: "N23", kind: "sql", ac: "AC-EDITOR-23", file: WS7_RULES, tests: [RULES_DB],
+    what: "унікальність назви за btrim, а не clean_name: «Tenant move-in» з табуляцією — дублікат",
+    find: "create unique index templates_name_normalized_key on public.templates (lower(private.clean_name(name)));",
+    replace: "create unique index templates_name_normalized_key on public.templates (lower(btrim(name)));",
+  },
+  {
+    id: "P08", kind: "sql", ac: "—", file: WS7_RULES, tests: [RULES_DB],
+    what: "немає унікальності (section_id, position): дві задачі розділу з однаковою позицією",
+    find: "add constraint template_tasks_section_position_key unique (section_id, position) deferrable initially deferred;",
+    replace: "add constraint template_tasks_section_position_key check (position > 0);",
   },
 ];
 
