@@ -86,7 +86,11 @@ describe("База: запуск — уточнення PM", () => {
 
     await t.asService("update public.template_sections set name = 'Key handover' where id = $1", [moveIn]);
     await t.asService(
-      "update public.template_tasks set section_id = $1 where section_id = $2 and name = 'Hand over the keys'",
+      // Позиція — наступна вільна в новому розділі (як у move_template_task_to_section): позиція задачі унікальна в розділі.
+      `update public.template_tasks
+       set section_id = $1,
+           position = (select coalesce(max(position), 0) + 1 from public.template_tasks where section_id = $1)
+       where section_id = $2 and name = 'Hand over the keys'`,
       [before, moveIn],
     );
 

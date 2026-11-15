@@ -55,7 +55,9 @@ describe("База: редактор шаблону", () => {
     // «Повторно відкрити редактор» — нова транзакція того самого адміністратора.
     const [state] = await t.asUser<{ has_unpublished_changes: boolean; tasks: number; current_version: number }>(
       ADMIN,
-      `select t.has_unpublished_changes, t.current_version,
+      // Позначку адміністратор читає функцією templates_with_unpublished_changes() — як сторінки редактора (рев'ю WS7).
+      `select exists (select 1 from public.templates_with_unpublished_changes() as u where u.id = t.id) as has_unpublished_changes,
+              t.current_version,
               (select count(*)::int from public.template_tasks where template_id = t.id) as tasks
        from public.templates as t where t.id = $1`,
       [TENANT_MOVE_IN],

@@ -10,6 +10,7 @@ import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
+import { unpublishedTemplateIds } from "@/lib/templates/queries";
 import { messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import {
   addSection,
@@ -40,12 +41,15 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   if (templatePageAccess(user.role, "edit") !== "ok") return <NotEnoughRights role={user.role} />;
 
   const [
+    unpublished,
     { data: template },
     { data: draftName, error: draftNameError },
     { data: sections, error: sectionsError },
     { data: tasks, error: tasksError },
   ] = await Promise.all([
-    supabase.from("templates").select("id, name, current_version, has_unpublished_changes").eq("id", id).maybeSingle(),
+    // Сторінка редактора — лише для адміністратора (templatePageAccess вище), тож позначку запитуємо завжди.
+    unpublishedTemplateIds(supabase, true),
+    supabase.from("templates").select("id, name, current_version").eq("id", id).maybeSingle(),
     // Робоча назва — у незбережених змінах; менеджер бачить назву поточної версії (AC-EDITOR-21).
     supabase.from("template_draft_names").select("name").eq("template_id", id).maybeSingle(),
     supabase.from("template_sections").select("id, name, position").eq("template_id", id).order("position"),
@@ -63,6 +67,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
       </main>
     );
   }
+  const hasUnpublishedChanges = unpublished.has(template.id);
 
   // Помилку читання незбережених змін не показуємо як порожній шаблон (рев'ю CodeRabbit, PR #18).
   if (sectionsError || tasksError || draftNameError) {
@@ -86,13 +91,13 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
           <h1 className="text-2xl font-semibold">{workingName}</h1>
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {template.current_version ? `Current: ${TEMPLATE_MESSAGES.version(template.current_version)}` : "Never saved"}
-            {template.has_unpublished_changes ? <StatusBadge status="unpublished" /> : null}
+            {hasUnpublishedChanges ? <StatusBadge status="unpublished" /> : null}
           </p>
         </div>
         <form action={saveVersion}>
           {hidden}
           {/* «Save» без незбережених змін неактивна (робоче рішення до solomchaak/property-workflows-spec#22). */}
-          <Button type="submit" size="lg" disabled={!template.has_unpublished_changes}>
+          <Button type="submit" size="lg" disabled={!hasUnpublishedChanges}>
             Save
           </Button>
         </form>

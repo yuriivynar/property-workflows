@@ -302,6 +302,13 @@ export type Database = {
           email: string | null;
         }[];
       };
+      // 20261115134842_ws7_review_template_rules.sql — позначку незбережених змін бачить лише адміністратор.
+      templates_with_unpublished_changes: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+        }[];
+      };
       // 20261102133035_vendor_role.sql — список запусків вендора і його задачі (AC-VENDOR-03…06, AC-VENDOR-10).
       vendor_runs: {
         Args: Record<PropertyKey, never>;
