@@ -66,6 +66,13 @@ export const mutants = [
     find: 'check.reason === "NOT_SIGNED_IN" ? "/login" : `${back}?error=NOT_ALLOWED`',
     replace: "`${back}?error=NOT_ALLOWED`",
   },
+  {
+    id: "TS-T16", kind: "ts", ac: "AC-TASK-16", file: "src/app/runs/[id]/mark-done-button.tsx",
+    tests: ["src/app/runs/[id]/mark-done-button.test.tsx"],
+    what: "MarkDoneButton: Cancel на підтвердженні не повертає кнопку «Mark as done» — підтвердження лишається відкритим",
+    find: "onClick={() => setConfirming(false)}",
+    replace: "onClick={() => setConfirming(true)}",
+  },
 
   // ── Мутанти правил у SQL за AC зрізу 3 (WS9): вендор — виконавець, бачить і змінює лише своє ───────────────────
   // Кожен мутант послаблює правило до «дозволено» (а не видаляє політику: без політики RLS забороняє все, і тест
