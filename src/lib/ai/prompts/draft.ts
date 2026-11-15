@@ -3,7 +3,7 @@
 // Змінили промпт — збільште DRAFT_PROMPT_VERSION і перезапишіть записи живим прогоном (RECORD=1 npm run eval).
 // Правила, які може перевірити код (сума кошторису, тексти приміток і відмови, телефон), — у src/lib/documents/values.ts.
 
-export const DRAFT_PROMPT_VERSION = "docai-v1";
+export const DRAFT_PROMPT_VERSION = "docai-v2";
 
 /** Найдовший документ, який бачить модель: довший текст обрізаємо (рахунок токенів і денний ліміт). */
 export const MAX_DOCUMENT_CHARS = 8_000;
@@ -22,7 +22,9 @@ export const DRAFT_INSTRUCTIONS = [
   "Never invent a value: anything that is not in the document is null.",
   "Rules for a request:",
   "- phone: digits with a dash, like 555-0100; a number spoken in words becomes digits; null if there is no phone in the document.",
-  "- description: one short English sentence with the problem and the apartment, without greetings, names, filler words or the phone.",
+  "- description: one short English sentence that keeps every fact the document states about the problem:",
+  "  what is wrong, where (the apartment and the room), since when or for how long, and conditions that make it worse (for example the weather).",
+  "  Leave out greetings, names, filler words, requests to send someone, and the phone. Add nothing that is not in the document.",
   "- category: plumbing, electrical, heating and cooling, appliance, structure and doors, or other.",
   "  If the document describes two problems, use the category of the more serious one, mention both problems in the description and set twoProblems to true.",
   '- urgency: "urgent" only for active damage or a risk to safety or health right now; otherwise "not urgent".',
