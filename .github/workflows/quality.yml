@@ -2,6 +2,7 @@
 #   fallow   — fallow audit: мертвий код, складність, дублі, правила Next.js і «послаблені тести» — валить лише НОВІ
 #              знахідки відносно бази PR (успадковані показує як контекст);
 #   coverage — Vitest із покриттям v8: підлога для доменних файлів (vitest.coverage.config.mts), таблиця — у Summary;
+#   mutation-sql — повний npm run mutation:sql (без --only), коли змінились міграції чи реєстр мутантів (рев'ю WS9);
 #   deps     — npm audit залежностей продакшену: лише попередження (вивід npm audit недетермінований, job не червоніє).
 # Тестові правила лінтера (@vitest/eslint-plugin) — в eslint.config.mjs, тобто вже в обов'язковому job app (ci.yml).
 # Порядок впровадження: нові перевірки — дорадчі, доки не буде першого зеленого прогону на main; після нього
@@ -61,6 +62,47 @@ jobs:
       - name: Таблиця покриття → Summary
         if: always()
         run: npm run coverage:summary
+
+  # Повний прогін SQL-мутантів (без --only): міграція, що видаляє й створює правило наново, тихо робить старий мутант
+  # непотрібним — повний прогін показує це як SURVIVED. Скрипт виходить з 1 на будь-якому SURVIVED чи ERROR без
+  # expect: "survive". Лише коли змінились міграції або реєстр мутантів (paths-filter нижче), інакше job — ok.
+  mutation-sql:
+    name: "Мутанти: SQL-правила"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Чи змінились міграції або мутанти
+        id: changed
+        # База: для PR — базова гілка; для push — github.event.before (увесь діапазон push, а не лише останній коміт),
+        # а для нової гілки (нульовий SHA) — HEAD~1.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then BASE="origin/${{ github.base_ref }}";
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then BASE="HEAD~1";
+          else BASE="${{ github.event.before }}"; fi
+          if git diff --name-only "$BASE"...HEAD -- supabase/migrations scripts/mutants.mjs scripts/mutation-check.mjs | grep -q .; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Міграції й реєстр мутантів не змінились — прогін пропущено" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/setup-node@v7
+        if: steps.changed.outputs.run == 'true'
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.changed.outputs.run == 'true'
+        run: npm ci
+      - name: npm run mutation:sql (усі мутанти)
+        if: steps.changed.outputs.run == 'true'
+        run: |
+          set -o pipefail
+          npm run mutation:sql | tee "$RUNNER_TEMP/mutation.log"
+      - name: Підсумок → Summary
+        if: always() && steps.changed.outputs.run == 'true'
+        run: |
+          { echo '### SQL-мутанти'; echo '```'; grep -E 'KILLED|SURVIVED|ERROR|прийнято' "$RUNNER_TEMP/mutation.log" || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
   deps:
     name: "Порада: вразливі залежності"

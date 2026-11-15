@@ -16,6 +16,8 @@
 //   node scripts/mutation-check.mjs --only L2,L5     вибрані
 //   node scripts/mutation-check.mjs --kind ts        лише TS-мутанти
 //   … --json reports/sql-mutation.json              результати у файл; --markdown — таблиця для опису PR
+//   … --max-workers 2                               обмежити паралелізм Vitest (Windows: кілька PGlite-процесів
+//                                                   разом вичерпують пам'ять — «Fatal process out of memory: Zone»)
 // Код виходу: 0 — кожен мутант KILLED або прийнятий (expect: "survive" з reason); 1 — є SURVIVED чи ERROR;
 // 2 — помилка запуску (брудний файл, find не знайдено, тести червоні без мутацій).
 import { execFileSync, spawnSync } from "node:child_process";
@@ -30,6 +32,11 @@ const only = option("--only")?.split(",").map((s) => s.trim());
 const kind = option("--kind");
 const jsonOut = option("--json");
 const markdown = args.includes("--markdown");
+const maxWorkers = option("--max-workers");
+if (maxWorkers !== null && !/^[1-9]\d*$/.test(maxWorkers)) {
+  console.error("✗ --max-workers очікує додатне ціле число");
+  process.exit(2);
+}
 
 const fail = (message) => {
   console.error(`✗ ${message}`);
@@ -109,7 +116,7 @@ function loadProblems(report, files) {
 
 function runTests(files, label) {
   const out = path.join(tmp, `${label}.json`);
-  const run = spawnSync(process.execPath, [vitestBin, "run", ...files, "--reporter=json", `--outputFile=${out}`], {
+  const run = spawnSync(process.execPath, [vitestBin, "run", ...files, "--reporter=json", `--outputFile=${out}`, ...(maxWorkers ? [`--maxWorkers=${maxWorkers}`] : [])], {
     stdio: "ignore",
     env: { ...process.env, FORCE_COLOR: "0" },
   });

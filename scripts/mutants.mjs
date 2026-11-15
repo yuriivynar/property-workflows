@@ -21,7 +21,9 @@ const VENDOR_DB = "tests/db/vendor-work.test.ts";
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
   {
-    id: "E07", kind: "sql", ac: "AC-EDITOR-07", file: VERSIONS, tests: [EDITOR_DB],
+    // Політику template_versions видаляє й створює наново vendor_role.sql: мутуємо останнє визначення, бо мутант
+    // старої міграції повний прогін показав би SURVIVED (діє вже нова політика).
+    id: "E07", kind: "sql", ac: "AC-EDITOR-07", file: VENDOR_ROLE, tests: [EDITOR_DB],
     what: "політика template_versions: менеджер бачить усі версії збереженого шаблону, а не лише поточну",
     find: "where t.id = template_versions.template_id and t.current_version = template_versions.number",
     replace: "where t.id = template_versions.template_id",

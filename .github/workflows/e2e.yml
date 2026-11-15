@@ -61,7 +61,15 @@ jobs:
         run: npm run users:demo
       - run: npm run build
       - name: Chromium для Playwright
-        run: npx playwright install --with-deps --only-shell chromium
+        # До трьох спроб: завантаження браузера чи apt-пакетів інколи обривається (так впали e2e на #73 і #74), а
+        # інфраструктурний збій не має виглядати як падіння тесту.
+        run: |
+          for attempt in 1 2 3; do
+            if npx playwright install --with-deps --only-shell chromium; then exit 0; fi
+            echo "::warning::Chromium не встановився (спроба $attempt з 3)"
+            sleep $((attempt * 15))
+          done
+          exit 1
       - name: Playwright (webServer — npm run start на зібраному застосунку)
         run: npx playwright test
       - name: Жодного пропущеного тесту
