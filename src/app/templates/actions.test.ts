@@ -53,7 +53,7 @@ vi.mock("@/lib/supabase/server", () => ({
         },
         delete: () => write("delete"),
         then: (resolve: (v: unknown) => void) =>
-          resolve({ data: lastOp === "update" ? state.updatedRows : null, error: null }),
+          resolve({ data: lastOp === "update" || lastOp === "delete" ? state.updatedRows : null, error: null }),
       };
       return chain;
     },
@@ -165,6 +165,7 @@ describe("Дії редактора шаблону", () => {
 
   it("AC-EDITOR-20: адміністратор очищує назву задачі чи розділу — зміна записується в незбережені зміни, без відмови", async () => {
     state.role = "admin";
+    state.updatedRows = [{ id: SECTION }];
     expect(await redirectOf(actions.renameTask(form({ template_id: TEMPLATE, task_id: SECTION, name: "  " })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
@@ -182,6 +183,7 @@ describe("Дії редактора шаблону", () => {
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
     expect(state.writes).toEqual([]);
+    state.updatedRows = [{ id: SECTION }];
     await redirectOf(actions.removeSection(form({ template_id: TEMPLATE, section_id: SECTION, confirmed: "true" })));
     expect(state.writes).toEqual(["delete:template_sections"]);
     expect(state.filters).toContainEqual(["id", SECTION]);
@@ -217,4 +219,35 @@ describe("Дії редактора шаблону", () => {
     expect(state.payloads).toEqual([{ name: "Tenant move-in (2027)" }]);
     expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
   });
+
+  // Рев'ю WS7 №2: дія пише лише в елемент цього шаблону й помічає, що нічого не змінилося (стара вкладка, чужий id).
+  it.each([
+    ["renameSection", "update:template_sections", { section_id: SECTION, name: "Keys" }],
+    ["removeSection", "delete:template_sections", { section_id: SECTION, confirmed: "true" }],
+    ["renameTask", "update:template_tasks", { task_id: SECTION, name: "Sign handover act" }],
+    ["setTaskRequired", "update:template_tasks", { task_id: SECTION, is_required: "true" }],
+    ["removeTask", "delete:template_tasks", { task_id: SECTION }],
+  ] as const)(
+    "AC-EDITOR-25: %s без зміненого рядка (елемента вже немає або він з іншого шаблону) — «Your last change was not kept. Try again.»",
+    async (name, write, fields) => {
+      state.role = "admin";
+      const action = actions[name] as (form: FormData) => Promise<unknown>;
+      state.updatedRows = [];
+      expect(await redirectOf(action(form({ template_id: TEMPLATE, ...fields })))).toBe(
+        `REDIRECT:/templates/${TEMPLATE}/edit?error=CHANGE_NOT_KEPT`,
+      );
+      expect(state.writes).toEqual([write]);
+      expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
+      // Запис обмежено саме цим елементом: фільтр за його id теж є (рев'ю CodeRabbit, PR #79).
+      expect(state.filters).toContainEqual(["id", "section_id" in fields ? fields.section_id : fields.task_id]);
+      const { messageForTemplateError } = await import("@/lib/templates/domain");
+      expect(messageForTemplateError("CHANGE_NOT_KEPT")).toBe("Your last change was not kept. Try again.");
+
+      state.writes = [];
+      state.updatedRows = [{ id: SECTION }];
+      expect(await redirectOf(action(form({ template_id: TEMPLATE, ...fields })))).toBe(`REDIRECT:/templates/${TEMPLATE}/edit`);
+      expect(state.writes).toEqual([write]);
+    },
+  );
 });
+

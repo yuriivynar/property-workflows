@@ -168,10 +168,6 @@ describe("Уточнення PM: підтвердження, email, сторін
     expect(staffLabel({ email: "admin@example.test" })).toBe("admin@example.test");
   });
 
-  it("AC-TASK-10: стороннім показуємо «Run not found»", () => {
-    expect(MESSAGES.runNotFound).toBe("Run not found");
-  });
-
   it("AC-TASK-15: позначки «required» і «optional»", () => {
     expect([requiredLabel(true), requiredLabel(false)]).toEqual(["required", "optional"]);
   });

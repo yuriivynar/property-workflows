@@ -41,6 +41,39 @@ export const mutants = [
     replace: "add constraint templates_name_not_blank check (char_length(name) > 0);",
   },
 
+  // ── Відмовні AC зрізу 2 без мутанта (рев'ю WS7 №3): «AC → що прибрали → який тест упав» ──────────────────────
+  {
+    id: "E11", kind: "sql", ac: "AC-EDITOR-11", file: VENDOR_ROLE, tests: [CLARIFY_DB],
+    what: "launch_run: шаблон без збереженої версії не відхиляється як TEMPLATE_NOT_FOUND (лише «не знайдено»)",
+    find: "  if not found or v_version is null then",
+    replace: "  if not found then",
+  },
+  {
+    id: "E16", kind: "sql", ac: "AC-EDITOR-16", file: VENDOR_ROLE, tests: [CLARIFY_DB],
+    what: "політика templates: менеджер бачить і незбережений шаблон (без умови current_version is not null)",
+    find: "or ((select private.current_app_role()) = 'manager' and current_version is not null)",
+    replace: "or (select private.current_app_role()) = 'manager'",
+  },
+  {
+    id: "E29", kind: "sql", ac: "AC-EDITOR-29", file: VERSIONS, tests: [CLARIFY_DB],
+    what: "політика template_tasks: незбережені задачі шаблону читає будь-хто, а не лише адміністратор",
+    find: "create policy template_tasks_select_admin\n  on public.template_tasks for select to authenticated\n  using ((select private.current_app_role()) = 'admin');",
+    replace: "create policy template_tasks_select_admin\n  on public.template_tasks for select to authenticated\n  using (true);",
+  },
+  {
+    id: "TS-E26", kind: "ts", ac: "AC-EDITOR-26", file: "src/app/templates/actions.ts", tests: ["src/app/templates/actions.test.ts"],
+    what: "adminClient: відвідувача без входу ведемо не на /login, а на сторінку з «Not enough rights»",
+    find: 'check.reason === "NOT_SIGNED_IN" ? "/login" : `${back}?error=NOT_ALLOWED`',
+    replace: "`${back}?error=NOT_ALLOWED`",
+  },
+  {
+    id: "TS-T16", kind: "ts", ac: "AC-TASK-16", file: "src/app/runs/[id]/mark-done-button.tsx",
+    tests: ["src/app/runs/[id]/mark-done-button.test.tsx"],
+    what: "MarkDoneButton: Cancel на підтвердженні не повертає кнопку «Mark as done» — підтвердження лишається відкритим",
+    find: "onClick={() => setConfirming(false)}",
+    replace: "onClick={() => setConfirming(true)}",
+  },
+
   // ── Мутанти правил у SQL за AC зрізу 3 (WS9): вендор — виконавець, бачить і змінює лише своє ───────────────────
   // Кожен мутант послаблює правило до «дозволено» (а не видаляє політику: без політики RLS забороняє все, і тест
   // відмови лишився б зеленим). Усі живуть у міграції vendor_role; правила доводить tests/db/vendor-work.test.ts (PGlite).

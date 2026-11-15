@@ -21,7 +21,7 @@
 // Код виходу: 0 — кожен мутант KILLED або прийнятий (expect: "survive" з reason); 1 — є SURVIVED чи ERROR;
 // 2 — помилка запуску (брудний файл, find не знайдено, тести червоні без мутацій).
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { mutants } from "./mutants.mjs";
@@ -54,6 +54,20 @@ if (!selected.length) fail("жодного мутанта не вибрано");
 for (const m of selected) {
   if (m.expect === "survive" && !m.reason) fail(`${m.id}: expect: "survive" без reason — поясніть, чому мутант еквівалентний`);
   for (const f of [m.file, ...m.tests]) if (!existsSync(f)) fail(`${m.id}: файлу ${f} немає`);
+}
+
+// SQL-мутант має ламати ОСТАННЄ визначення правила. Якщо той самий рядок find є в пізнішій міграції, вона, найімовірніше,
+// перевизначає той самий об'єкт (drop/create policy, create or replace function), і мутацію тихо перекриє чинна
+// версія — так E07 став SURVIVED після vendor_role.sql (рев'ю WS8 №1). Відмовляємо до запуску й називаємо файл.
+const MIGRATIONS = "supabase/migrations";
+for (const m of selected.filter((x) => x.kind === "sql" && x.file.startsWith(`${MIGRATIONS}/`))) {
+  const own = path.basename(m.file);
+  const later = readdirSync(MIGRATIONS)
+    .filter((name) => name.endsWith(".sql") && name > own)
+    .filter((name) => readFileSync(path.join(MIGRATIONS, name), "utf8").replace(/\r\n/g, "\n").includes(m.find));
+  if (later.length) {
+    fail(`${m.id}: рядок find є й у пізнішій міграції ${later.join(", ")} — мутуйте останнє визначення (${MIGRATIONS}/${later.at(-1)})`);
+  }
 }
 
 // Ctrl+C посеред мутанта: повертаємо оригінальні байти файлу.
