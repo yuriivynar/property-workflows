@@ -18,7 +18,9 @@ import {
   runTasks,
   signInAs,
   type Actor,
+  type SavedTemplate,
 } from "./support/vendor";
+import { uatTemplateName } from "./support/admin";
 
 test.afterEach(async ({ page }) => attachRuntimeErrors(page));
 
@@ -173,19 +175,29 @@ test(
     const attemptName = "Apartment 16, move-in";
     try {
       let vendor!: Actor;
-      let version = 0;
+      let template!: SavedTemplate;
       let before: string[] = [];
       let launchMessage: string | undefined;
       let insertErrorCode: string | undefined;
       let insertRows: unknown[] = [];
 
-      await given("vendor V signed in and the template \"Tenant move-in\" with a current version", async () => {
+      // «Current version 1» з AC: на проді й у CI поточна версія «Tenant move-in» вже не 1 (фікстура AC-EDITOR-07,
+      // редагування), а назва шаблону унікальна (AC-EDITOR-24). Тож «Дано» відтворює синтетична копія задач
+      // «Tenant move-in», збережена версією 1 справжньою save_template_version (рев'ю WS9,
+      // koldovsky/2026-quitcode-09-software-factory-hw#9); відрізняється лише назва — uat-<run>-v09-tpl.
+      const templateName = uatTemplateName("v09-tpl");
+      await given(`vendor V signed in and the template "${templateName}" (the tasks of "Tenant move-in") with current version 1`, async () => {
+        const admin = await cast.create("adm", "admin");
         const manager = await cast.create("mgr-a", "manager");
         vendor = await cast.create("vnd", "vendor");
-        // «Current version 1» з AC: поточну версію читаємо з бази (currentTemplate кидає виняток, якщо шаблон ніколи не
-        // зберігали). На проді й у CI після фікстури AC-EDITOR-07 вона 2, а не 1 — це відхилення «Дано» від тексту AC
-        // описано в docs/qa/proof-pack.md; «Тоді» (запуск не створено) від версії не залежить.
-        ({ version } = await currentTemplate(TENANT_MOVE_IN));
+        const { tasks: source } = await currentTemplate(TENANT_MOVE_IN);
+        const sections = [...new Set(source.map((task) => task.sectionName))].map((name) => ({
+          name,
+          tasks: source.filter((task) => task.sectionName === name).map(({ name: taskName, isRequired }) => ({ name: taskName, isRequired })),
+        }));
+        template = await cast.template(admin, "tpl", sections);
+        expect(template.name).toBe(templateName);
+        expect(template.version).toBe(1);
         // У V є один запуск зі своєю задачею — щоб «список запусків не змінився» означало щось більше за порожній список.
         await launchApartment12(manager, vendor);
         await signInAs(page, vendor);
@@ -198,7 +210,7 @@ test(
       await when("V tries to launch this template directly, bypassing the pages of the application", async () => {
         const vendorClient = await clientFor(vendor);
         const launch = await vendorClient.rpc("launch_run", {
-          p_template_id: TENANT_MOVE_IN,
+          p_template_id: template.id,
           p_case_name: attemptName,
           p_assignments: {},
         });
@@ -207,9 +219,9 @@ test(
         const insert = await vendorClient
           .from("runs")
           .insert({
-            template_id: TENANT_MOVE_IN,
-            template_name: "Tenant move-in",
-            template_version: version,
+            template_id: template.id,
+            template_name: template.name,
+            template_version: template.version,
             case_name: attemptName,
             run_manager_id: vendor.id,
           })
@@ -228,6 +240,7 @@ test(
             "запуску «Apartment 16, move-in» (спроби) у списку немає",
           ],
           hidden: [
+            "шаблон спроби — синтетична копія задач «Tenant move-in» з поточною версією 1",
             "запит через launch_run відхилено (LAUNCH_NOT_ALLOWED), а не виконано",
             "прямий INSERT у runs не створив жодного рядка",
             "у базі немає запуску з менеджером V і немає запуску з назвою спроби",

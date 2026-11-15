@@ -149,8 +149,9 @@ test(
       await thenStep(
         page,
         {
-          clause: "V receives nothing about other users (the profile page).",
-          visible: [`на сторінці профілю — лише власний email V «${vendor?.email ?? "V"}»`],
+          // clause — дослівна частина «Тоді» AC-VENDOR-18; де саме це видно — у visible.
+          clause: "V receives nothing about other users",
+          visible: [`сторінка профілю V: лише власний email V «${vendor?.email ?? "V"}»`],
           hidden: [
             "пряма відповідь `profiles` — лише власний рядок V",
             "профілі менеджерів A і B за їхніми id — порожня відповідь",
@@ -175,8 +176,8 @@ test(
       await thenStep(
         page,
         {
-          clause: 'V receives nothing about "Apartment 14, repair" (the list of runs).',
-          visible: ["у списку запусків V — лише «Apartment 12, move-in»", "рядка «Apartment 14, repair» немає"],
+          clause: 'or about "Apartment 14, repair".',
+          visible: ["список запусків V: лише «Apartment 12, move-in»", "список запусків V: рядка «Apartment 14, repair» немає"],
           hidden: [
             "прямі відповіді для «Apartment 14, repair» порожні: `run_tasks`, `vendor_run_tasks`, `run_sections`, `runs`, `run_overview`",
             "`vendor_runs()` не містить «Apartment 14, repair»",

@@ -47,6 +47,37 @@ export function adminClient(): SupabaseClient {
   return createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
+/**
+ * Синтетичні шаблони UAT (Cast.template) звуться так само, як локальна частина синтетичної адреси: uat-<run>-<суфікс>.
+ * Справжній шаблон агенції так не зветься, тож прибирання за цим префіксом не зачепить довідкових шаблонів.
+ */
+export const UAT_TEMPLATE = /^uat-[0-9a-z-]+$/;
+
+export function uatTemplateName(suffix: string): string {
+  return uatEmail(suffix).replace(/@example\.test$/, "");
+}
+
+/** Видаляє синтетичні шаблони uat-* (розділи, задачі й версії — каскадом; запуски лишаються з template_id = null). */
+export async function deleteUatTemplates(ids?: string[]): Promise<string[]> {
+  const supabase = adminClient();
+  let query = supabase.from("templates").select("id, name").like("name", "uat-%");
+  if (ids) query = query.in("id", ids);
+  const { data, error } = await query;
+  if (error) throw error;
+  const targets = (data ?? []).filter((row) => UAT_TEMPLATE.test(row.name as string));
+  if (targets.length) {
+    const { error: deleteError } = await supabase
+      .from("templates")
+      .delete()
+      .in(
+        "id",
+        targets.map((row) => row.id),
+      );
+    if (deleteError) throw deleteError;
+  }
+  return targets.map((row) => row.name as string);
+}
+
 async function listUatUsers(supabase: SupabaseClient): Promise<{ id: string; email: string }[]> {
   const found: { id: string; email: string }[] = [];
   for (let page = 1; ; page++) {
