@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
+import { listRuns } from "@/lib/runs/queries";
 import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,10 +33,7 @@ export default async function RunsPage() {
 
   if (viewer.role === "vendor") return <VendorRuns />;
 
-  const { data: runs, error: loadError } = await supabase
-    .from("run_overview")
-    .select("id, case_name, template_name, status, created_at, done_count, total_count")
-    .order("created_at", { ascending: false });
+  const { data: runs, error: loadError } = await listRuns(supabase);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">

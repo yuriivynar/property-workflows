@@ -39,6 +39,22 @@ function done(templateId: string, error?: { message?: string; code?: string } | 
   redirect(error ? `${editPath(templateId)}?error=${templateErrorCode(error)}` : editPath(templateId));
 }
 
+/**
+ * Завершення зміни одного елемента шаблону. Запис фільтрується за id елемента І за template_id з форми та повертає
+ * змінені рядки: 0 рядків без помилки (елемента вже немає — стара вкладка; або id з іншого шаблону) — це «зміну не
+ * збережено», а не тихий успіх (AC-EDITOR-25, рев'ю WS7 №2). Текст — messageForTemplateError → changeNotKept.
+ */
+function doneChanged(
+  templateId: string,
+  result: { data: unknown[] | null; error: { message?: string; code?: string } | null },
+): never {
+  if (!result.error && !result.data?.length) {
+    revalidatePath(editPath(templateId));
+    redirect(`${editPath(templateId)}?error=CHANGE_NOT_KEPT`);
+  }
+  done(templateId, result.error);
+}
+
 export async function createTemplate(form: FormData) {
   const supabase = await adminClient("/templates");
   const name = cleanName(form.get("name"));
@@ -93,8 +109,13 @@ export async function renameSection(form: FormData) {
   const supabase = await adminClient(editPath(templateId));
   // Очищена назва лишається в незбережених змінах; зберегти версію з нею не можна (AC-EDITOR-20).
   const name = cleanName(form.get("name")) ?? "";
-  const { error } = await supabase.from("template_sections").update({ name }).eq("id", sectionId);
-  done(templateId, error);
+  const result = await supabase
+    .from("template_sections")
+    .update({ name })
+    .eq("id", sectionId)
+    .eq("template_id", templateId)
+    .select("id");
+  doneChanged(templateId, result);
 }
 
 export async function removeSection(form: FormData) {
@@ -104,8 +125,13 @@ export async function removeSection(form: FormData) {
   const supabase = await adminClient(editPath(templateId));
   // Без підтвердження (зокрема прямий POST) нічого не видаляємо (AC-EDITOR-13).
   if (form.get("confirmed") !== "true") redirect(editPath(templateId));
-  const { error } = await supabase.from("template_sections").delete().eq("id", sectionId);
-  done(templateId, error);
+  const result = await supabase
+    .from("template_sections")
+    .delete()
+    .eq("id", sectionId)
+    .eq("template_id", templateId)
+    .select("id");
+  doneChanged(templateId, result);
 }
 
 /**
@@ -148,8 +174,13 @@ export async function renameTask(form: FormData) {
   const supabase = await adminClient(editPath(templateId));
   // Очищена назва лишається в незбережених змінах; зберегти версію з нею не можна (AC-EDITOR-20).
   const name = cleanName(form.get("name")) ?? "";
-  const { error } = await supabase.from("template_tasks").update({ name }).eq("id", taskId);
-  done(templateId, error);
+  const result = await supabase
+    .from("template_tasks")
+    .update({ name })
+    .eq("id", taskId)
+    .eq("template_id", templateId)
+    .select("id");
+  doneChanged(templateId, result);
 }
 
 export async function setTaskRequired(form: FormData) {
@@ -157,11 +188,13 @@ export async function setTaskRequired(form: FormData) {
   const taskId = id(form, "task_id");
   if (!templateId || !taskId) redirect("/templates");
   const supabase = await adminClient(editPath(templateId));
-  const { error } = await supabase
+  const result = await supabase
     .from("template_tasks")
     .update({ is_required: form.get("is_required") === "true" })
-    .eq("id", taskId);
-  done(templateId, error);
+    .eq("id", taskId)
+    .eq("template_id", templateId)
+    .select("id");
+  doneChanged(templateId, result);
 }
 
 export async function removeTask(form: FormData) {
@@ -169,8 +202,13 @@ export async function removeTask(form: FormData) {
   const taskId = id(form, "task_id");
   if (!templateId || !taskId) redirect("/templates");
   const supabase = await adminClient(editPath(templateId));
-  const { error } = await supabase.from("template_tasks").delete().eq("id", taskId);
-  done(templateId, error);
+  const result = await supabase
+    .from("template_tasks")
+    .delete()
+    .eq("id", taskId)
+    .eq("template_id", templateId)
+    .select("id");
+  doneChanged(templateId, result);
 }
 
 export async function moveItem(form: FormData) {

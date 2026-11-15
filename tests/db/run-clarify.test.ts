@@ -224,17 +224,19 @@ describe("База: список запусків — уточнення PM", ()
     expect(inProgress.status).toBe("in_progress");
   });
 
-  it("AC-TASK-14: «Repair» запущено пізніше — у списку першим; у рядку назва випадку й шаблону", async () => {
+  // Порядок рядків (найновіші вгорі) задає listRuns — його перевіряє src/lib/runs/queries.test.ts, а сторінка /runs
+  // викликає ту саму функцію. Тут — дані рядків, які віддає run_overview: «Repair» запущено пізніше, тож його час більший.
+  it("AC-TASK-14: «Repair» запущено пізніше — його created_at не раніший; у рядку назва випадку й шаблону", async () => {
     const a = l.users["manager.a@example.test"];
     const moveIn = await launchIn(a, TENANT_MOVE_IN, "Apartment 12");
     const repair = await launchIn(a, REPAIR_REQUEST, "Apartment 12");
 
-    const list = await l.asUser<{ id: string; case_name: string; template_name: string }>(
+    const list = await l.asUser<{ id: string; case_name: string; template_name: string; created_at: string }>(
       a,
-      "select id, case_name, template_name from public.run_overview order by created_at desc",
+      "select id, case_name, template_name, created_at from public.run_overview",
     );
-    const ids = list.map((r) => r.id);
-    expect(ids.indexOf(repair)).toBeLessThan(ids.indexOf(moveIn));
+    const at = (id: string) => Date.parse(list.find((r) => r.id === id)!.created_at);
+    expect(at(repair)).toBeGreaterThanOrEqual(at(moveIn));
     expect(list.find((r) => r.id === repair)).toMatchObject({ case_name: "Apartment 12", template_name: "Repair request" });
     expect(list.find((r) => r.id === moveIn)).toMatchObject({ case_name: "Apartment 12", template_name: "Tenant move-in" });
   });

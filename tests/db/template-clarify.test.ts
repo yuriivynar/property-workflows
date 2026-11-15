@@ -88,7 +88,9 @@ describe("База: правила шаблонів після уточнень 
       t.asUser(ADMIN, "select public.launch_run($1, 'Apartment 3, repair', '{}'::jsonb, null)", [template]),
     );
 
-    expect(error).not.toBeNull();
+    // Саме «шаблон не знайдено», а не будь-яка помилка (рев'ю WS7 №3): інакше тест пройде й тоді, коли запуск
+    // відхилено з іншої причини (мутант E11 у scripts/mutants.mjs).
+    expect(error?.message).toContain("TEMPLATE_NOT_FOUND");
     expect(await runCount()).toBe(before);
   });
 
