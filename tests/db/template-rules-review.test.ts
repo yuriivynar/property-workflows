@@ -136,3 +136,61 @@ describe("База: позиція задачі унікальна в розді
     expect(rows.map((row) => row.position)).toEqual([1, 2]);
   });
 });
+
+// Наявні дані, які старі правила (btrim, без унікальної позиції) пропускали, а нові вважають порожніми чи дублікатами:
+// міграція має застосуватися й виправити їх, а не впасти на db-deploy (рев'ю CodeRabbit, PR #80).
+describe("Міграція 20261115134842 на наявних даних", () => {
+  let old: TestDb;
+  const TPL = "f9000000-0000-4000-8000-000000000001";
+  const BLANK = "f9000000-0000-4000-8000-000000000002";
+  const TWIN = "f9000000-0000-4000-8000-000000000003";
+  const SECTION = "f9000000-0000-4000-8000-000000000011";
+
+  beforeAll(async () => {
+    old = await createTestDb({ stopBefore: "20261115134842_ws7_review_template_rules.sql" });
+  }, 60_000);
+
+  afterAll(async () => {
+    await old.db.close();
+  });
+
+  it("назви з табуляцією чи U+00A0 і дві групи однакових позицій — міграція проходить, дані під новими правилами", async () => {
+    await old.asService("insert into public.templates (id, name) values ($1, $2), ($3, $4), ($5, $6)", [
+      TPL,
+      `Repair checklist${TAB}`,
+      BLANK,
+      NBSP,
+      TWIN,
+      `Tenant move-in${TAB}`,
+    ]);
+    await old.asService("insert into public.template_draft_names (template_id, name) values ($1, $2)", [TPL, ` ${NBSP} `]);
+    await old.asService("insert into public.template_sections (id, template_id, name, position) values ($1, $2, 'Repairs', 1)", [
+      SECTION,
+      TPL,
+    ]);
+    // Позиції [1, 1, 2, 2]: дві групи дублікатів в одному розділі.
+    await old.asService(
+      `insert into public.template_tasks (template_id, section_id, name, is_required, position) values
+         ($1, $2, 'A', true, 1), ($1, $2, 'B', false, 1), ($1, $2, 'C', false, 2), ($1, $2, 'D', false, 2)`,
+      [TPL, SECTION],
+    );
+
+    await old.migrateRest();
+
+    const names = await old.asService<{ id: string; name: string }>(
+      "select id, name from public.templates where id = any($1::uuid[]) order by id",
+      [[TPL, BLANK, TWIN]],
+    );
+    expect(names).toEqual([
+      { id: TPL, name: "Repair checklist" },
+      { id: BLANK, name: "Untitled template f9000000" },
+      { id: TWIN, name: "Tenant move-in (f9000000)" },
+    ]);
+    expect(await old.asService("select 1 from public.template_draft_names where template_id = $1", [TPL])).toEqual([]);
+    const positions = await old.asService<{ position: number }>(
+      "select position from public.template_tasks where section_id = $1 order by position",
+      [SECTION],
+    );
+    expect(positions.map((row) => row.position)).toEqual([1, 2, 3, 4]);
+  });
+});

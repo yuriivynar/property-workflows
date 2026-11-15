@@ -62,15 +62,38 @@ revoke execute on function private.clean_name(text) from public, anon;
 grant usage on schema private to service_role;
 grant execute on function private.clean_name(text) to authenticated, service_role;
 
+-- Старі обмеження й індекс знімаємо першими: нормалізація наявних назв нижче могла б їх порушити (обрізаний край дає
+-- дубль за старим ключем lower(btrim(name))).
 alter table public.templates drop constraint templates_name_not_blank;
+alter table public.template_draft_names drop constraint template_draft_names_name_not_blank;
+drop index public.templates_name_normalized_key;
+
+-- Наявні назви під нове правило (рев'ю CodeRabbit, PR #80; на проді й у сиді таких рядків немає — кроки на випадок, якщо
+-- прямий запит колись записав назву з табуляцією чи U+00A0, яку btrim пропускав):
+-- Порядок важливий: колонка name має ще й точний unique (templates_name_key), тож спершу розводимо збіги, а вже потім
+-- обрізаємо краї (інакше «Tenant move-in» з табуляцією, обрізаний, зіткнувся б із наявним «Tenant move-in»).
+-- а) збіг за новим ключем — усі шаблони групи, крім найстарішого, отримують очищену назву з початком id;
+with ranked as (
+  select id, row_number() over (partition by lower(private.clean_name(name)) order by created_at, id) as rn
+  from public.templates
+  where private.clean_name(name) <> ''
+)
+update public.templates as t
+set name = private.clean_name(t.name) || ' (' || left(t.id::text, 8) || ')'
+from ranked as r
+where r.id = t.id and r.rn > 1;
+-- б) назва шаблону лише з пробільних символів — заглушка з початком id (адміністратор перейменує в редакторі);
+update public.templates set name = 'Untitled template ' || left(id::text, 8) where private.clean_name(name) = '';
+-- в) пробільні символи на краях — тим самим набором, що clean_name (після а) кожен ключ унікальний);
+update public.templates set name = private.clean_name(name) where name <> private.clean_name(name);
+-- г) робоча назва: лише з пробільних символів — прибираємо (діє назва поточної версії, AC-EDITOR-21), інакше — краї.
+delete from public.template_draft_names where private.clean_name(name) = '';
+update public.template_draft_names set name = private.clean_name(name) where name <> private.clean_name(name);
+
 alter table public.templates
   add constraint templates_name_not_blank check (char_length(private.clean_name(name)) > 0);
-
-alter table public.template_draft_names drop constraint template_draft_names_name_not_blank;
 alter table public.template_draft_names
   add constraint template_draft_names_name_not_blank check (char_length(private.clean_name(name)) > 0);
-
-drop index public.templates_name_normalized_key;
 create unique index templates_name_normalized_key on public.templates (lower(private.clean_name(name)));
 
 -- Перевірки під час збереження версії — тим самим правилом (тіло — з 20261027225514, змінено лише btrim → clean_name).
@@ -157,14 +180,23 @@ $$;
 -- ── 3. Позиція задачі унікальна в розділі ─────────────────────────────────────────────────────────────────────────
 -- Наявні дублікати (якщо два швидкі додавання вже їх дали) — у кінець розділу, решта рядків не змінюється (тригер
 -- mark_unpublished позначить такий шаблон як змінений — це правда: порядок задач у ньому змінився).
-with duplicates as (
-  select id, row_number() over (partition by section_id, position order by id) as rn
+-- Нумерація — у межах усього розділу (рев'ю CodeRabbit, PR #80): за позицій [1, 1, 2, 2] обидва зайві рядки отримують
+-- різні нові позиції (3 і 4), а не однакову.
+with ranked as (
+  select id, section_id, position,
+    row_number() over (partition by section_id, position order by id) as rn,
+    max(position) over (partition by section_id) as max_position
   from public.template_tasks
+),
+duplicates as (
+  select id, max_position + row_number() over (partition by section_id order by position, id) as new_position
+  from ranked
+  where rn > 1
 )
 update public.template_tasks as t
-set position = (select max(x.position) from public.template_tasks as x where x.section_id = t.section_id) + d.rn - 1
+set position = d.new_position
 from duplicates as d
-where d.id = t.id and d.rn > 1;
+where d.id = t.id;
 
 alter table public.template_tasks
   add constraint template_tasks_section_position_key unique (section_id, position) deferrable initially deferred;
