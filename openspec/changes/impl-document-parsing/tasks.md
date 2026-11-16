@@ -10,8 +10,8 @@
 - [x] 1.3 `src/lib/documents/values.ts`: телефон, сума кошторису й попередження, тексти відмови й приміток, пошук
   інструкцій для AI у тексті, стан «недоступний»
 - [x] 1.4 `tests/fixtures/golden/cases.json` з #40; `tests/golden.test.ts` (реплей, збої, ін'єкція); `tests/ai-key.test.ts`
-- Done when: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-03, AC-DOCAI-04, AC-DOCAI-05, AC-DOCAI-06, AC-DOCAI-07, AC-DOCAI-10
-  (офлайн-реплей записаних відповідей: код навколо моделі), AC-DOCAI-09 (збої → стан «недоступний»); через
+- Done when: AC-DOCAI-01, AC-DOCAI-06, AC-DOCAI-07, AC-DOCAI-02, AC-DOCAI-08, AC-DOCAI-09, AC-DOCAI-10
+  (офлайн-реплей записаних відповідей: код навколо моделі), AC-DOCAI-13 (збої → стан «недоступний»); через
   сторінку ці AC перевіряє задача 2
 
 ## 2. Блок на сторінці запуску, підтвердження людиною, таблиця з RLS
@@ -22,8 +22,8 @@
 - [x] 2.3 `document-parsing-form.tsx` і розділ «Document values» на сторінці запуску; `Textarea` з shadcn
 - [x] 2.4 Тести: бази (хто читає й пише, вендор — нічого), дій (без ролі моделі не кличе, без «Save values» нічого не
   записано), компонента (стани відмови й «недоступний»)
-- Done when: AC-DOCAI-08, AC-DOCAI-09; AC-DOCAI-02, AC-DOCAI-06, AC-DOCAI-07 — у формі на сторінці запуску (тест
-  компонента), решта AC-DOCAI-01…07, AC-DOCAI-10 — той самий шлях від тексту до форми
+- Done when: AC-DOCAI-04, AC-DOCAI-13; AC-DOCAI-06, AC-DOCAI-08, AC-DOCAI-09 — у формі на сторінці запуску (тест
+  компонента), решта AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-06…AC-DOCAI-10 — той самий шлях від тексту до форми
 
 ## 3. Живий eval і записи
 
@@ -31,7 +31,7 @@
   лише з причиною (`OLDER_RECORDS`)
 - [x] 3.2 Звіт `evals/reports/<дата й час>.md`, пояснення кожного FAIL, порівняння з порогом (Q18 solomchaak/property-workflows-spec#55, варіант A); суддя з
   версією, дорозбір `CASES`
-- Done when: AC-DOCAI-01…07, AC-DOCAI-10 — реплей справжніх відповідей у CI
+- Done when: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-06…AC-DOCAI-10 — реплей справжніх відповідей у CI
 
 ## 5. Критерії PM (вимога solomchaak/property-workflows-spec#59): нова поведінка блоку й ID тестів
 
