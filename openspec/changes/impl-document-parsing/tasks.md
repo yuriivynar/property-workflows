@@ -16,11 +16,11 @@
 
 ## 2. Блок на сторінці запуску, підтвердження людиною, таблиця з RLS
 
-- [ ] 2.1 Міграція `run_document_values` з RLS (менеджер запуску й адміністратор), колонковий `grant insert`
-- [ ] 2.2 Server Actions `requestDocumentValues` (роль до моделі, нічого не пише) і `confirmDocumentValues` (роль, zod,
+- [x] 2.1 Міграція `run_document_values` з RLS (менеджер запуску й адміністратор), колонковий `grant insert`
+- [x] 2.2 Server Actions `requestDocumentValues` (роль до моделі, нічого не пише) і `confirmDocumentValues` (роль, zod,
   правила коду, `insert` під RLS)
-- [ ] 2.3 `document-parsing-form.tsx` і розділ «Document values» на сторінці запуску; `Textarea` з shadcn
-- [ ] 2.4 Тести: бази (хто читає й пише, вендор — нічого), дій (без ролі моделі не кличе, без «Save values» нічого не
+- [x] 2.3 `document-parsing-form.tsx` і розділ «Document values» на сторінці запуску; `Textarea` з shadcn
+- [x] 2.4 Тести: бази (хто читає й пише, вендор — нічого), дій (без ролі моделі не кличе, без «Save values» нічого не
   записано), компонента (стани відмови й «недоступний»)
 - Done when: AC-DOCAI-08, AC-DOCAI-09; AC-DOCAI-02, AC-DOCAI-06, AC-DOCAI-07 — у формі на сторінці запуску (тест
   компонента), решта AC-DOCAI-01…07, AC-DOCAI-10 — той самий шлях від тексту до форми
