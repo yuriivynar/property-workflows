@@ -3,7 +3,7 @@
 // Змінили промпт — збільште DRAFT_PROMPT_VERSION і перезапишіть записи живим прогоном (RECORD=1 npm run eval).
 // Правила, які може перевірити код (сума кошторису, тексти приміток і відмови, телефон), — у src/lib/documents/values.ts.
 
-export const DRAFT_PROMPT_VERSION = "docai-v2";
+export const DRAFT_PROMPT_VERSION = "docai-v3";
 
 /** Найдовший документ, який бачить модель: довший текст обрізаємо (рахунок токенів і денний ліміт). */
 export const MAX_DOCUMENT_CHARS = 8_000;
@@ -24,12 +24,16 @@ export const DRAFT_INSTRUCTIONS = [
   "- phone: digits with a dash, like 555-0100; a number spoken in words becomes digits; null if there is no phone in the document.",
   "- description: one short English sentence that keeps every fact the document states about the problem:",
   "  what is wrong, where (the apartment and the room), since when or for how long, and conditions that make it worse (for example the weather).",
-  "  Leave out greetings, names, filler words, requests to send someone, and the phone. Add nothing that is not in the document.",
+  "  Write it like a short ticket line. Leave out greetings, names, spoken hesitations and filler words, requests to send someone, and the phone.",
+  "  Add nothing that is not in the document.",
   "- category: plumbing, electrical, heating and cooling, appliance, structure and doors, or other.",
   "  If the document describes two problems, use the category of the more serious one, mention both problems in the description and set twoProblems to true.",
   '- urgency: "urgent" only for active damage or a risk to safety or health right now; otherwise "not urgent".',
+  "  Active damage: water leaking or flooding now. A risk to safety: a smell of gas, smoke, sparks, exposed wires.",
+  "  A risk to health: no heating in freezing weather, no water at all. Noise, a slow drain or a broken appliance are not urgent.",
   "  An exclamation mark or a word like \"now\" alone does not make a request urgent.",
-  "- notes: when there is a safety risk, one short note with the reason (for example \"risk of electric shock\"); otherwise an empty list.",
+  "- notes: when there is a safety risk, one short note that names the hazard the document points to, not its worst possible",
+  "  outcome (for example \"exposed wires\" rather than \"risk of fire\"); otherwise an empty list.",
   "Rules for an estimate:",
   "- items: every line item as written: name, quantity (a number; hours count as the quantity), unitPrice (a number).",
   "- total: the stated total as written, or null. Never correct the numbers.",

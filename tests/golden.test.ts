@@ -110,6 +110,9 @@ describe("збої моделі → стан «помічник недоступ
   it("AC-DOCAI-09: відповідь не за схемою → invalid_output, а не «майже пропозиція»", async () => {
     const result = await proposeDocumentValues("x", replay('{"status":"ok","kind":"request","category":"dragons"}'));
     expect(result).toMatchObject({ ok: false, reason: "invalid_output" });
+    // Звіт eval показує, яке поле зламано (шлях zod і код), — але не текст відповіді моделі.
+    expect(result).toMatchObject({ message: expect.stringContaining("category: invalid_value") });
+    expect(result).not.toMatchObject({ message: expect.stringContaining("dragons") });
   });
 
   it("AC-DOCAI-09: 429 → rate_limited, повтор рівно maxRetries разів, без циклу", async () => {
