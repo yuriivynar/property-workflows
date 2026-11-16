@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { classifyError, proposeDocumentValues } from "@/lib/ai/draft";
 import { JUDGE_MODEL, PRODUCT_MODELS, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
+import { JUDGE_PROMPT_VERSION } from "@/lib/ai/prompts/judge";
 import { ProposalSchema } from "@/lib/ai/schema";
 import { freeText, judgeFreeText, passRate, scoreFields, type GoldenCase } from "@/lib/ai/scorer";
 import { toProposalView } from "@/lib/documents/values";
@@ -17,9 +18,15 @@ import casesJson from "../tests/fixtures/golden/cases.json";
 // Таймаут, помилка постачальника, відповідь не за схемою — FAIL з причиною (входять у частку успіху).
 //   RUNS=2    — кілька прогонів поспіль для частки успіху (pass rate); бюджет див. нижче.
 //   RECORD=1  — успішні відповіді дописати в tests/fixtures/golden/recorded.json (для офлайн-реплею в CI).
+//   CASES=GC-03,GC-10 — лише ці кейси (дорозбір, коли денного ліміту бракує на всі 10); поріг такий звіт не рахує.
 // PowerShell: $env:RECORD="1"; npm run eval   (а потім Remove-Item Env:RECORD)
 
-const cases = casesJson as GoldenCase[];
+const allCases = casesJson as GoldenCase[];
+const only = (process.env.CASES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const unknown = only.filter((id) => !allCases.some((c) => c.id === id));
+if (unknown.length > 0) throw new Error(`CASES: немає таких кейсів: ${unknown.join(", ")}`);
+const cases = only.length > 0 ? allCases.filter((c) => only.includes(c.id)) : allCases;
+const PARTIAL = cases.length < allCases.length;
 const key = process.env.OPENROUTER_API_KEY;
 const RECORD = process.env.RECORD === "1";
 const RUNS = Math.max(1, Number(process.env.RUNS ?? 1) || 1);
@@ -131,8 +138,8 @@ function writeReport() {
   const lines = [
     `# Живий прогін golden cases — ${new Date().toISOString()}`,
     "",
-    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\``,
-    `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}`,
+    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\` (\`${JUDGE_PROMPT_VERSION}\`)`,
+    `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}${PARTIAL ? ` з ${allCases.length} (CASES=${cases.map((c) => c.id).join(",")})` : ""}`,
     `- **Частка успіху: ${total.passed}/${total.total} (${Math.round(total.rate * 100)}%)** — з кейсів, що отримали відповідь`,
     thresholdLine(ran),
     `- Не запущено (NOT RUN): ${notRun.length}${stoppedAt ? ` — ліміт 429, зупинено на: ${stoppedAt}` : ""}`,
@@ -157,6 +164,7 @@ function writeReport() {
 // Поріг приймання PM ще не названо — тимчасово варіант A питання Q18 (docs/spec-reading.md): ≥ 8 з 10, GC-09 і GC-10 — обов'язково.
 const THRESHOLD = { passed: 8, mustPass: ["GC-09", "GC-10"] };
 function thresholdLine(ran: Row[]): string {
+  if (PARTIAL) return "- Поріг: не рахується — частковий прогін (CASES); підсумок разом із повним прогоном — у evals/reports/README.md";
   const last = new Map<string, Row>();
   for (const r of ran) last.set(r.id, r); // останній прогін кожного кейсу
   const passed = [...last.values()].filter((r) => r.pass).length;
