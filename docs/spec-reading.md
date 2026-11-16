@@ -221,10 +221,10 @@ solomchaak/property-workflows-spec#52 (стан «помічник недост�
 
 | # | Категорія | Статус | Де |
 |---|---|---|---|
-| 1 | Функціональний обсяг | Частково | roadmap: крок «AI document parsing» у шаблоні від адміністратора; #40 — розбір у запуску; де розбір — solomchaak/property-workflows-spec#53; PDF поза scope (`requirements/product.md`) |
+| 1 | Функціональний обсяг | Частково | roadmap: крок «AI document parsing» у шаблоні від адміністратора; #40 — розбір у запуску; де розбір — solomchaak/property-workflows-spec#53; PDF поза scope, «pastes or uploads the text» (`requirements/product.md`) — які документи приймати (текст, `.txt`, PDF, фото) → Q19 |
 | 2 | Ролі й доступ | Немає | хто розбирає й підтверджує — solomchaak/property-workflows-spec#53 |
 | 3 | Домен і модель даних | Частково | категорії й терміновість — переліком у #40; куди зберігати підтверджені значення — solomchaak/property-workflows-spec#54 |
-| 4 | Потік взаємодії (UX) | Частково | «user always confirms or corrects the proposal before it is saved» (#40) — ясно; де видно збережене — solomchaak/property-workflows-spec#54 |
+| 4 | Потік взаємодії (UX) | Частково | «user always confirms or corrects the proposal before it is saved» (#40) — ясно; де видно збережене — solomchaak/property-workflows-spec#54; що підтверджені значення роблять далі (запуск, шаблон, терміновість) → Q20 |
 | 5 | Нефункціональні вимоги | Ясно | синтетичні дані, телефони 555-01xx, суми в доларах |
 | 6 | Інтеграції й обмеження платформи | Частково | вхідна пошта поза scope, вставка тексту; ліміт безкоштовної моделі → стан «помічник недоступний» (solomchaak/property-workflows-spec#52) |
 | 7 | Граничні випадки й збої | Частково | відмова (кейс 9) і ін'єкція (кейс 10) — з текстами; помічник недоступний — без тексту → solomchaak/property-workflows-spec#52 |
@@ -239,6 +239,8 @@ solomchaak/property-workflows-spec#52 (стан «помічник недост�
 |---|---|---|---|---|---|---|
 | Q17 | AC-DOCAI-01, -02, -04, -10 (solomchaak/property-workflows-spec#40) | Description у лапках у golden cases перевіряється дослівно чи за змістом? | A: за змістом; phone, category, urgency, позиції, total, попередження й відмова — точно | solomchaak/property-workflows-spec#56 | очікуємо | Assumptions зміни `add-document-parsing`; eval оцінює description за змістом |
 | Q18 | — (solomchaak/property-workflows-spec#40) | Поріг приймання 10 golden cases і вимога зрізу 4 з AC | A: ≥ 8 з 10, кейси 9 і 10 — обов'язково; AC розробника до issue «Вимога» | solomchaak/property-workflows-spec#55 | очікуємо | звіт eval порівнює частку успіху з варіантом A |
+| Q19 | — (solomchaak/property-workflows-spec#40, `requirements/product.md` «поза scope») | Які документи приймає помічник: лише вставлений текст чи й файли (`.txt`, PDF з текстом, фото й скани, Word)? | A: вставлений текст і файл `.txt`; PDF, фото, скани, Word — поза scope | (після публікації) | очікуємо | приймаємо лише вставлений текст; у специфікації нічого про файли |
+| Q20 | AC-DOCAI-08 (solomchaak/property-workflows-spec#40) | Для чого підтверджені значення після «Save values»: лише запис запуску чи вони щось змінюють (шаблон, назва справи, позначка терміновості)? | A: лише запис запуску на його сторінці; інші використання — окремими вимогами | (після публікації) | очікуємо | значення лише зберігаються й показані на сторінці запуску (AC-DOCAI-08) |
 
 ### Власні припущення (зріз 4)
 
