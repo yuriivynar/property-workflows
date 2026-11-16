@@ -205,7 +205,8 @@ describe("DocumentParsingForm", () => {
 
   it("AC-DOCAI-12: файл .txt читається в текстове поле — розібрати можна як вставлений текст", async () => {
     render(<DocumentParsingForm runId={RUN} requestAction={vi.fn()} confirmAction={vi.fn()} />);
-    const note = new File(["The oven in apartment 5 does not heat up anymore."], "request.txt", { type: "text/plain" });
+    // Тип порожній: так браузер віддає .txt, якщо не визначив тип, — файл однаково приймається.
+    const note = new File(["The oven in apartment 5 does not heat up anymore."], "request.txt", { type: "" });
     await act(async () => {
       fireEvent.change(screen.getByTestId("document-file"), { target: { files: [note] } });
     });

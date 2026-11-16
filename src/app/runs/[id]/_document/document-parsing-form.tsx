@@ -58,8 +58,8 @@ function valuesOf(parse: ParseState) {
   return null;
 }
 
-/** Файл .txt: розширення .txt і тип text/plain (або порожній тип — так деякі системи віддають .txt). */
-const isPlainTextFile = (file: File) => file.name.toLowerCase().endsWith(".txt") && (file.type === "" || file.type === "text/plain");
+/** Файл .txt — за розширенням (AC-DOCAI-12): тип файлу браузер може не визначити, а `accept` — лише підказка діалогу. */
+const isPlainTextFile = (file: File) => file.name.toLowerCase().endsWith(".txt");
 
 function DocumentParsingBlock({ runId, requestAction, confirmAction, onDiscard }: Props & { onDiscard: () => void }) {
   const [parse, parseAction, parsing] = useActionState(requestAction, INITIAL_PARSE_STATE);
