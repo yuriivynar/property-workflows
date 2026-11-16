@@ -85,3 +85,12 @@ solomchaak/property-workflows-spec#52–#54 (Assumptions зміни `add-documen
   `RECORD=1` пише лише ✅-відповіді: кейс, що впав на поточній версії промпту, лишає старший запис лише з причиною
   (`OLDER_RECORDS`), заглушок немає. Поріг до відповіді на Q18 solomchaak/property-workflows-spec#55 — ≥ 8 з 10,
   кейси 9 і 10 обов'язково.
+
+## Критерії PM (вимога solomchaak/property-workflows-spec#59)
+
+- Кнопка розбору — «Propose values», стан очікування — дослівно «Reading the document…» (AC-DOCAI-03).
+- «Discard» (`Button` `outline`) перемонтовує блок із порожнім станом; сервер не викликається (AC-DOCAI-05).
+- «Upload a text file» (`Button` `outline` + прихований `<input type="file" accept=".txt,text/plain">`): файл читається
+  в браузері в текстове поле; розширення не `.txt` або тип не `text/plain` — «Only plain text files (.txt) are accepted»,
+  нічого не надсилається (AC-DOCAI-12). На сервер, як і досі, йде лише текст у межах 20 000 символів.
+- Час підтвердження — `en-GB`, `Europe/Kyiv`: «12 Nov 2026, 10:15» (Припущення PM; AC-DOCAI-04).

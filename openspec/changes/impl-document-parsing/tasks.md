@@ -33,9 +33,24 @@
   версією, дорозбір `CASES`
 - Done when: AC-DOCAI-01…07, AC-DOCAI-10 — реплей справжніх відповідей у CI
 
+## 5. Критерії PM (вимога solomchaak/property-workflows-spec#59): нова поведінка блоку й ID тестів
+
+Тимчасові AC-DOCAI-01…10 замінено критеріями PM AC-DOCAI-01…16 (зміна clarify-document-parsing): задачі 1–3 вище
+написано під тимчасові ID, їхні тести перейменовуємо за відповідністю з proposal.md тієї зміни.
+
+- [ ] 5.1 Кнопка «Propose values» замість «Parse document»; під час розбору — «Reading the document…» (AC-DOCAI-03)
+- [ ] 5.2 «Discard»: блок знову порожній, нічого не збережено (AC-DOCAI-05)
+- [ ] 5.3 «Upload a text file»: файл .txt читається в текстове поле; інший файл — «Only plain text files (.txt) are
+  accepted» (AC-DOCAI-12)
+- [ ] 5.4 Час підтвердження в записі — як у «Припущеннях» PM: «12 Nov 2026, 10:15» за Києвом (AC-DOCAI-04)
+- [ ] 5.5 Тест компонента RunDocuments: вендор і менеджер, що не є менеджером запуску, не бачать блоку (AC-DOCAI-14,
+  AC-DOCAI-15); прямі запити — тести сервісу й бази (AC-DOCAI-16)
+- [ ] 5.6 Назви тестів, `ac` у `tests/fixtures/golden/cases.json` і UAT — під ID PM
+- Done when: AC-DOCAI-01…16
+
 ## 4. Прод, UAT, conformance
 
 - [ ] 4.1 Прод: `/api/health` з SHA `main`, ключ у Vercel Production
-- [ ] 4.2 UAT на проді: AC-DOCAI-08 і AC-DOCAI-07 → `docs/qa/uat/<дата>/`
+- [ ] 4.2 UAT на проді: AC-DOCAI-04 і AC-DOCAI-09 (критерії PM) → `docs/qa/uat/<дата>/`
 - [ ] 4.3 `docs/conformance.md` на кожен AC; archive `impl-document-parsing`
-- Done when: AC-DOCAI-07, AC-DOCAI-08 (UAT на проді)
+- Done when: AC-DOCAI-04, AC-DOCAI-09 (UAT на проді)
