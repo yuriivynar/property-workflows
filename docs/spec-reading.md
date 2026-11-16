@@ -207,3 +207,46 @@ solomchaak/property-workflows-spec#26 (редактор і список верс
 PM закрив усі питання зрізу 3 (solomchaak/property-workflows-spec#41–#50) і оновив solomchaak/property-workflows-spec#39 і solomchaak/property-workflows-spec#3 (знімок 2026-11-10, PR «Оновлення вимог» #63). Питання колег, що вплинули на специфікацію: solomchaak/property-workflows-spec#45 (роль не змінюється в застосунку), solomchaak/property-workflows-spec#46 (AC-VENDOR-16, AC-TASK-19), solomchaak/property-workflows-spec#47 і solomchaak/property-workflows-spec#49 (AC-VENDOR-08, AC-VENDOR-14), solomchaak/property-workflows-spec#48 (AC-VENDOR-07, AC-VENDOR-15), solomchaak/property-workflows-spec#50 (AC-VENDOR-17, AC-VENDOR-18). Переклад — зміна `clarify-vendor-work` (archive 2026-11-10). Відкритих питань зрізу 3 немає.
 
 Вимогу solomchaak/property-workflows-spec#51 (AC-LOGIC-01…05) поки не перекладаємо й не реалізуємо — рішення розробника до окремої команди; `ac:coverage` попереджає про неї (WARN).
+
+## Зріз 4 (golden cases PM від 2026-11-02)
+
+Вимоги зрізу 4 з AC у PM немає (перевірено 15.11.2026): є лише solomchaak/property-workflows-spec#40 «Golden cases: AI
+document parsing» (опис функції, правила, 10 кейсів) без мітки `requirement`, тож `/requirements-sync` його не приносить;
+у `requirements/product.md` — рядок roadmap «WS10». Критерії AC-DOCAI-01…10 — тимчасові, від розробника (правило WS10
+«Якщо вимоги зрізу 4 ще немає»). Зміна специфікації — `add-document-parsing`. Питання колеги до того самого зрізу —
+solomchaak/property-workflows-spec#52 (стан «помічник недоступний»), solomchaak/property-workflows-spec#53 (хто й де
+користується), solomchaak/property-workflows-spec#54 (примітка golden case 5 і куди зберігати значення) — не дублюємо.
+
+### Скан за таксономією (зріз 4)
+
+| # | Категорія | Статус | Де |
+|---|---|---|---|
+| 1 | Функціональний обсяг | Частково | roadmap: крок «AI document parsing» у шаблоні від адміністратора; #40 — розбір у запуску; де розбір — solomchaak/property-workflows-spec#53; PDF поза scope (`requirements/product.md`) |
+| 2 | Ролі й доступ | Немає | хто розбирає й підтверджує — solomchaak/property-workflows-spec#53 |
+| 3 | Домен і модель даних | Частково | категорії й терміновість — переліком у #40; куди зберігати підтверджені значення — solomchaak/property-workflows-spec#54 |
+| 4 | Потік взаємодії (UX) | Частково | «user always confirms or corrects the proposal before it is saved» (#40) — ясно; де видно збережене — solomchaak/property-workflows-spec#54 |
+| 5 | Нефункціональні вимоги | Ясно | синтетичні дані, телефони 555-01xx, суми в доларах |
+| 6 | Інтеграції й обмеження платформи | Частково | вхідна пошта поза scope, вставка тексту; ліміт безкоштовної моделі → стан «помічник недоступний» (solomchaak/property-workflows-spec#52) |
+| 7 | Граничні випадки й збої | Частково | відмова (кейс 9) і ін'єкція (кейс 10) — з текстами; помічник недоступний — без тексту → solomchaak/property-workflows-spec#52 |
+| 8 | Обмеження й компроміси | Ясно | AI не вигадує значень і не виправляє чисел мовчки (кейси 4, 8) |
+| 9 | Термінологія | Ясно | категорії, urgency, «not found» — дослівно з #40 |
+| 10 | Сигнали завершеності | Немає | порогу приймання немає → Q18; description у лапках — дослівно чи за змістом → Q17 |
+| 11 | Заглушки й розмиті слова | Частково | «a note that the email has two problems» без тексту (кейс 5) → solomchaak/property-workflows-spec#54 |
+
+### Питання до PM (зріз 4)
+
+| # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
+|---|---|---|---|---|---|---|
+| Q17 | AC-DOCAI-01, -02, -04, -10 (solomchaak/property-workflows-spec#40) | Description у лапках у golden cases перевіряється дослівно чи за змістом? | A: за змістом; phone, category, urgency, позиції, total, попередження й відмова — точно | solomchaak/property-workflows-spec#56 | очікуємо | Assumptions зміни `add-document-parsing`; eval оцінює description за змістом |
+| Q18 | — (solomchaak/property-workflows-spec#40) | Поріг приймання 10 golden cases і вимога зрізу 4 з AC | A: ≥ 8 з 10, кейси 9 і 10 — обов'язково; AC розробника до issue «Вимога» | solomchaak/property-workflows-spec#55 | очікуємо | звіт eval порівнює частку успіху з варіантом A |
+
+### Власні припущення (зріз 4)
+
+- Розбір — блок на сторінці запуску для менеджера запуску й адміністратора, без кроку в шаблоні (варіант A
+  solomchaak/property-workflows-spec#53).
+- Підтверджені значення — один запис запуску, видимий на сторінці запуску (варіант A solomchaak/property-workflows-spec#54).
+- Текст стану — «The assistant is not available now. Fill in the values yourself.» (варіант A
+  solomchaak/property-workflows-spec#52); примітка кейсу 5 — «the email has two problems» (варіант A
+  solomchaak/property-workflows-spec#54).
+- Лише вставлений текст: «pastes or uploads» (`requirements/product.md`) — досить вставки; PDF поза scope.
+- Номери AC-DOCAI-01, -08, -09 — як у питаннях solomchaak/property-workflows-spec#52–#54, решта — за порядком кейсів #40.

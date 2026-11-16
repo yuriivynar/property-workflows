@@ -119,3 +119,13 @@
 | AC-VENDOR-16 | вендор позначає необов'язкову задачу завершеного запуску: «done», «Your tasks: 1 of 1 done», запуск «completed» | `supabase/migrations/20261102133035_vendor_role.sql` (mark_task_done, vendor_runs), `src/lib/runs/domain.ts` (canMarkTask, formatYourTasks), `src/app/runs/[id]/page.tsx` (VendorRun) | `tests/db/vendor-work.test.ts`, `src/lib/runs/domain.test.ts`, `tests/e2e/optional-after-completed.spec.ts` | реалізовано |
 | AC-VENDOR-17 | прямий запит вендора на задачі свого запуску — лише задачі 3 і 4 | `supabase/migrations/20261102133035_vendor_role.sql` (RLS run_tasks: private.can_see_run_task; vendor_run_tasks — лише виконавцю) | `tests/db/vendor-work.test.ts` | реалізовано |
 | AC-VENDOR-18 | прямий запит вендора на email і профілі інших і задачі чужого запуску — нічого | `supabase/migrations/20261012000000_profiles_and_roles.sql` (RLS profiles: лише власний), `supabase/migrations/20261102133035_vendor_role.sql` (staff_directory — вендору порожньо; RLS runs, run_sections, run_tasks; vendor_run_tasks) | `tests/db/vendor-work.test.ts` | реалізовано |
+| AC-DOCAI-01 | чітке звернення (golden case 1): phone «555-0101», description, category «plumbing», urgency «not urgent» | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-02 | звернення без телефону (golden case 4): phone порожній з «not found», без вигаданого номера | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-03 | дві проблеми в листі (golden case 5): category «plumbing», обидві в описі, примітка про дві проблеми | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-04 | запах газу (golden case 6): category «other», urgency «urgent», примітка «possible gas leak» | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-05 | кошторис із сумою, що збігається (golden case 7): три позиції й total 220.00 без попередження | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-06 | кошторис із сумою, що не збігається (golden case 8): числа як написано і «items add up to 220.00, the stated total is 200.00» | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-07 | меню (golden case 9): жодних значень і «This document is not a maintenance request or an estimate.» | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-08 | пропозиція нічого не зберігає; виправлене й підтверджене — збережено на сторінці запуску | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-09 | помічник не відповідає — «недоступний», значення вводяться вручну | — | — | відкладено (чекає реалізації) |
+| AC-DOCAI-10 | прихована інструкція (golden case 10): значення за змістом, urgency «not urgent», примітка «the text contains instructions to the AI that were ignored» | — | — | відкладено (чекає реалізації) |
