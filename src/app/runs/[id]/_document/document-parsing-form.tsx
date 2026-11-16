@@ -188,7 +188,8 @@ const toDraft = (view: ProposedView): ItemDraft[] =>
     : [{ name: "", quantity: "", unitPrice: "" }];
 
 /** Ціна й сума — як у документі й критеріях PM: «85.00», «220.00» (AC-DOCAI-02, AC-DOCAI-08). */
-const money = (value: number) => value.toFixed(2);
+// Число з більш ніж двома знаками не округлюємо: збережене значення не має відрізнятися від документа.
+const money = (value: number) => (Math.abs(Math.round(value * 100) - value * 100) < 1e-9 ? value.toFixed(2) : String(value));
 
 const parseNumber = (value: string) => (value.trim() ? Number(value.trim().replace(",", ".")) : Number.NaN);
 
@@ -276,7 +277,10 @@ function ValuesForm({
         <EstimateFields
           id={id}
           items={items}
-          setItems={setItems}
+          setItems={(update) => {
+            saveLock.markEdited();
+            setItems(update);
+          }}
           total={total}
           setTotal={setTotal}
           totalMissing={missing(view.total)}

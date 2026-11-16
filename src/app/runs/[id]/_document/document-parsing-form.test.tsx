@@ -279,4 +279,13 @@ describe("DocumentParsingForm", () => {
     fireEvent.change(screen.getByLabelText(/^Urgency/), { target: { value: "urgent" } });
     expect(save.disabled).toBe(false);
   });
+  it("AC-DOCAI-08: ціна з трьома знаками не округлюється — число документа не змінюється", async () => {
+    await parseWith({
+      status: "proposed",
+      text: "Estimate",
+      view: { ...emptyView("estimate"), items: [{ name: "Washer", quantity: 100, unitPrice: 0.125 }], total: 12.5 },
+    });
+    expect((screen.getAllByLabelText("Unit price")[0] as HTMLInputElement).value).toBe("0.125");
+    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("12.50");
+  });
 });
