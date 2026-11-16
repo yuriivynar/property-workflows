@@ -25,7 +25,7 @@ export type GoldenCase = {
     message?: string;
     notes?: string[];
   };
-  // Слова PM: що опис і примітки мають містити / чого не мають. Оцінює LLM-суддя лише в живому eval (Q17 — за змістом).
+  // Слова PM: що опис і примітки мають містити / чого не мають. Оцінює LLM-суддя лише в живому eval (Q17 solomchaak/property-workflows-spec#56 — за змістом).
   rubric?: string;
 };
 

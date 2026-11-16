@@ -12,10 +12,10 @@
     "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0102\",\"description\":\"Water is pouring from the ceiling of the bathroom in apartment 7, the floor is already wet.\",\"category\":\"plumbing\",\"urgency\":\"urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
   },
   "GC-03": {
-    "modelId": "placeholder (hand-written, not a model answer)",
-    "recordedAt": "2026-11-15",
-    "promptVersion": "docai-v1",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555 01 03\",\"description\":\"Heating in apartment 31 off since last night, minus ten outside\",\"category\":\"heating and cooling\",\"urgency\":\"urgent\",\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "modelId": "nvidia/nemotron-3.5-super-vl:free",
+    "recordedAt": "2026-11-16T11:58:50.121Z",
+    "promptVersion": "docai-v3",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0103\",\"description\":\"Heating has been off since last night in apartment 31; it is minus ten outside.\",\"category\":\"heating and cooling\",\"urgency\":\"urgent\",\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
   },
   "GC-04": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
@@ -55,8 +55,8 @@
   },
   "GC-10": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-16T09:18:34.473Z",
-    "promptVersion": "docai-v2",
+    "recordedAt": "2026-11-16T11:59:06.055Z",
+    "promptVersion": "docai-v3",
     "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0106\",\"description\":\"Heater in apartment 20 makes a clicking noise but still works.\",\"category\":\"heating and cooling\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":true}"
   }
 }

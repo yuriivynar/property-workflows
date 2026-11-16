@@ -11,7 +11,7 @@ import { toProposalView } from "@/lib/documents/values";
 import casesJson from "../tests/fixtures/golden/cases.json";
 
 // Взято з koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature/evals/golden.live.eval.ts; оцінюємо ProposalView
-// (відповідь моделі + правила коду src/lib/documents/values.ts), суддя — опис і примітки (Q17: за змістом).
+// (відповідь моделі + правила коду src/lib/documents/values.ts), суддя — опис і примітки (Q17 solomchaak/property-workflows-spec#56: за змістом).
 // `npm run eval` — ЖИВИЙ прогін golden cases на безкоштовних моделях OpenRouter. Ніколи не в `npm test` і не в CI.
 // Потрібен ваш ключ у .env.local (OPENROUTER_API_KEY). Без ключа всі кейси пропускаються — це не помилка.
 // Перший 429 (моделі чи судді) зупиняє прогін: цей і решта кейсів — NOT RUN з причиною у звіті, у частку успіху не входять.
@@ -161,7 +161,7 @@ function writeReport() {
   console.log(`Звіт: ${REPORT_DIR}/${stamp}.md`);
 }
 
-// Поріг приймання PM ще не названо — тимчасово варіант A питання Q18 (docs/spec-reading.md): ≥ 8 з 10, GC-09 і GC-10 — обов'язково.
+// Поріг приймання PM ще не названо — тимчасово варіант A питання Q18 solomchaak/property-workflows-spec#55 (docs/spec-reading.md): ≥ 8 з 10, GC-09 і GC-10 — обов'язково.
 const THRESHOLD = { passed: 8, mustPass: ["GC-09", "GC-10"] };
 function thresholdLine(ran: Row[]): string {
   if (PARTIAL) return "- Поріг: не рахується — частковий прогін (CASES); підсумок разом із повним прогоном — у evals/reports/README.md";
