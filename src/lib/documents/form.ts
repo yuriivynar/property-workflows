@@ -54,9 +54,9 @@ type ProposedView = Extract<ProposalView, { state: "proposed" }>;
 export type ParseState =
   | { status: "idle"; text: string }
   | { status: "error"; text: string; message: string }
-  /** AC-DOCAI-09: помічник недоступний — порожня форма для ручного вводу. */
+  /** AC-DOCAI-13: помічник недоступний — порожня форма для ручного вводу. */
   | { status: "unavailable"; text: string; message: string }
-  /** AC-DOCAI-07: не звернення й не кошторис — жодних значень. */
+  /** AC-DOCAI-09: не звернення й не кошторис — жодних значень. */
   | { status: "refused"; text: string; message: string }
   | { status: "proposed"; text: string; view: ProposedView };
 
@@ -77,7 +77,7 @@ export function documentTextFrom(formData: FormData): { ok: true; text: string }
   return { ok: true, text };
 }
 
-/** Порожні значення для ручного вводу, коли помічник недоступний (AC-DOCAI-09; варіант A #52). */
+/** Порожні значення для ручного вводу, коли помічник недоступний (AC-DOCAI-13; варіант A #52). */
 export function emptyView(kind: "request" | "estimate" = "request"): ProposedView {
   return {
     state: "proposed",
@@ -106,8 +106,8 @@ function numberOrNull(raw: string): number | null {
 }
 
 /**
- * Значення, які людина підтвердила кнопкою «Save values» (AC-DOCAI-08), — з полів форми, а не з відповіді моделі:
- * людина могла їх змінити чи ввести вручну (AC-DOCAI-09). Порожній рядок позиції (усі три поля порожні) пропускаємо.
+ * Значення, які людина підтвердила кнопкою «Save values» (AC-DOCAI-04), — з полів форми, а не з відповіді моделі:
+ * людина могла їх змінити чи ввести вручну (AC-DOCAI-13). Порожній рядок позиції (усі три поля порожні) пропускаємо.
  */
 export function confirmedValuesFrom(formData: FormData): { ok: true; values: ConfirmedValues } | { ok: false } {
   const notes = formData
