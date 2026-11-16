@@ -65,6 +65,8 @@ test(
           await expect(page.getByTestId("document-values-form")).toHaveCount(0);
           await expect(page.getByRole("button", { name: "Save values" })).toHaveCount(0);
           expect(await savedCount(manager, runId)).toBe(0);
+          // Кадр «Тоді» знімає лише вікно (1280×800): прокручуємо так, щоб було видно повідомлення і низ блоку без форми.
+          await page.getByTestId("parse-document").evaluate((el) => el.scrollIntoView({ block: "end" }));
         },
       );
     } finally {
@@ -126,6 +128,8 @@ test(
           await expect(record).toContainText("555-0101");
           await expect(record).toContainText(`Confirmed by ${manager.email}`);
           expect(await savedCount(manager, runId)).toBe(1);
+          // Кадр «Тоді» знімає лише вікно: прокручуємо до розділу «Document values» із записом і «Confirmed by».
+          await page.getByTestId("document-values").evaluate((el) => el.scrollIntoView({ block: "center" }));
         },
       );
     } finally {
