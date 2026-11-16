@@ -37,7 +37,7 @@ solomchaak/property-workflows-spec#52–#54 (Assumptions зміни `add-documen
 - `enable row level security`; `revoke all … from anon, authenticated`; `grant select, insert (run_id, kind, fields) …
   to authenticated` — `confirmed_by` і `confirmed_at` ставить база, користувач їх не задає.
 - Хелпер `private.can_manage_run_documents(run_id)` (`security definer`, `set search_path = ''`, роль з `profiles`,
-  `revoke execute … from public, anon`): адміністратор або менеджер цього запуску (`runs.run_manager_id = auth.uid()`).
+  `revoke execute … from public, anon`, `grant execute … to authenticated` — його викликають політики): адміністратор або менеджер цього запуску (`runs.run_manager_id = auth.uid()`).
 - Політики `to authenticated`: select і insert — лише коли хелпер повертає true; insert додатково
   `confirmed_by = (select auth.uid())`.
   Update і delete — немає (запис підтвердження незмінний). Вендор і виконавець-не-менеджер не читають і не пишуть
@@ -63,7 +63,7 @@ solomchaak/property-workflows-spec#52–#54 (Assumptions зміни `add-documen
   `phone`, `description`, `category` (6 значень #40), `urgency` (`urgent | not urgent`), `items[]` (`name`, `quantity`,
   `unitPrice`), `total`, `notes[]`, `twoProblems`, `instructionsIgnored`; невідоме — `null`, не вигадане. Відповідь не
   за схемою — помилка `invalid_output`, а не «майже чернетка».
-- **Правила в коді, не лише в промпті** (`src/lib/documents/values.ts`): телефон — у форму `555-0103` (AC-DOCAI-01);
+- **Правила в коді, не лише в промпті** (`src/lib/documents/values.ts`): телефон — цифри з тексту документа у форму `ddd-dddd`, наприклад `555-0101` (AC-DOCAI-01);
   суму позицій рахує код і сам формує попередження «items add up to X, the stated total is Y» з двома знаками
   (AC-DOCAI-06); тексти відмови й приміток «the email has two problems», «the text contains instructions to the AI that
   were ignored» — константи коду за прапорцями моделі (AC-DOCAI-03, AC-DOCAI-07, AC-DOCAI-10); код сам шукає в тексті
