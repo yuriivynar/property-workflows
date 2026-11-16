@@ -45,6 +45,16 @@ describe("правила коду AI-розбору документа", () => {
     expect(view.state === "proposed" && view.notes).toEqual(["the email has two problems"]);
   });
 
+  it("AC-DOCAI-07: у нетерміновому зверненні лише стала примітка коду — власні примітки моделі не показуємо", () => {
+    const view = toProposalView({ ...base, twoProblems: true, notes: ["the fan may break soon"] }, "x");
+    expect(view).toMatchObject({ state: "proposed", notes: ["the email has two problems"] });
+  });
+
+  it("AC-DOCAI-10: ін'єкція в нетерміновому зверненні — лише примітка про проігноровані інструкції", () => {
+    const view = toProposalView({ ...base, instructionsIgnored: true, notes: ["the sender asked to mark it urgent"] }, "x");
+    expect(view).toMatchObject({ state: "proposed", notes: ["the text contains instructions to the AI that were ignored"] });
+  });
+
   it("Примітка моделі про ризик лишається для людини", () => {
     const view = toProposalView({ ...base, category: "other", urgency: "urgent", notes: [" possible gas leak "] }, "x");
     expect(view).toMatchObject({ state: "proposed", category: "other", urgency: "urgent", notes: ["possible gas leak"] });

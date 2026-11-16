@@ -92,7 +92,10 @@ export function toProposalView(proposal: Proposal, documentText: string): Propos
     return { state: "refused", message: DOCUMENT_MESSAGES.refused };
   }
 
-  const notes = proposal.notes.map((note) => note.trim()).filter(Boolean);
+  // Примітки PM — точні (вимога #59): у звичайному зверненні й кошторисі лише сталі примітки коду. Власна примітка моделі
+  // (назва небезпеки, golden case 6) — лише для звернення, яке модель позначила терміновим.
+  const modelNotes = proposal.kind === "request" && proposal.urgency === "urgent" ? proposal.notes : [];
+  const notes = modelNotes.map((note) => note.trim()).filter(Boolean);
   if (proposal.kind === "request" && proposal.twoProblems) notes.push(DOCUMENT_MESSAGES.twoProblems);
   if (proposal.instructionsIgnored || containsInstructionsToAi(documentText)) {
     notes.push(DOCUMENT_MESSAGES.instructionsIgnored);
