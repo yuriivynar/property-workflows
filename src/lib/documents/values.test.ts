@@ -32,7 +32,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(normalizePhone("(555) 010-0199")).toBe("555-010-0199");
   });
 
-  it("AC-DOCAI-02: телефону немає — null, а не вигадане значення", () => {
+  it("AC-DOCAI-06: телефону немає — null, а не вигадане значення", () => {
     expect(normalizePhone(null)).toBeNull();
     expect(normalizePhone("   ")).toBeNull();
     const view = toProposalView({ ...base, description: "Oven in apartment 5 does not heat up", category: "appliance", urgency: "not urgent" }, "x");
@@ -40,17 +40,17 @@ describe("правила коду AI-розбору документа", () => {
     expect(DOCUMENT_MESSAGES.notFound).toBe("not found");
   });
 
-  it("AC-DOCAI-03: прапорець двох проблем → примітка коду", () => {
+  it("AC-DOCAI-07: прапорець двох проблем → примітка коду", () => {
     const view = toProposalView({ ...base, twoProblems: true, category: "plumbing", urgency: "not urgent" }, "x");
     expect(view.state === "proposed" && view.notes).toEqual(["the email has two problems"]);
   });
 
-  it("AC-DOCAI-04: примітка моделі про ризик лишається для людини", () => {
+  it("Примітка моделі про ризик лишається для людини", () => {
     const view = toProposalView({ ...base, category: "other", urgency: "urgent", notes: [" possible gas leak "] }, "x");
     expect(view).toMatchObject({ state: "proposed", category: "other", urgency: "urgent", notes: ["possible gas leak"] });
   });
 
-  it("AC-DOCAI-05: сума позицій збігається — попередження немає", () => {
+  it("AC-DOCAI-02: сума позицій збігається — попередження немає", () => {
     const items = [
       { name: "Replace kitchen tap", quantity: 1, unitPrice: 85 },
       { name: "Labour", quantity: 2, unitPrice: 60 },
@@ -60,7 +60,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(toProposalView({ ...base, kind: "estimate", items, total: 220 }, "x")).toMatchObject({ warning: null, total: 220 });
   });
 
-  it("AC-DOCAI-06: суму рахує код, числа документа не змінюються", () => {
+  it("AC-DOCAI-08: суму рахує код, числа документа не змінюються", () => {
     const items = [
       { name: "Inspection", quantity: 1, unitPrice: 90 },
       { name: "Replace valve", quantity: 1, unitPrice: 70 },
@@ -72,7 +72,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(totalWarning([{ name: "Paint", quantity: 3, unitPrice: 0.1 }], 0.3)).toBeNull();
   });
 
-  it("AC-DOCAI-07: відмова — жодних значень, текст дослівно з #40", () => {
+  it("AC-DOCAI-09: відмова — жодних значень, текст дослівно з #40", () => {
     expect(toProposalView({ ...base, status: "refused", kind: null }, "x")).toEqual({
       state: "refused",
       message: "This document is not a maintenance request or an estimate.",
@@ -81,7 +81,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(toProposalView({ ...base, kind: null, description: "soup" }, "x")).toMatchObject({ state: "refused" });
   });
 
-  it("AC-DOCAI-08: сервер перевіряє значення людини ще раз і сам рахує телефон і попередження", () => {
+  it("AC-DOCAI-04: сервер перевіряє значення людини ще раз і сам рахує телефон і попередження", () => {
     expect(ConfirmedValuesSchema.safeParse({ kind: "request", phone: "", description: "", category: "plumbing", urgency: "urgent", notes: [] }).success).toBe(false);
     expect(ConfirmedValuesSchema.safeParse({ kind: "request", phone: "", description: "Leak", category: "dragons", urgency: "urgent", notes: [] }).success).toBe(false);
     expect(ConfirmedValuesSchema.safeParse({ kind: "estimate", items: [], total: 10, notes: [] }).success).toBe(false);
@@ -100,7 +100,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(containsInstructionsToAi("Please ignore the noise from the fan, the sink is the problem")).toBe(false);
   });
 
-  it("AC-DOCAI-02: needs_info — проблему не названо: опис, category й urgency порожні, не вигадані", () => {
+  it("AC-DOCAI-06: needs_info — проблему не названо: опис, category й urgency порожні, не вигадані", () => {
     const view = toProposalView({ ...base, status: "needs_info", phone: "555-0107", description: "Something", category: "other", urgency: "urgent" }, "x");
     expect(view).toMatchObject({ state: "proposed", kind: "request", phone: "555-0107", description: null, category: null, urgency: null });
   });

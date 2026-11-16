@@ -8,28 +8,28 @@
   },
   {
     "id": "GC-02",
-    "ac": "AC-DOCAI-01",
+    "ac": null,
     "input": "Water is pouring from the ceiling of the bathroom in apartment 7, the floor is already wet. Please come now! 555-0102",
     "expected": { "state": "proposed", "kind": "request", "phone": "555-0102", "category": "plumbing", "urgency": "urgent" },
     "rubric": "The description says the same as \"Water pouring from the bathroom ceiling in apartment 7, floor already wet\" and adds nothing that is not in the email."
   },
   {
     "id": "GC-03",
-    "ac": "AC-DOCAI-01",
+    "ac": null,
     "input": "uh hi, this is, um, Taras from apartment 31, the heating has been off since last night and it is minus ten outside, my number is five five five, zero one, zero three, thanks",
     "expected": { "state": "proposed", "kind": "request", "phone": "555-0103", "category": "heating and cooling", "urgency": "urgent" },
     "rubric": "The description says the same as \"Heating in apartment 31 off since last night, minus ten outside\"; the filler words are dropped."
   },
   {
     "id": "GC-04",
-    "ac": "AC-DOCAI-02",
+    "ac": "AC-DOCAI-06",
     "input": "The oven in apartment 5 does not heat up anymore. Thanks, Maria Demo",
     "expected": { "state": "proposed", "kind": "request", "phone": null, "category": "appliance", "urgency": "not urgent" },
     "rubric": "The description says the same as \"Oven in apartment 5 does not heat up\"; no phone number appears anywhere in the text."
   },
   {
     "id": "GC-05",
-    "ac": "AC-DOCAI-03",
+    "ac": "AC-DOCAI-07",
     "input": "Two things: the bathroom fan is very loud, and the sink in the kitchen is blocked and water stays in it. 555-0104",
     "expected": {
       "state": "proposed",
@@ -43,14 +43,14 @@
   },
   {
     "id": "GC-06",
-    "ac": "AC-DOCAI-04",
+    "ac": null,
     "input": "There is a strong smell of gas in the kitchen of apartment 9. I opened the window. 555-0105",
     "expected": { "state": "proposed", "kind": "request", "phone": "555-0105", "category": "other", "urgency": "urgent" },
     "rubric": "The description says the same as \"Strong smell of gas in the kitchen of apartment 9\". A note says \"possible gas leak\" or the same in other words."
   },
   {
     "id": "GC-07",
-    "ac": "AC-DOCAI-05",
+    "ac": "AC-DOCAI-02",
     "input": "Estimate 2026-0012. Replace kitchen tap, 1 x 85.00. Labour, 2 h x 60.00. Disposal fee, 1 x 15.00. Total 220.00",
     "expected": {
       "state": "proposed",
@@ -66,7 +66,7 @@
   },
   {
     "id": "GC-08",
-    "ac": "AC-DOCAI-06",
+    "ac": "AC-DOCAI-08",
     "input": "Boiler service. Inspection, 1 x 90.00. Replace valve, 1 x 70.00. Labour, 1 h x 60.00. Total 200.00",
     "expected": {
       "state": "proposed",
@@ -82,7 +82,7 @@
   },
   {
     "id": "GC-09",
-    "ac": "AC-DOCAI-07",
+    "ac": "AC-DOCAI-09",
     "input": "Tonight's menu: tomato soup 6.50, roast chicken 14.00, apple pie 5.00",
     "expected": { "state": "refused", "message": "This document is not a maintenance request or an estimate." }
   },

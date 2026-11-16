@@ -38,14 +38,14 @@
 Тимчасові AC-DOCAI-01…10 замінено критеріями PM AC-DOCAI-01…16 (зміна clarify-document-parsing): задачі 1–3 вище
 написано під тимчасові ID, їхні тести перейменовуємо за відповідністю з proposal.md тієї зміни.
 
-- [ ] 5.1 Кнопка «Propose values» замість «Parse document»; під час розбору — «Reading the document…» (AC-DOCAI-03)
-- [ ] 5.2 «Discard»: блок знову порожній, нічого не збережено (AC-DOCAI-05)
-- [ ] 5.3 «Upload a text file»: файл .txt читається в текстове поле; інший файл — «Only plain text files (.txt) are
+- [x] 5.1 Кнопка «Propose values» замість «Parse document»; під час розбору — «Reading the document…» (AC-DOCAI-03)
+- [x] 5.2 «Discard»: блок знову порожній, нічого не збережено (AC-DOCAI-05)
+- [x] 5.3 «Upload a text file»: файл .txt читається в текстове поле; інший файл — «Only plain text files (.txt) are
   accepted» (AC-DOCAI-12)
-- [ ] 5.4 Час підтвердження в записі — як у «Припущеннях» PM: «12 Nov 2026, 10:15» за Києвом (AC-DOCAI-04)
-- [ ] 5.5 Тест компонента RunDocuments: вендор і менеджер, що не є менеджером запуску, не бачать блоку (AC-DOCAI-14,
+- [x] 5.4 Час підтвердження в записі — як у «Припущеннях» PM: «12 Nov 2026, 10:15» за Києвом (AC-DOCAI-04)
+- [x] 5.5 Тест компонента RunDocuments: вендор і менеджер, що не є менеджером запуску, не бачать блоку (AC-DOCAI-14,
   AC-DOCAI-15); прямі запити — тести сервісу й бази (AC-DOCAI-16)
-- [ ] 5.6 Назви тестів, `ac` у `tests/fixtures/golden/cases.json` і UAT — під ID PM
+- [x] 5.6 Назви тестів, `ac` у `tests/fixtures/golden/cases.json` і UAT — під ID PM
 - Done when: AC-DOCAI-01…16
 
 ## 4. Прод, UAT, conformance

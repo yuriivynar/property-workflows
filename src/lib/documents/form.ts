@@ -9,8 +9,11 @@ export const DOCUMENT_LABELS = {
   title: "Parse a document",
   hint: "Paste a maintenance request or a contractor's estimate. The assistant suggests values; nothing is saved until you select Save values.",
   documentText: "Document text",
-  parse: "Parse document",
-  parsing: "Reading the document. This usually takes 5 to 30 seconds.",
+  // Тексти кнопок і стану — дослівно з вимоги PM solomchaak/property-workflows-spec#59 (AC-DOCAI-03, -05, -12).
+  parse: "Propose values",
+  parsing: "Reading the document…",
+  upload: "Upload a text file",
+  discard: "Discard",
   save: "Save values",
   saved: "Values saved",
   request: "Maintenance request",
@@ -41,11 +44,13 @@ export const DOCUMENT_ERRORS = {
   notAllowed: "Not enough rights",
   unexpected: "Something went wrong. Try again.",
   loadFailed: "Saved values could not be loaded. Reload the page.",
+  /** AC-DOCAI-12 — дослівно з вимоги PM. */
+  onlyText: "Only plain text files (.txt) are accepted",
 } as const;
 
 type ProposedView = Extract<ProposalView, { state: "proposed" }>;
 
-/** Стан після «Parse document». `text` повертаємо, щоб вставлений текст лишався в полі. */
+/** Стан після «Propose values». `text` повертаємо, щоб вставлений текст лишався в полі. */
 export type ParseState =
   | { status: "idle"; text: string }
   | { status: "error"; text: string; message: string }
@@ -141,17 +146,29 @@ export function confirmedValuesFrom(formData: FormData): { ok: true; values: Con
   return parsed.success ? { ok: true, values: parsed.data } : { ok: false };
 }
 
-/** Дата підтвердження за Києвом, DD.MM.YYYY HH:MM (DESIGN.md, «Типографіка»). */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** Дата й час підтвердження за Києвом у форматі «Припущень» PM (solomchaak/property-workflows-spec#59): «12 Nov 2026, 10:15». */
 export function formatConfirmedAt(iso: string): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Kyiv",
-    day: "2-digit",
-    month: "2-digit",
+    day: "numeric",
+    month: "numeric",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   }).formatToParts(new Date(iso));
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
-  return `${part("day")}.${part("month")}.${part("year")} ${part("hour")}:${part("minute")}`;
+  // Як у «Припущеннях» PM (#59): «12 Nov 2026, 10:15». Назви місяців — власні, бо ICU у різних версіях пише «Sep»/«Sept».
+  return `${Number(part("day"))} ${MONTHS[Number(part("month")) - 1]} ${part("year")}, ${part("hour")}:${part("minute")}`;
+}
+
+/**
+ * Хто користується блоком «Parse a document» на сторінці запуску: адміністратор будь-якого запуску й менеджер цього
+ * запуску. Вендор і менеджер чи адміністратор, що лише виконує задачу, — ні (AC-DOCAI-14, AC-DOCAI-15). Те саме правило
+ * перевіряють дії (AC-DOCAI-16) і RLS run_document_values.
+ */
+export function canUseDocumentBlock(viewer: { role: string | null; userId: string }, runManagerId: string): boolean {
+  return viewer.role === "admin" || (viewer.role === "manager" && runManagerId === viewer.userId);
 }

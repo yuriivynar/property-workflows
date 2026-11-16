@@ -1,6 +1,6 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { DOCUMENT_ERRORS, DOCUMENT_LABELS } from "@/lib/documents/form";
+import { DOCUMENT_ERRORS, DOCUMENT_LABELS, canUseDocumentBlock } from "@/lib/documents/form";
 import type { createClient } from "@/lib/supabase/server";
 import { confirmDocumentValues, requestDocumentValues } from "./actions";
 import { DocumentParsingForm } from "./document-parsing-form";
@@ -19,8 +19,7 @@ type Props = {
  * (варіант A solomchaak/property-workflows-spec#53); ті самі правила перевіряють дії й RLS run_document_values.
  */
 export async function RunDocuments({ supabase, runId, viewer, runManagerId, names }: Props) {
-  const allowed = viewer.role === "admin" || (viewer.role === "manager" && runManagerId === viewer.userId);
-  if (!allowed) return null;
+  if (!canUseDocumentBlock(viewer, runManagerId)) return null;
   const { data: records, error } = await supabase
     .from("run_document_values")
     .select("id, kind, fields, confirmed_by, confirmed_at")
