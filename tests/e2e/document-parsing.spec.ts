@@ -53,7 +53,8 @@ test(
           clause: 'A sees the message "This document is not a maintenance request or an estimate." and no values are proposed.',
           visible: [
             "повідомлення «This document is not a maintenance request or an estimate.»",
-            "під повідомленням немає форми значень і кнопки «Save values»",
+            "під повідомленням блок закінчується: немає форми значень і кнопки «Save values»",
+            "блок «Parse a document» — останній на сторінці: під карткою лише порожнє тло",
           ],
           hidden: ["у запуску немає збережених значень (run_document_values, 0 рядків)"],
         },
@@ -65,8 +66,9 @@ test(
           await expect(page.getByTestId("document-values-form")).toHaveCount(0);
           await expect(page.getByRole("button", { name: "Save values" })).toHaveCount(0);
           expect(await savedCount(manager, runId)).toBe(0);
-          // Кадр «Тоді» знімає лише вікно (1280×800): прокручуємо так, щоб було видно повідомлення і низ блоку без форми.
-          await page.getByTestId("parse-document").evaluate((el) => el.scrollIntoView({ block: "end" }));
+          // Кадр «Тоді» знімає лише вікно (1280×800): прокручуємо до самого низу сторінки — видно повідомлення, кінець блоку
+          // і порожнє тло під ним (форми значень немає, блок — останній на сторінці).
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
         },
       );
     } finally {
