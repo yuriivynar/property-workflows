@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState } from "react";
+import { useActionState, useId, useState, type Dispatch, type SetStateAction } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +109,8 @@ function NotFound({ show }: { show: boolean }) {
   return show ? <span className="text-sm font-normal text-muted-foreground"> — {DOCUMENT_MESSAGES.notFound}</span> : null;
 }
 
+type Missing = (value: unknown) => boolean;
+
 function ValuesForm({
   runId,
   view,
@@ -122,15 +124,12 @@ function ValuesForm({
 }) {
   const [save, saveAction, saving] = useActionState(confirmAction, INITIAL_SAVE_STATE);
   const [kind, setKind] = useState<"request" | "estimate">(view.kind);
+  // Позиції й сума живуть тут, а не в EstimateFields: перемикання типу документа не стирає вже введене.
   const [items, setItems] = useState<ItemDraft[]>(() => toDraft(view));
   const [total, setTotal] = useState(view.total === null ? "" : String(view.total));
   const id = useId();
-  const warning = kind === "estimate" ? liveWarning(items, total) : null;
   // «not found» — лише біля поля, яке модель не знайшла в документі (AC-DOCAI-02), не в ручному вводі.
-  const missing = (value: unknown) => fromProposal && (value === null || value === "");
-
-  const updateItem = (index: number, patch: Partial<ItemDraft>) =>
-    setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const missing: Missing = (value) => fromProposal && (value === null || value === "");
 
   return (
     <form action={saveAction} className="flex flex-col gap-4 border-t border-border pt-4" data-testid="document-values-form">
@@ -149,143 +148,213 @@ function ValuesForm({
       </div>
 
       {kind === "request" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${id}-phone`}>
-              {DOCUMENT_LABELS.phone}
-              <NotFound show={missing(view.phone)} />
-            </Label>
-            <Input id={`${id}-phone`} name="phone" defaultValue={view.phone ?? ""} inputMode="tel" />
-          </div>
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor={`${id}-description`}>
-              {DOCUMENT_LABELS.description}
-              <NotFound show={missing(view.description)} />
-            </Label>
-            <Input id={`${id}-description`} name="description" defaultValue={view.description ?? ""} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${id}-category`}>
-              {DOCUMENT_LABELS.category}
-              <NotFound show={missing(view.category)} />
-            </Label>
-            <NativeSelect id={`${id}-category`} name="category" defaultValue={view.category ?? ""} className="w-full">
-              <NativeSelectOption value="">{DOCUMENT_LABELS.choose}</NativeSelectOption>
-              {CATEGORIES.map((category) => (
-                <NativeSelectOption key={category} value={category}>
-                  {category}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${id}-urgency`}>
-              {DOCUMENT_LABELS.urgency}
-              <NotFound show={missing(view.urgency)} />
-            </Label>
-            <NativeSelect id={`${id}-urgency`} name="urgency" defaultValue={view.urgency ?? ""} className="w-full">
-              <NativeSelectOption value="">{DOCUMENT_LABELS.choose}</NativeSelectOption>
-              {URGENCIES.map((urgency) => (
-                <NativeSelectOption key={urgency} value={urgency}>
-                  {urgency}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-        </div>
+        <RequestFields id={id} view={view} missing={missing} />
       ) : (
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-2 text-sm font-medium">{DOCUMENT_LABELS.items}</legend>
-          {items.map((item, index) => (
-            <div key={index} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_8rem_auto] sm:items-end" data-testid="document-item">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`${id}-item-${index}`}>{DOCUMENT_LABELS.item}</Label>
-                <Input
-                  id={`${id}-item-${index}`}
-                  name="item_name"
-                  value={item.name}
-                  onChange={(event) => updateItem(index, { name: event.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`${id}-qty-${index}`}>{DOCUMENT_LABELS.quantity}</Label>
-                <Input
-                  id={`${id}-qty-${index}`}
-                  name={`item_quantity_${index}`}
-                  inputMode="decimal"
-                  className="tabular-nums"
-                  value={item.quantity}
-                  onChange={(event) => updateItem(index, { quantity: event.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`${id}-price-${index}`}>{DOCUMENT_LABELS.unitPrice}</Label>
-                <Input
-                  id={`${id}-price-${index}`}
-                  name={`item_unit_price_${index}`}
-                  inputMode="decimal"
-                  className="tabular-nums"
-                  value={item.unitPrice}
-                  onChange={(event) => updateItem(index, { unitPrice: event.target.value })}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={items.length === 1}
-                onClick={() => setItems((current) => current.filter((_, i) => i !== index))}
-              >
-                {DOCUMENT_LABELS.removeItem}
-              </Button>
-            </div>
-          ))}
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setItems((current) => [...current, { name: "", quantity: "", unitPrice: "" }])}
-            >
-              {DOCUMENT_LABELS.addItem}
-            </Button>
-          </div>
-          <div className="flex flex-col gap-2 sm:max-w-48">
-            <Label htmlFor={`${id}-total`}>
-              {DOCUMENT_LABELS.total}
-              <NotFound show={missing(view.total)} />
-            </Label>
-            <Input
-              id={`${id}-total`}
-              name="total"
-              inputMode="decimal"
-              className="tabular-nums"
-              value={total}
-              onChange={(event) => setTotal(event.target.value)}
-            />
-          </div>
-          {warning ? (
-            <Alert data-testid="document-warning">
-              <AlertDescription>{warning}</AlertDescription>
-            </Alert>
-          ) : null}
-        </fieldset>
+        <EstimateFields
+          id={id}
+          items={items}
+          setItems={setItems}
+          total={total}
+          setTotal={setTotal}
+          totalMissing={missing(view.total)}
+        />
       )}
 
-      {view.notes.length ? (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium">{DOCUMENT_LABELS.notes}</h3>
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-sm" data-testid="document-notes">
-            {view.notes.map((note) => (
-              <li key={note}>
-                {note}
-                <input type="hidden" name="notes" value={note} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <NotesList notes={view.notes} />
+      <SaveRow save={save} saving={saving} />
+    </form>
+  );
+}
 
+function RequestFields({ id, view, missing }: { id: string; view: ProposedView; missing: Missing }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${id}-phone`}>
+          {DOCUMENT_LABELS.phone}
+          <NotFound show={missing(view.phone)} />
+        </Label>
+        <Input id={`${id}-phone`} name="phone" defaultValue={view.phone ?? ""} inputMode="tel" />
+      </div>
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <Label htmlFor={`${id}-description`}>
+          {DOCUMENT_LABELS.description}
+          <NotFound show={missing(view.description)} />
+        </Label>
+        <Input id={`${id}-description`} name="description" defaultValue={view.description ?? ""} />
+      </div>
+      <ChoiceField
+        id={`${id}-category`}
+        name="category"
+        label={DOCUMENT_LABELS.category}
+        options={CATEGORIES}
+        value={view.category}
+        missing={missing(view.category)}
+      />
+      <ChoiceField
+        id={`${id}-urgency`}
+        name="urgency"
+        label={DOCUMENT_LABELS.urgency}
+        options={URGENCIES}
+        value={view.urgency}
+        missing={missing(view.urgency)}
+      />
+    </div>
+  );
+}
+
+function ChoiceField({
+  id,
+  name,
+  label,
+  options,
+  value,
+  missing,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  options: readonly string[];
+  value: string | null;
+  missing: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={id}>
+        {label}
+        <NotFound show={missing} />
+      </Label>
+      <NativeSelect id={id} name={name} defaultValue={value ?? ""} className="w-full">
+        <NativeSelectOption value="">{DOCUMENT_LABELS.choose}</NativeSelectOption>
+        {options.map((option) => (
+          <NativeSelectOption key={option} value={option}>
+            {option}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    </div>
+  );
+}
+
+function EstimateFields({
+  id,
+  items,
+  setItems,
+  total,
+  setTotal,
+  totalMissing,
+}: {
+  id: string;
+  items: ItemDraft[];
+  setItems: Dispatch<SetStateAction<ItemDraft[]>>;
+  total: string;
+  setTotal: (value: string) => void;
+  totalMissing: boolean;
+}) {
+  const warning = liveWarning(items, total);
+  const updateItem = (index: number, patch: Partial<ItemDraft>) =>
+    setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="mb-2 text-sm font-medium">{DOCUMENT_LABELS.items}</legend>
+      {items.map((item, index) => (
+        <div key={index} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_8rem_auto] sm:items-end" data-testid="document-item">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={`${id}-item-${index}`}>{DOCUMENT_LABELS.item}</Label>
+            <Input
+              id={`${id}-item-${index}`}
+              name="item_name"
+              value={item.name}
+              onChange={(event) => updateItem(index, { name: event.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={`${id}-qty-${index}`}>{DOCUMENT_LABELS.quantity}</Label>
+            <Input
+              id={`${id}-qty-${index}`}
+              name={`item_quantity_${index}`}
+              inputMode="decimal"
+              className="tabular-nums"
+              value={item.quantity}
+              onChange={(event) => updateItem(index, { quantity: event.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={`${id}-price-${index}`}>{DOCUMENT_LABELS.unitPrice}</Label>
+            <Input
+              id={`${id}-price-${index}`}
+              name={`item_unit_price_${index}`}
+              inputMode="decimal"
+              className="tabular-nums"
+              value={item.unitPrice}
+              onChange={(event) => updateItem(index, { unitPrice: event.target.value })}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={items.length === 1}
+            onClick={() => setItems((current) => current.filter((_, i) => i !== index))}
+          >
+            {DOCUMENT_LABELS.removeItem}
+          </Button>
+        </div>
+      ))}
+      <div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setItems((current) => [...current, { name: "", quantity: "", unitPrice: "" }])}
+        >
+          {DOCUMENT_LABELS.addItem}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2 sm:max-w-48">
+        <Label htmlFor={`${id}-total`}>
+          {DOCUMENT_LABELS.total}
+          <NotFound show={totalMissing} />
+        </Label>
+        <Input
+          id={`${id}-total`}
+          name="total"
+          inputMode="decimal"
+          className="tabular-nums"
+          value={total}
+          onChange={(event) => setTotal(event.target.value)}
+        />
+      </div>
+      {warning ? (
+        <Alert data-testid="document-warning">
+          <AlertDescription>{warning}</AlertDescription>
+        </Alert>
+      ) : null}
+    </fieldset>
+  );
+}
+
+function NotesList({ notes }: { notes: string[] }) {
+  if (!notes.length) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-medium">{DOCUMENT_LABELS.notes}</h3>
+      <ul className="flex list-disc flex-col gap-1 pl-5 text-sm" data-testid="document-notes">
+        {notes.map((note) => (
+          <li key={note}>
+            {note}
+            <input type="hidden" name="notes" value={note} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SaveRow({ save, saving }: { save: SaveState; saving: boolean }) {
+  return (
+    <>
       {save.status === "error" ? (
         <Alert variant="destructive">
           <AlertDescription>{save.message}</AlertDescription>
@@ -301,6 +370,6 @@ function ValuesForm({
           </p>
         ) : null}
       </div>
-    </form>
+    </>
   );
 }

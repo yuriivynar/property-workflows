@@ -19,6 +19,9 @@ export const DOCUMENT_MESSAGES = {
   instructionsIgnored: "the text contains instructions to the AI that were ignored",
 } as const;
 
+/** Найдовший текст, який приймає форма (символів). Моделі йде не більше MAX_DOCUMENT_CHARS з промпту. */
+export const MAX_INPUT_CHARS = 20_000;
+
 /**
  * Телефон у формі «555-0103» (AC-DOCAI-01, golden case 3): 7 цифр → «ddd-dddd», 10 цифр → «ddd-ddd-dddd»;
  * інший запис лишаємо як є (людина виправить). Порожнє — null («not found», AC-DOCAI-02).

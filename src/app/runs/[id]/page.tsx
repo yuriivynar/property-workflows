@@ -22,10 +22,7 @@ import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { BackLink } from "@/components/ui/back-link";
-import { DOCUMENT_LABELS } from "@/lib/documents/form";
-import { confirmDocumentValues, requestDocumentValues } from "./_document/actions";
-import { DocumentParsingForm } from "./_document/document-parsing-form";
-import { DocumentValuesList } from "./_document/document-values-list";
+import { RunDocuments } from "./_document/run-documents";
 
 // Сторінка запуску: прогрес «N of M done», задачі за розділами з виконавцем, позначкою обов'язковості й статусом
 // (AC-TASK-05, AC-TASK-08; робоче рішення до solomchaak/property-workflows-spec#11), кнопка позначки — лише там, де
@@ -72,17 +69,6 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     supabase.from("runs").select("template_version").eq("id", runId).maybeSingle(),
   ]);
   const names = new Map((staff ?? []).map((person) => [person.id, staffLabel(person)]));
-
-  // Блок «Parse a document» — лише адміністратору й менеджеру цього запуску (варіант A solomchaak/property-workflows-spec#53);
-  // ті самі правила перевіряють дії й RLS run_document_values.
-  const canParseDocuments = viewer.role === "admin" || (viewer.role === "manager" && runManagerId === viewer.userId);
-  const { data: documentValues } = canParseDocuments
-    ? await supabase
-        .from("run_document_values")
-        .select("id, kind, fields, confirmed_by, confirmed_at")
-        .eq("run_id", runId)
-        .order("confirmed_at", { ascending: false })
-    : { data: null };
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -177,35 +163,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         </section>
       ))}
 
-      {canParseDocuments ? (
-        <section className="flex flex-col gap-2" aria-labelledby="parse-document-title" data-testid="parse-document">
-          <h2 id="parse-document-title" className="text-base font-semibold">
-            {DOCUMENT_LABELS.title}
-          </h2>
-          <Card className="gap-4 px-4 py-4">
-            <p className="text-sm text-muted-foreground">{DOCUMENT_LABELS.hint}</p>
-            <DocumentParsingForm
-              runId={runId}
-              requestAction={requestDocumentValues}
-              confirmAction={confirmDocumentValues}
-            />
-          </Card>
-        </section>
-      ) : null}
-
-      {canParseDocuments && documentValues?.length ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-base font-semibold">{DOCUMENT_LABELS.savedTitle}</h2>
-          <Card className="gap-0 py-0">
-            <DocumentValuesList
-              records={documentValues.map((record) => ({
-                ...record,
-                confirmedBy: names.get(record.confirmed_by) ?? "—",
-              }))}
-            />
-          </Card>
-        </section>
-      ) : null}
+      <RunDocuments supabase={supabase} runId={runId} viewer={viewer} runManagerId={runManagerId} names={names} />
       </div>
       </div>
     </main>
