@@ -28,6 +28,10 @@ import { RunDocuments } from "./_document/run-documents";
 // (AC-TASK-05, AC-TASK-08; робоче рішення до solomchaak/property-workflows-spec#11), кнопка позначки — лише там, де
 // користувач може позначити (AC-TASK-01, AC-TASK-02, AC-TASK-07). Чужий запуск RLS не повертає — «Run not found»
 // (AC-TASK-06; робоче рішення до solomchaak/property-workflows-spec#4).
+// Розбір документа чекає на безкоштовну модель до 45 с і ще раз до 45 с на повторі: функція не має обриватися раніше
+// за таймаут моделі (Server Action «Propose values» успадковує ліміт сторінки; Vercel Hobby з Fluid — до 300 с).
+export const maxDuration = 120;
+
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error } = await searchParams;

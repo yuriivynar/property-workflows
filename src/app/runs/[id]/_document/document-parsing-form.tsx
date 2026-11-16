@@ -110,7 +110,7 @@ function DocumentParsingBlock({ runId, requestAction, confirmAction, onDiscard }
         </div>
       </form>
 
-      <ParseNotices parse={parse} uploadError={uploadError} />
+      {parsing ? null : <ParseNotices parse={parse} uploadError={uploadError} />}
 
       {/* Під час нового розбору стару форму ховаємо: вона розмонтовується, і нова пропозиція не змішується зі станом
           попередньої (і стару не можна зберегти, поки йде розбір). */}
@@ -142,6 +142,8 @@ function useTextUpload(setText: (text: string) => void) {
     if (!file) return;
     const current = ++selection.current;
     if (!isPlainTextFile(file)) return setUploadError(DOCUMENT_ERRORS.onlyText);
+    // Не читаємо в пам'ять файл, який завідомо задовгий (символ UTF-8 — до 4 байтів).
+    if (file.size > MAX_INPUT_CHARS * 4) return setUploadError(DOCUMENT_ERRORS.tooLong);
     const content = await file.text();
     if (current !== selection.current) return;
     if (content.length > MAX_INPUT_CHARS) return setUploadError(DOCUMENT_ERRORS.tooLong);
@@ -182,12 +184,16 @@ type ItemDraft = { name: string; quantity: string; unitPrice: string };
 
 const toDraft = (view: ProposedView): ItemDraft[] =>
   view.items.length
-    ? view.items.map((item) => ({ name: item.name, quantity: String(item.quantity), unitPrice: String(item.unitPrice) }))
+    ? view.items.map((item) => ({ name: item.name, quantity: String(item.quantity), unitPrice: money(item.unitPrice) }))
     : [{ name: "", quantity: "", unitPrice: "" }];
+
+/** Ціна й сума — як у документі й критеріях PM: «85.00», «220.00» (AC-DOCAI-02, AC-DOCAI-08). */
+// Число з більш ніж двома знаками не округлюємо: збережене значення не має відрізнятися від документа.
+const money = (value: number) => (Math.abs(Math.round(value * 100) - value * 100) < 1e-9 ? value.toFixed(2) : String(value));
 
 const parseNumber = (value: string) => (value.trim() ? Number(value.trim().replace(",", ".")) : Number.NaN);
 
-/** Попередження про суму на льоту з того, що зараз у полях (те саме правило коду, що й на сервері, AC-DOCAI-06). */
+/** Попередження про суму на льоту з того, що зараз у полях (те саме правило коду, що й на сервері, AC-DOCAI-08). */
 function liveWarning(items: ItemDraft[], total: string): string | null {
   const parsed = items
     .filter((item) => item.name.trim() || item.quantity.trim() || item.unitPrice.trim())
@@ -204,6 +210,9 @@ function NotFound({ show }: { show: boolean }) {
 }
 
 type Missing = (value: unknown) => boolean;
+type DocumentKind = "" | "request" | "estimate";
+const kindOf = (value: string): DocumentKind =>
+  value === "estimate" || value === "request" ? value : "";
 type RequestDraft = { phone: string; description: string; category: string; urgency: string };
 
 function ValuesForm({
@@ -220,10 +229,11 @@ function ValuesForm({
   onDiscard: () => void;
 }) {
   const [save, saveAction, saving] = useActionState(confirmAction, INITIAL_SAVE_STATE);
-  const [kind, setKind] = useState<"request" | "estimate">(view.kind);
+  // Ручний ввід (помічник недоступний): Document type порожній, людина обирає сама (AC-DOCAI-13).
+  const [kind, setKind] = useState<DocumentKind>(fromProposal ? view.kind : "");
   // Позиції й сума живуть тут, а не в EstimateFields: перемикання типу документа не стирає вже введене.
   const [items, setItems] = useState<ItemDraft[]>(() => toDraft(view));
-  const [total, setTotal] = useState(view.total === null ? "" : String(view.total));
+  const [total, setTotal] = useState(view.total === null ? "" : money(view.total));
   // Поля звернення керовані: React скидає некеровані поля форми після кожної дії, зокрема після помилки збереження,
   // і виправлення людини повернулися б до пропозиції моделі.
   const [request, setRequest] = useState<RequestDraft>(() => ({
@@ -233,31 +243,27 @@ function ValuesForm({
     urgency: view.urgency ?? "",
   }));
   const id = useId();
+  const saveLock = useSaveLock(save);
   // Не <form action>: після дії React скидає форму (form.reset()), і керовані <select> (тип, category, urgency) втратили б
   // вибір людини навіть після помилки збереження. Надсилаємо самі — без скидання.
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    saveLock.markSaved();
     startTransition(() => saveAction(data));
   };
-  // «not found» — лише біля поля, яке модель не знайшла в документі (AC-DOCAI-02), не в ручному вводі.
+  // «not found» — лише біля поля, яке модель не знайшла в документі (AC-DOCAI-06), не в ручному вводі.
   const missing: Missing = (value) => fromProposal && (value === null || value === "");
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 border-t border-border pt-4" data-testid="document-values-form">
+    <form
+      onSubmit={submit}
+      onChange={saveLock.markEdited}
+      className="flex flex-col gap-4 border-t border-border pt-4"
+      data-testid="document-values-form"
+    >
       <input type="hidden" name="run_id" value={runId} />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={`${id}-kind`}>{DOCUMENT_LABELS.kind}</Label>
-        <NativeSelect
-          id={`${id}-kind`}
-          name="kind"
-          value={kind}
-          onChange={(event) => setKind(event.target.value === "estimate" ? "estimate" : "request")}
-        >
-          <NativeSelectOption value="request">{DOCUMENT_LABELS.request}</NativeSelectOption>
-          <NativeSelectOption value="estimate">{DOCUMENT_LABELS.estimate}</NativeSelectOption>
-        </NativeSelect>
-      </div>
+      <KindField id={id} kind={kind} setKind={setKind} />
 
       {kind === "request" ? (
         <RequestFields
@@ -267,20 +273,51 @@ function ValuesForm({
           values={request}
           onChange={(patch) => setRequest((current) => ({ ...current, ...patch }))}
         />
-      ) : (
+      ) : kind === "estimate" ? (
         <EstimateFields
           id={id}
           items={items}
-          setItems={setItems}
+          setItems={(update) => {
+            saveLock.markEdited();
+            setItems(update);
+          }}
           total={total}
           setTotal={setTotal}
           totalMissing={missing(view.total)}
         />
-      )}
+      ) : null}
 
-      <NotesList notes={view.notes} />
-      <SaveRow save={save} saving={saving} onDiscard={onDiscard} />
+      {kind === view.kind ? <NotesList notes={view.notes} /> : null}
+      <SaveRow save={save} saving={saving} locked={saveLock.locked} onDiscard={onDiscard} />
     </form>
+  );
+}
+
+/**
+ * Після «Save values» кнопка неактивна, доки людина нічого не змінить: повторне натискання не створить другого запису
+ * (AC-DOCAI-04: «one saved record»).
+ */
+function useSaveLock(save: SaveState) {
+  const [edits, setEdits] = useState(0);
+  const [savedAtEdit, setSavedAtEdit] = useState(-1);
+  return {
+    locked: save.status === "saved" && edits === savedAtEdit,
+    markEdited: () => setEdits((n) => n + 1),
+    markSaved: () => setSavedAtEdit(edits),
+  };
+}
+
+/** «Document type»: у ручному вводі спершу порожній — людина обирає тип сама (AC-DOCAI-13). */
+function KindField({ id, kind, setKind }: { id: string; kind: DocumentKind; setKind: (kind: DocumentKind) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={`${id}-kind`}>{DOCUMENT_LABELS.kind}</Label>
+      <NativeSelect id={`${id}-kind`} name="kind" value={kind} onChange={(event) => setKind(kindOf(event.target.value))}>
+        {kind === "" ? <NativeSelectOption value="">{DOCUMENT_LABELS.choose}</NativeSelectOption> : null}
+        <NativeSelectOption value="request">{DOCUMENT_LABELS.request}</NativeSelectOption>
+        <NativeSelectOption value="estimate">{DOCUMENT_LABELS.estimate}</NativeSelectOption>
+      </NativeSelect>
+    </div>
   );
 }
 
@@ -523,7 +560,17 @@ function ParsingPlaceholder() {
   );
 }
 
-function SaveRow({ save, saving, onDiscard }: { save: SaveState; saving: boolean; onDiscard: () => void }) {
+function SaveRow({
+  save,
+  saving,
+  locked,
+  onDiscard,
+}: {
+  save: SaveState;
+  saving: boolean;
+  locked: boolean;
+  onDiscard: () => void;
+}) {
   return (
     <>
       {save.status === "error" ? (
@@ -532,7 +579,7 @@ function SaveRow({ save, saving, onDiscard }: { save: SaveState; saving: boolean
         </Alert>
       ) : null}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <PendingButton pending={saving} className="max-sm:w-full">
+        <PendingButton pending={saving} disabled={locked} className="max-sm:w-full">
           {DOCUMENT_LABELS.save}
         </PendingButton>
         <Button type="button" variant="outline" disabled={saving} className="max-sm:w-full" onClick={onDiscard}>

@@ -7,13 +7,13 @@ import { CATEGORIES, ItemSchema, URGENCIES, type Item, type Proposal } from "@/l
 
 /** Тексти інтерфейсу — дослівно з solomchaak/property-workflows-spec#40 і варіантів A питань #52, #54. */
 export const DOCUMENT_MESSAGES = {
-  /** AC-DOCAI-07 — golden case 9. */
+  /** AC-DOCAI-09 — golden case 9. */
   refused: "This document is not a maintenance request or an estimate.",
-  /** AC-DOCAI-09 — варіант A solomchaak/property-workflows-spec#52 (тимчасово, до відповіді PM). */
+  /** AC-DOCAI-13 — рішення PM solomchaak/property-workflows-spec#52. */
   unavailable: "The assistant is not available now. Fill in the values yourself.",
-  /** AC-DOCAI-02 — позначка біля порожнього поля. */
+  /** AC-DOCAI-06 — позначка біля порожнього поля. */
   notFound: "not found",
-  /** AC-DOCAI-03 — варіант A solomchaak/property-workflows-spec#54 (тимчасово, до відповіді PM). */
+  /** AC-DOCAI-07 — рішення PM solomchaak/property-workflows-spec#54. */
   twoProblems: "the email has two problems",
   /** AC-DOCAI-10 — golden case 10. */
   instructionsIgnored: "the text contains instructions to the AI that were ignored",
@@ -24,7 +24,7 @@ export const MAX_INPUT_CHARS = 20_000;
 
 /**
  * Телефон у формі «555-0103» (AC-DOCAI-01, golden case 3): 7 цифр → «ddd-dddd», 10 цифр → «ddd-ddd-dddd»;
- * інший запис лишаємо як є (людина виправить). Порожнє — null («not found», AC-DOCAI-02).
+ * інший запис лишаємо як є (людина виправить). Порожнє — null («not found», AC-DOCAI-06).
  */
 export function normalizePhone(raw: string | null | undefined): string | null {
   const text = (raw ?? "").trim();
@@ -44,7 +44,7 @@ export function itemsTotalCents(items: readonly Item[]): number {
 }
 
 /**
- * Попередження, коли сума позицій не дорівнює вказаній загальній сумі (AC-DOCAI-06, golden case 8). Рахує код, а не
+ * Попередження, коли сума позицій не дорівнює вказаній загальній сумі (AC-DOCAI-08, golden case 8). Рахує код, а не
  * модель; числа документа не змінюємо. Немає позицій чи вказаної суми — попередження немає.
  */
 export function totalWarning(items: readonly Item[], total: number | null): string | null {
@@ -84,7 +84,7 @@ export type ProposalView =
     };
 
 /**
- * Пропозиція моделі → те, що показуємо людині (AC-DOCAI-01…07, AC-DOCAI-10). `refused` — жодних значень і текст
+ * Пропозиція моделі → те, що показуємо людині (AC-DOCAI-01, -02, -06…-10). `refused` — жодних значень і текст
  * відмови. `needs_info` — звернення без названої проблеми: показуємо порожні поля з «not found» для ручного вводу.
  */
 export function toProposalView(proposal: Proposal, documentText: string): ProposalView {
@@ -92,7 +92,10 @@ export function toProposalView(proposal: Proposal, documentText: string): Propos
     return { state: "refused", message: DOCUMENT_MESSAGES.refused };
   }
 
-  const notes = proposal.notes.map((note) => note.trim()).filter(Boolean);
+  // Примітки PM — точні (вимога #59): у звичайному зверненні й кошторисі лише сталі примітки коду. Власна примітка моделі
+  // (назва небезпеки, golden case 6) — лише для звернення, яке модель позначила терміновим.
+  const modelNotes = proposal.kind === "request" && proposal.urgency === "urgent" ? proposal.notes : [];
+  const notes = modelNotes.map((note) => note.trim()).filter(Boolean);
   if (proposal.kind === "request" && proposal.twoProblems) notes.push(DOCUMENT_MESSAGES.twoProblems);
   if (proposal.instructionsIgnored || containsInstructionsToAi(documentText)) {
     notes.push(DOCUMENT_MESSAGES.instructionsIgnored);
@@ -129,8 +132,8 @@ export function toProposalView(proposal: Proposal, documentText: string): Propos
   };
 }
 
-// Значення, які людина підтверджує кнопкою «Save values» (AC-DOCAI-08). Сервер перевіряє їх ще раз: клієнт може
-// надіслати що завгодно, а пропозицію моделі людина могла змінити чи ввести вручну (AC-DOCAI-09).
+// Значення, які людина підтверджує кнопкою «Save values» (AC-DOCAI-04). Сервер перевіряє їх ще раз: клієнт може
+// надіслати що завгодно, а пропозицію моделі людина могла змінити чи ввести вручну (AC-DOCAI-13).
 const optionalText = (max: number) =>
   z
     .string()

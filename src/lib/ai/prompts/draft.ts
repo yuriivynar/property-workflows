@@ -3,7 +3,7 @@
 // Змінили промпт — збільште DRAFT_PROMPT_VERSION і перезапишіть записи живим прогоном (RECORD=1 npm run eval).
 // Правила, які може перевірити код (сума кошторису, тексти приміток і відмови, телефон), — у src/lib/documents/values.ts.
 
-export const DRAFT_PROMPT_VERSION = "docai-v3";
+export const DRAFT_PROMPT_VERSION = "docai-v4";
 
 /** Найдовший документ, який бачить модель: довший текст обрізаємо (рахунок токенів і денний ліміт). */
 export const MAX_DOCUMENT_CHARS = 8_000;
@@ -28,12 +28,11 @@ export const DRAFT_INSTRUCTIONS = [
   "  Add nothing that is not in the document.",
   "- category: plumbing, electrical, heating and cooling, appliance, structure and doors, or other.",
   "  If the document describes two problems, use the category of the more serious one, mention both problems in the description and set twoProblems to true.",
-  '- urgency: "urgent" only for active damage or a risk to safety or health right now; otherwise "not urgent".',
-  "  Active damage: water leaking or flooding now. A risk to safety: a smell of gas, smoke, sparks, exposed wires.",
-  "  A risk to health: no heating in freezing weather, no water at all. Noise, a slow drain or a broken appliance are not urgent.",
-  "  An exclamation mark or a word like \"now\" alone does not make a request urgent.",
-  "- notes: when there is a safety risk, one short note that names the hazard the document points to, not its worst possible",
-  "  outcome (for example \"exposed wires\" rather than \"risk of fire\"); otherwise an empty list.",
+  // Правило терміновості — дослівно з «Припущень» вимоги PM solomchaak/property-workflows-spec#59 (docai-v4).
+  '- urgency: "urgent" when the request describes danger to people or property, active flooding, a lost heating in cold weather,',
+  '  no power, or a smell of gas; otherwise "not urgent". A word like "urgent" or an exclamation mark alone does not make it urgent.',
+  "- notes: only for an urgent request, one short note that names the danger the document points to, not its worst possible",
+  "  outcome (for example \"possible electrical fault\" rather than \"risk of fire\"); otherwise an empty list.",
   "Rules for an estimate:",
   "- items: every line item as written: name, quantity (a number; hours count as the quantity), unitPrice (a number).",
   "- total: the stated total as written, or null. Never correct the numbers.",

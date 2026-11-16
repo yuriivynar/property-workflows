@@ -53,8 +53,19 @@ const casesOf = (ac: string) => cases.filter((c) => c.ac === ac);
 
 // RECORD=1 дописує лише ✅-відповіді: кейс, що впав у живому прогоні поточної версії, лишає запис старшої. Такі кейси —
 // лише тут, з причиною (повний розбір — evals/reports/README.md); реплей перевіряє код на справжній відповіді моделі.
+const V4_NOT_RECORDED =
+  "docai-v4 (16.11, 22:50) — правило терміновості дослівно з вимоги PM #59; живим прогоном ще не перезаписано: денний ліміт 16.11 вичерпано, повний прогін RECORD=1 — 17.11 до приймання PM";
 const OLDER_RECORDS: Record<string, string> = {
-  "GC-06": "docai-v3 FAIL: примітка «smell of gas» замість «possible gas leak»; запис — ✅-відповідь docai-v1",
+  "GC-01": V4_NOT_RECORDED,
+  "GC-02": V4_NOT_RECORDED,
+  "GC-03": V4_NOT_RECORDED,
+  "GC-04": V4_NOT_RECORDED,
+  "GC-05": V4_NOT_RECORDED,
+  "GC-06": "docai-v3 FAIL: примітка «smell of gas» замість «possible gas leak»; запис — ✅-відповідь docai-v1; також docai-v4 (16.11, 22:50)",
+  "GC-07": V4_NOT_RECORDED,
+  "GC-08": V4_NOT_RECORDED,
+  "GC-09": V4_NOT_RECORDED,
+  "GC-10": V4_NOT_RECORDED,
 };
 
 // Точні поля PM збіглися, і недовірений вхід дійшов до моделі загорнутим як дані.

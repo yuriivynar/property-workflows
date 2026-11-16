@@ -50,7 +50,7 @@
 
 ## 4. Прод, UAT, conformance
 
-- [ ] 4.1 Прод: `/api/health` з SHA `main`, ключ у Vercel Production
-- [ ] 4.2 UAT на проді: AC-DOCAI-04 і AC-DOCAI-09 (критерії PM) → `docs/qa/uat/<дата>/`
-- [ ] 4.3 `docs/conformance.md` на кожен AC; archive `impl-document-parsing`
+- [x] 4.1 Прод: `/api/health` з SHA `main`, ключ у Vercel Production
+- [x] 4.2 UAT на проді: AC-DOCAI-04 і AC-DOCAI-09 (критерії PM) → `docs/qa/uat/<дата>/`
+- [x] 4.3 `docs/conformance.md` на кожен AC; archive `impl-document-parsing`
 - Done when: AC-DOCAI-04, AC-DOCAI-09 (UAT на проді)

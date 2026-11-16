@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// Блок «Parse a document» на рівні інтерфейсу: що бачить людина після розбору — відмову без значень (AC-DOCAI-07),
-// «недоступний» з порожньою формою для ручного вводу (AC-DOCAI-09), «not found» біля порожніх полів (AC-DOCAI-02),
-// попередження про суму (AC-DOCAI-06) і що лише «Save values» надсилає значення (AC-DOCAI-08). Дії — моки.
+// Блок «Parse a document» на рівні інтерфейсу: що бачить людина після розбору — відмову без значень (AC-DOCAI-09),
+// «недоступний» з порожньою формою для ручного вводу (AC-DOCAI-13), «not found» біля порожніх полів (AC-DOCAI-06),
+// попередження про суму (AC-DOCAI-08) і що лише «Save values» надсилає значення (AC-DOCAI-04). Дії — моки.
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { emptyView, type ParseState, type SaveState } from "@/lib/documents/form";
@@ -41,6 +41,11 @@ describe("DocumentParsingForm", () => {
     expect(screen.getByTestId("document-notice").textContent).toBe(
       "The assistant is not available now. Fill in the values yourself.",
     );
+    // Document type і значення порожні й редаговані: тип людина обирає сама, тоді з'являються поля.
+    const kind = screen.getByLabelText("Document type") as HTMLSelectElement;
+    expect(kind.value).toBe("");
+    expect(screen.queryByLabelText("Description")).toBeNull();
+    fireEvent.change(kind, { target: { value: "request" } });
     expect((screen.getByLabelText("Description") as HTMLInputElement).value).toBe("");
     expect(screen.getByRole("button", { name: "Save values" })).toBeTruthy();
     expect(screen.queryByText(/not found/)).toBeNull();
@@ -76,7 +81,8 @@ describe("DocumentParsingForm", () => {
     });
 
     expect(screen.getByTestId("document-warning").textContent).toBe("items add up to 95.00, the stated total is 100.00");
-    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("100");
+    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("100.00");
+    expect((screen.getAllByLabelText("Unit price")[0] as HTMLInputElement).value).toBe("45.00");
   });
 
   it("AC-DOCAI-04: значення надсилає лише «Save values» — розбір сам нічого не підтверджує", async () => {
@@ -143,7 +149,7 @@ describe("DocumentParsingForm", () => {
     }
 
     expect((screen.getByLabelText(/^Item/) as HTMLInputElement).value).toBe("Estimate B item");
-    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("20");
+    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("20.00");
   });
   it("AC-DOCAI-03: поки модель читає документ — кнопка неактивна й aria-busy, замість форми заглушка зі статусом", async () => {
     let finish: (state: ParseState) => void = () => {};
@@ -252,5 +258,34 @@ describe("DocumentParsingForm", () => {
     });
 
     expect((screen.getByLabelText("Document text") as HTMLTextAreaElement).value).toBe("Document B");
+  });
+  it("AC-DOCAI-04: після «Save values» кнопка неактивна, доки людина нічого не змінить — другого запису немає", async () => {
+    const confirm = vi.fn(async (): Promise<SaveState> => ({ status: "saved", message: "Values saved" }));
+    await parseWith(
+      {
+        status: "proposed",
+        text: "Kitchen tap",
+        view: { ...emptyView(), phone: "555-0101", description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+      },
+      confirm,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save values" }));
+    });
+    const save = screen.getByRole("button", { name: "Save values" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    expect(confirm).toHaveBeenCalledTimes(1);
+
+    fireEvent.change(screen.getByLabelText(/^Urgency/), { target: { value: "urgent" } });
+    expect(save.disabled).toBe(false);
+  });
+  it("AC-DOCAI-08: ціна з трьома знаками не округлюється — число документа не змінюється", async () => {
+    await parseWith({
+      status: "proposed",
+      text: "Estimate",
+      view: { ...emptyView("estimate"), items: [{ name: "Washer", quantity: 100, unitPrice: 0.125 }], total: 12.5 },
+    });
+    expect((screen.getAllByLabelText("Unit price")[0] as HTMLInputElement).value).toBe("0.125");
+    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("12.50");
   });
 });
