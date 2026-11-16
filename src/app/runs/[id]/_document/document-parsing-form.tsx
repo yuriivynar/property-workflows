@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { PendingButton } from "@/components/ui/pending-button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES, URGENCIES } from "@/lib/ai/schema";
 import {
@@ -53,9 +55,9 @@ export function DocumentParsingForm({ runId, requestAction, confirmAction }: Pro
           <Textarea id={textId} name="document_text" defaultValue={parse.text} key={`text-${round}`} required />
         </div>
         <div>
-          <Button type="submit" variant="secondary" disabled={parsing} className="max-sm:w-full">
+          <PendingButton variant="secondary" className="max-sm:w-full">
             {DOCUMENT_LABELS.parse}
-          </Button>
+          </PendingButton>
         </div>
       </form>
 
@@ -72,6 +74,8 @@ export function DocumentParsingForm({ runId, requestAction, confirmAction }: Pro
 
       {/* Під час нового розбору стару форму ховаємо: вона розмонтовується, і нова пропозиція не змішується зі станом
           попередньої (і стару не можна зберегти, поки йде розбір). */}
+      {parsing ? <ParsingPlaceholder /> : null}
+
       {values && !parsing ? (
         <ValuesForm
           key={`values-${round}`}
@@ -403,6 +407,32 @@ function NotesList({ notes }: { notes: string[] }) {
   );
 }
 
+/**
+ * Поки модель читає документ (зазвичай 5–30 с): заглушка у формі майбутньої форми значень (Skeleton, як у loading.tsx)
+ * і короткий текст стану — людина бачить, що розбір іде і скільки приблизно чекати.
+ */
+function ParsingPlaceholder() {
+  return (
+    <div className="flex flex-col gap-4 border-t border-border pt-4" data-testid="document-parsing">
+      <p role="status" className="text-sm text-muted-foreground">
+        {DOCUMENT_LABELS.parsing}
+      </p>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-11 w-full sm:h-10 sm:max-w-64" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[0, 1, 2, 3].map((index) => (
+          <div key={index} className={index === 1 ? "flex flex-col gap-2 sm:col-span-2" : "flex flex-col gap-2"}>
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-11 w-full sm:h-10" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SaveRow({ save, saving }: { save: SaveState; saving: boolean }) {
   return (
     <>
@@ -412,9 +442,9 @@ function SaveRow({ save, saving }: { save: SaveState; saving: boolean }) {
         </Alert>
       ) : null}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-        <Button type="submit" disabled={saving} className="max-sm:w-full">
+        <PendingButton pending={saving} className="max-sm:w-full">
           {DOCUMENT_LABELS.save}
-        </Button>
+        </PendingButton>
         {save.status === "saved" ? (
           <p role="status" className="text-sm text-muted-foreground">
             {save.message}

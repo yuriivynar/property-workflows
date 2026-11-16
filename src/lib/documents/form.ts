@@ -10,6 +10,7 @@ export const DOCUMENT_LABELS = {
   hint: "Paste a maintenance request or a contractor's estimate. The assistant suggests values; nothing is saved until you select Save values.",
   documentText: "Document text",
   parse: "Parse document",
+  parsing: "Reading the document. This usually takes 5 to 30 seconds.",
   save: "Save values",
   saved: "Values saved",
   request: "Maintenance request",
