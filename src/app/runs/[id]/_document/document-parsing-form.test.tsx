@@ -97,4 +97,52 @@ describe("DocumentParsingForm", () => {
     expect(sent[1].get("description")).toBe("Kitchen tap drips, apartment 12");
     expect(sent[1].get("run_id")).toBe(RUN);
   });
+  it("AC-DOCAI-08: помилка збереження не стирає виправлень людини — повторне «Save values» надсилає виправлене", async () => {
+    const confirm = vi.fn(async (): Promise<SaveState> => ({ status: "error", message: "Not enough rights" }));
+    await parseWith(
+      {
+        status: "proposed",
+        text: "Kitchen tap",
+        view: { ...emptyView(), phone: "555-0101", description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+      },
+      confirm,
+    );
+    fireEvent.change(screen.getByLabelText(/^Description/), { target: { value: "Kitchen tap drips, apartment 12" } });
+    fireEvent.change(screen.getByLabelText(/^Urgency/), { target: { value: "urgent" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save values" }));
+    });
+
+    expect(screen.getByText("Not enough rights")).toBeTruthy();
+    expect((screen.getByLabelText(/^Description/) as HTMLInputElement).value).toBe("Kitchen tap drips, apartment 12");
+    expect((screen.getByLabelText(/^Urgency/) as HTMLSelectElement).value).toBe("urgent");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save values" }));
+    });
+    const second = confirm.mock.calls[1] as unknown as [SaveState, FormData];
+    expect(second[1].get("description")).toBe("Kitchen tap drips, apartment 12");
+    expect(second[1].get("urgency")).toBe("urgent");
+  });
+
+  it("AC-DOCAI-08: новий розбір — нова пропозиція, без позицій і суми попереднього кошторису", async () => {
+    const estimate = (name: string, total: number): ParseState => ({
+      status: "proposed",
+      text: name,
+      view: { ...emptyView("estimate"), items: [{ name, quantity: 1, unitPrice: total }], total },
+    });
+    const request = vi
+      .fn<(state: ParseState, data: FormData) => Promise<ParseState>>()
+      .mockResolvedValueOnce(estimate("Estimate A item", 10))
+      .mockResolvedValueOnce(estimate("Estimate B item", 20));
+    render(<DocumentParsingForm runId={RUN} requestAction={request} confirmAction={vi.fn()} />);
+    for (const text of ["Estimate A", "Estimate B"]) {
+      fireEvent.change(screen.getByLabelText("Document text"), { target: { value: text } });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Parse document" }));
+      });
+    }
+
+    expect((screen.getByLabelText(/^Item/) as HTMLInputElement).value).toBe("Estimate B item");
+    expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("20");
+  });
 });

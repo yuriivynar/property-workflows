@@ -42,11 +42,17 @@ export function scoreFields(expected: GoldenCase["expected"], view: ProposalView
       if (missing.length > 0) mismatches.push({ field, expected: want, actual: have });
       continue;
     }
-    if (JSON.stringify(actual[field] ?? null) !== JSON.stringify(want ?? null)) {
+    if (JSON.stringify(canonical(field, actual[field])) !== JSON.stringify(canonical(field, want))) {
       mismatches.push({ field, expected: want, actual: actual[field] ?? null });
     }
   }
   return { pass: mismatches.length === 0, mismatches };
+}
+
+// Позиції порівнюємо незалежно від порядку ключів у об'єкті (порядок самих позицій — важить).
+function canonical(field: string, value: unknown): unknown {
+  if (field !== "items" || !Array.isArray(value)) return value ?? null;
+  return (value as Item[]).map((item) => ({ name: item.name, quantity: item.quantity, unitPrice: item.unitPrice }));
 }
 
 /** Вільний текст для судді: опис і примітки, як їх бачить людина. */
@@ -67,6 +73,7 @@ export async function judgeFreeText(judge: LanguageModel, rubric: string, text: 
     output: Output.object({ name: "verdict", schema: Verdict }),
     temperature: 0,
     maxRetries: 0, // повтор на безкоштовному тарифі витрачає той самий денний ліміт
+    timeout: 45_000, // як у виклику продукту: суддя не тримає живий eval без меж
   });
   return output;
 }

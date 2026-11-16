@@ -139,7 +139,9 @@ const optionalText = (max: number) =>
     .transform((value) => value || null)
     .nullable();
 
-const NotesSchema = z.array(z.string().trim().min(1).max(200)).max(5);
+// До 5 приміток моделі (ProposalSchema) + 2 сталі примітки коду (twoProblems, instructionsIgnored, toProposalView):
+// людина зберігає все, що їй показали.
+const NotesSchema = z.array(z.string().trim().min(1).max(200)).max(7);
 
 export const RequestValuesSchema = z.object({
   kind: z.literal("request"),

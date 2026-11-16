@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useState, type Dispatch, type SetStateAction } from "react";
+import { startTransition, useActionState, useId, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,9 @@ export function DocumentParsingForm({ runId, requestAction, confirmAction }: Pro
         </Alert>
       ) : null}
 
-      {values ? (
+      {/* Під час нового розбору стару форму ховаємо: вона розмонтовується, і нова пропозиція не змішується зі станом
+          попередньої (і стару не можна зберегти, поки йде розбір). */}
+      {values && !parsing ? (
         <ValuesForm
           key={`values-${round}`}
           runId={runId}
@@ -110,6 +112,7 @@ function NotFound({ show }: { show: boolean }) {
 }
 
 type Missing = (value: unknown) => boolean;
+type RequestDraft = { phone: string; description: string; category: string; urgency: string };
 
 function ValuesForm({
   runId,
@@ -127,12 +130,27 @@ function ValuesForm({
   // Позиції й сума живуть тут, а не в EstimateFields: перемикання типу документа не стирає вже введене.
   const [items, setItems] = useState<ItemDraft[]>(() => toDraft(view));
   const [total, setTotal] = useState(view.total === null ? "" : String(view.total));
+  // Поля звернення керовані: React скидає некеровані поля форми після кожної дії, зокрема після помилки збереження,
+  // і виправлення людини повернулися б до пропозиції моделі.
+  const [request, setRequest] = useState<RequestDraft>(() => ({
+    phone: view.phone ?? "",
+    description: view.description ?? "",
+    category: view.category ?? "",
+    urgency: view.urgency ?? "",
+  }));
   const id = useId();
+  // Не <form action>: після дії React скидає форму (form.reset()), і керовані <select> (тип, category, urgency) втратили б
+  // вибір людини навіть після помилки збереження. Надсилаємо самі — без скидання.
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    startTransition(() => saveAction(data));
+  };
   // «not found» — лише біля поля, яке модель не знайшла в документі (AC-DOCAI-02), не в ручному вводі.
   const missing: Missing = (value) => fromProposal && (value === null || value === "");
 
   return (
-    <form action={saveAction} className="flex flex-col gap-4 border-t border-border pt-4" data-testid="document-values-form">
+    <form onSubmit={submit} className="flex flex-col gap-4 border-t border-border pt-4" data-testid="document-values-form">
       <input type="hidden" name="run_id" value={runId} />
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${id}-kind`}>{DOCUMENT_LABELS.kind}</Label>
@@ -148,7 +166,13 @@ function ValuesForm({
       </div>
 
       {kind === "request" ? (
-        <RequestFields id={id} view={view} missing={missing} />
+        <RequestFields
+          id={id}
+          view={view}
+          missing={missing}
+          values={request}
+          onChange={(patch) => setRequest((current) => ({ ...current, ...patch }))}
+        />
       ) : (
         <EstimateFields
           id={id}
@@ -166,7 +190,19 @@ function ValuesForm({
   );
 }
 
-function RequestFields({ id, view, missing }: { id: string; view: ProposedView; missing: Missing }) {
+function RequestFields({
+  id,
+  view,
+  missing,
+  values,
+  onChange,
+}: {
+  id: string;
+  view: ProposedView;
+  missing: Missing;
+  values: RequestDraft;
+  onChange: (patch: Partial<RequestDraft>) => void;
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="flex flex-col gap-2">
@@ -174,21 +210,33 @@ function RequestFields({ id, view, missing }: { id: string; view: ProposedView; 
           {DOCUMENT_LABELS.phone}
           <NotFound show={missing(view.phone)} />
         </Label>
-        <Input id={`${id}-phone`} name="phone" defaultValue={view.phone ?? ""} inputMode="tel" />
+        <Input
+          id={`${id}-phone`}
+          name="phone"
+          value={values.phone}
+          onChange={(event) => onChange({ phone: event.target.value })}
+          inputMode="tel"
+        />
       </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
         <Label htmlFor={`${id}-description`}>
           {DOCUMENT_LABELS.description}
           <NotFound show={missing(view.description)} />
         </Label>
-        <Input id={`${id}-description`} name="description" defaultValue={view.description ?? ""} />
+        <Input
+          id={`${id}-description`}
+          name="description"
+          value={values.description}
+          onChange={(event) => onChange({ description: event.target.value })}
+        />
       </div>
       <ChoiceField
         id={`${id}-category`}
         name="category"
         label={DOCUMENT_LABELS.category}
         options={CATEGORIES}
-        value={view.category}
+        value={values.category}
+        onChange={(category) => onChange({ category })}
         missing={missing(view.category)}
       />
       <ChoiceField
@@ -196,7 +244,8 @@ function RequestFields({ id, view, missing }: { id: string; view: ProposedView; 
         name="urgency"
         label={DOCUMENT_LABELS.urgency}
         options={URGENCIES}
-        value={view.urgency}
+        value={values.urgency}
+        onChange={(urgency) => onChange({ urgency })}
         missing={missing(view.urgency)}
       />
     </div>
@@ -209,13 +258,15 @@ function ChoiceField({
   label,
   options,
   value,
+  onChange,
   missing,
 }: {
   id: string;
   name: string;
   label: string;
   options: readonly string[];
-  value: string | null;
+  value: string;
+  onChange: (value: string) => void;
   missing: boolean;
 }) {
   return (
@@ -224,7 +275,7 @@ function ChoiceField({
         {label}
         <NotFound show={missing} />
       </Label>
-      <NativeSelect id={id} name={name} defaultValue={value ?? ""} className="w-full">
+      <NativeSelect id={id} name={name} value={value} onChange={(event) => onChange(event.target.value)} className="w-full">
         <NativeSelectOption value="">{DOCUMENT_LABELS.choose}</NativeSelectOption>
         {options.map((option) => (
           <NativeSelectOption key={option} value={option}>

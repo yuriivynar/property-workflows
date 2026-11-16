@@ -1,5 +1,6 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { DOCUMENT_LABELS } from "@/lib/documents/form";
+import { DOCUMENT_ERRORS, DOCUMENT_LABELS } from "@/lib/documents/form";
 import type { createClient } from "@/lib/supabase/server";
 import { confirmDocumentValues, requestDocumentValues } from "./actions";
 import { DocumentParsingForm } from "./document-parsing-form";
@@ -20,7 +21,7 @@ type Props = {
 export async function RunDocuments({ supabase, runId, viewer, runManagerId, names }: Props) {
   const allowed = viewer.role === "admin" || (viewer.role === "manager" && runManagerId === viewer.userId);
   if (!allowed) return null;
-  const { data: records } = await supabase
+  const { data: records, error } = await supabase
     .from("run_document_values")
     .select("id, kind, fields, confirmed_by, confirmed_at")
     .eq("run_id", runId)
@@ -37,6 +38,13 @@ export async function RunDocuments({ supabase, runId, viewer, runManagerId, name
           <DocumentParsingForm runId={runId} requestAction={requestDocumentValues} confirmAction={confirmDocumentValues} />
         </Card>
       </section>
+
+      {/* Збій читання — не «порожньо»: людина має знати, що історію не завантажено; розбір лишається доступним. */}
+      {error ? (
+        <Alert variant="destructive" data-testid="document-values-error">
+          <AlertDescription>{DOCUMENT_ERRORS.loadFailed}</AlertDescription>
+        </Alert>
+      ) : null}
 
       {records?.length ? (
         <section className="flex flex-col gap-2">

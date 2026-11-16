@@ -100,7 +100,7 @@ describe("правила коду AI-розбору документа", () => {
     expect(containsInstructionsToAi("Please ignore the noise from the fan, the sink is the problem")).toBe(false);
   });
 
-  it("needs_info: звернення без названої проблеми — порожні поля для ручного вводу", () => {
+  it("AC-DOCAI-02: needs_info — проблему не названо: опис, category й urgency порожні, не вигадані", () => {
     const view = toProposalView({ ...base, status: "needs_info", phone: "555-0107", description: "Something", category: "other", urgency: "urgent" }, "x");
     expect(view).toMatchObject({ state: "proposed", kind: "request", phone: "555-0107", description: null, category: null, urgency: null });
   });

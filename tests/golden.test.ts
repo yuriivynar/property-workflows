@@ -114,6 +114,33 @@ describe("golden cases, офлайн-реплей", () => {
   });
 });
 
+describe("оцінювач golden cases", () => {
+  it("AC-DOCAI-05: позиції порівнюються незалежно від порядку ключів, але з порядком самих позицій", () => {
+    const expected: GoldenCase["expected"] = {
+      state: "proposed",
+      items: [{ quantity: 1, name: "Labour", unitPrice: 10 }, { unitPrice: 5, name: "Washer", quantity: 2 }],
+    };
+    const view = toProposalView(
+      {
+        status: "ok",
+        kind: "estimate",
+        phone: null,
+        description: null,
+        category: null,
+        urgency: null,
+        items: [{ name: "Labour", quantity: 1, unitPrice: 10 }, { name: "Washer", quantity: 2, unitPrice: 5 }],
+        total: 20,
+        notes: [],
+        twoProblems: false,
+        instructionsIgnored: false,
+      },
+      "Estimate",
+    );
+    expect(scoreFields(expected, view).mismatches).toEqual([]);
+    expect(scoreFields({ state: "proposed", items: [...expected.items!].reverse() }, view).pass).toBe(false);
+  });
+});
+
 describe("збої моделі → стан «помічник недоступний»", () => {
   it("AC-DOCAI-09: відповідь не за схемою → invalid_output, а не «майже пропозиція»", async () => {
     const result = await proposeDocumentValues("x", replay('{"status":"ok","kind":"request","category":"dragons"}'));

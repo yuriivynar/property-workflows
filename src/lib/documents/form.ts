@@ -39,6 +39,7 @@ export const DOCUMENT_ERRORS = {
   invalidValues: "Check the values: a request needs a description, a category and an urgency; an estimate needs at least one line item",
   notAllowed: "Not enough rights",
   unexpected: "Something went wrong. Try again.",
+  loadFailed: "Saved values could not be loaded. Reload the page.",
 } as const;
 
 type ProposedView = Extract<ProposalView, { state: "proposed" }>;
