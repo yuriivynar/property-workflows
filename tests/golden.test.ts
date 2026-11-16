@@ -74,18 +74,6 @@ describe("golden cases, офлайн-реплей", () => {
     expect(c.ac).toBe("AC-DOCAI-02");
     await expectGolden(c);
   });
-  it.each(casesOf("AC-DOCAI-03"))("AC-DOCAI-03: golden $id", async (c) => {
-    expect(c.ac).toBe("AC-DOCAI-03");
-    await expectGolden(c);
-  });
-  it.each(casesOf("AC-DOCAI-04"))("AC-DOCAI-04: golden $id", async (c) => {
-    expect(c.ac).toBe("AC-DOCAI-04");
-    await expectGolden(c);
-  });
-  it.each(casesOf("AC-DOCAI-05"))("AC-DOCAI-05: golden $id", async (c) => {
-    expect(c.ac).toBe("AC-DOCAI-05");
-    await expectGolden(c);
-  });
   it.each(casesOf("AC-DOCAI-06"))("AC-DOCAI-06: golden $id", async (c) => {
     expect(c.ac).toBe("AC-DOCAI-06");
     await expectGolden(c);
@@ -94,15 +82,39 @@ describe("golden cases, офлайн-реплей", () => {
     expect(c.ac).toBe("AC-DOCAI-07");
     await expectGolden(c);
   });
+  it.each(casesOf("AC-DOCAI-08"))("AC-DOCAI-08: golden $id", async (c) => {
+    expect(c.ac).toBe("AC-DOCAI-08");
+    await expectGolden(c);
+  });
+  it.each(casesOf("AC-DOCAI-09"))("AC-DOCAI-09: golden $id", async (c) => {
+    expect(c.ac).toBe("AC-DOCAI-09");
+    await expectGolden(c);
+  });
   it.each(casesOf("AC-DOCAI-10"))("AC-DOCAI-10: golden $id", async (c) => {
     expect(c.ac).toBe("AC-DOCAI-10");
     await expectGolden(c);
   });
+  // GC-02, GC-03, GC-06 — golden cases #40 без власного AC у вимозі PM #59: входять у поріг приймання (#55).
+  it.each(cases.filter((c) => c.ac === null))("golden $id — без AC у вимозі PM, лише поріг #55", async (c) => {
+    expect(c.ac).toBeNull();
+    await expectGolden(c);
+  });
 
-  it("кожен з 10 кейсів #40 має AC і справжню відповідь моделі; старший промпт — лише з причиною", () => {
+  it("кожен з 10 кейсів #40 має AC PM (або null) і справжню відповідь моделі; старший промпт — лише з причиною", () => {
     expect(cases.map((c) => c.id)).toEqual(Array.from({ length: 10 }, (_, i) => `GC-${String(i + 1).padStart(2, "0")}`));
-    const tested = new Set(["AC-DOCAI-01", "AC-DOCAI-02", "AC-DOCAI-03", "AC-DOCAI-04", "AC-DOCAI-05", "AC-DOCAI-06", "AC-DOCAI-07", "AC-DOCAI-10"]);
-    expect(cases.filter((c) => !tested.has(c.ac)).map((c) => c.id)).toEqual([]);
+    // AC кейсів — з вимоги PM #59; GC-02, GC-03, GC-06 там власного AC не мають.
+    expect(Object.fromEntries(cases.map((c) => [c.id, c.ac]))).toEqual({
+      "GC-01": "AC-DOCAI-01",
+      "GC-02": null,
+      "GC-03": null,
+      "GC-04": "AC-DOCAI-06",
+      "GC-05": "AC-DOCAI-07",
+      "GC-06": null,
+      "GC-07": "AC-DOCAI-02",
+      "GC-08": "AC-DOCAI-08",
+      "GC-09": "AC-DOCAI-09",
+      "GC-10": "AC-DOCAI-10",
+    });
     expect(cases.map((c) => c.id).filter((id) => !recorded[id])).toEqual([]);
     // Реплей заглушки, написаної руками, перевіряв би не відповідь моделі, а наш здогад про неї.
     expect(Object.entries(recorded).filter(([, r]) => /placeholder/i.test(r.modelId)).map(([id]) => id)).toEqual([]);
@@ -115,7 +127,7 @@ describe("golden cases, офлайн-реплей", () => {
 });
 
 describe("оцінювач golden cases", () => {
-  it("AC-DOCAI-05: позиції порівнюються незалежно від порядку ключів, але з порядком самих позицій", () => {
+  it("AC-DOCAI-02: позиції порівнюються незалежно від порядку ключів, але з порядком самих позицій", () => {
     const expected: GoldenCase["expected"] = {
       state: "proposed",
       items: [{ quantity: 1, name: "Labour", unitPrice: 10 }, { unitPrice: 5, name: "Washer", quantity: 2 }],
@@ -142,7 +154,7 @@ describe("оцінювач golden cases", () => {
 });
 
 describe("збої моделі → стан «помічник недоступний»", () => {
-  it("AC-DOCAI-09: відповідь не за схемою → invalid_output, а не «майже пропозиція»", async () => {
+  it("AC-DOCAI-13: відповідь не за схемою → invalid_output, а не «майже пропозиція»", async () => {
     const result = await proposeDocumentValues("x", replay('{"status":"ok","kind":"request","category":"dragons"}'));
     expect(result).toMatchObject({ ok: false, reason: "invalid_output" });
     // Звіт eval показує, яке поле зламано (шлях zod і код), — але не текст відповіді моделі.
@@ -150,7 +162,7 @@ describe("збої моделі → стан «помічник недоступ
     expect(result).not.toMatchObject({ message: expect.stringContaining("dragons") });
   });
 
-  it("AC-DOCAI-09: 429 → rate_limited, повтор рівно maxRetries разів, без циклу", async () => {
+  it("AC-DOCAI-13: 429 → rate_limited, повтор рівно maxRetries разів, без циклу", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
         throw new APICallError({
@@ -166,7 +178,7 @@ describe("збої моделі → стан «помічник недоступ
     expect(model.doGenerateCalls).toHaveLength(2);
   });
 
-  it("AC-DOCAI-09: HTTP 200 з тілом помилки code 429 → rate_limited, без повтору", async () => {
+  it("AC-DOCAI-13: HTTP 200 з тілом помилки code 429 → rate_limited, без повтору", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
         throw new APICallError({
@@ -183,7 +195,7 @@ describe("збої моделі → стан «помічник недоступ
     expect(model.doGenerateCalls).toHaveLength(1); // statusCode 200 не повторюється
   });
 
-  it("AC-DOCAI-09: повільна модель → timeout", async () => {
+  it("AC-DOCAI-13: повільна модель → timeout", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async ({ abortSignal }) => {
         await new Promise((resolve, reject) => {
@@ -200,7 +212,7 @@ describe("збої моделі → стан «помічник недоступ
     expect(result).toMatchObject({ ok: false, reason: "timeout" });
   });
 
-  it("AC-DOCAI-09: помилка постачальника → provider_error", async () => {
+  it("AC-DOCAI-13: помилка постачальника → provider_error", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => {
         throw new APICallError({ message: "Bad gateway", url: "u", requestBodyValues: {}, statusCode: 502, isRetryable: false });
@@ -210,7 +222,7 @@ describe("збої моделі → стан «помічник недоступ
     expect(result).toMatchObject({ ok: false, reason: "provider_error" });
   });
 
-  it("AC-DOCAI-09: текст стану — дослівно варіант A solomchaak/property-workflows-spec#52", () => {
+  it("AC-DOCAI-13: текст стану — дослівно варіант A solomchaak/property-workflows-spec#52", () => {
     expect(DOCUMENT_MESSAGES.unavailable).toBe("The assistant is not available now. Fill in the values yourself.");
   });
 });

@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 // з profiles (currentUser), а вже потім сервіс вирішує, чи це адміністратор або менеджер запуску, — до виклику моделі
 // й до запису (src/lib/documents/service.ts). Ключ моделі — лише в src/lib/ai/openrouter.ts (server-only).
 
-/** «Parse document» — пропозиція моделі; нічого не пише (AC-DOCAI-08). */
+/** «Propose values» — пропозиція моделі; нічого не пише (AC-DOCAI-01, AC-DOCAI-04). */
 export async function requestDocumentValues(_previous: ParseState, formData: FormData): Promise<ParseState> {
   const supabase = await createClient();
   const user = await currentUser(supabase);
@@ -20,7 +20,7 @@ export async function requestDocumentValues(_previous: ParseState, formData: For
   return requestValues({ supabase, user, model: productModel() }, formData);
 }
 
-/** «Save values» — єдина дія, що пише значення документа (AC-DOCAI-08). */
+/** «Save values» — єдина дія, що пише значення документа (AC-DOCAI-01, AC-DOCAI-04). */
 export async function confirmDocumentValues(_previous: SaveState, formData: FormData): Promise<SaveState> {
   const supabase = await createClient();
   const user = await currentUser(supabase);

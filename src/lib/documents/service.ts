@@ -4,10 +4,10 @@ import { proposeDocumentValues } from "@/lib/ai/draft";
 import type { RoleCheck } from "@/lib/auth/require-role";
 import { isUuid } from "@/lib/runs/domain";
 import type { Database } from "@/lib/supabase/database.types";
-import { DOCUMENT_ERRORS, DOCUMENT_LABELS, confirmedValuesFrom, documentTextFrom, type ParseState, type SaveState } from "./form";
+import { DOCUMENT_ERRORS, DOCUMENT_LABELS, canUseDocumentBlock, confirmedValuesFrom, documentTextFrom, type ParseState, type SaveState } from "./form";
 import { DOCUMENT_MESSAGES, toProposalView, toStoredValues } from "./values";
 
-// Розбір документа в запуску: що роблять дії «Parse document» і «Save values» після перевірки входу
+// Розбір документа в запуску: що роблять дії «Propose values» і «Save values» після перевірки входу
 // (src/app/runs/[id]/_document/actions.ts; openspec/changes/impl-document-parsing/design.md, «Auth»). Залежності —
 // параметрами: клієнт Supabase під сесією користувача, роль з currentUser() і модель (null — ключа немає). Так тести
 // передають справжній MockLanguageModelV4 і мок клієнта, а не мокають власні модулі.
@@ -29,10 +29,10 @@ async function mayWorkWithDocuments({ supabase, user }: DocumentDeps, runId: str
   if (!user.ok || user.role === "vendor" || !isUuid(runId)) return false;
   const { data: run, error } = await supabase.from("runs").select("run_manager_id").eq("id", runId).maybeSingle();
   if (error || !run) return false;
-  return user.role === "admin" || run.run_manager_id === user.userId;
+  return canUseDocumentBlock(user, run.run_manager_id);
 }
 
-/** «Parse document»: пропозиція моделі для людини. Нічого не пише в базу (AC-DOCAI-08). */
+/** «Propose values»: пропозиція моделі для людини. Нічого не пише в базу (AC-DOCAI-08). */
 export async function requestValues(
   deps: DocumentDeps & { model: LanguageModel | null },
   formData: FormData,

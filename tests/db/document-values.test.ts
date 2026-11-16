@@ -63,7 +63,7 @@ afterAll(async () => {
 });
 
 describe("run_document_values: хто зберігає й бачить підтверджені значення", () => {
-  it("AC-DOCAI-08: менеджер запуску зберігає значення; confirmed_by і confirmed_at ставить база", async () => {
+  it("AC-DOCAI-04: менеджер запуску зберігає значення; confirmed_by і confirmed_at ставить база", async () => {
     expect(await insertAs(MANAGER_A, RUN)).toBe("");
     const rows = await t.asService<{ confirmed_by: string; kind: string; fields: unknown; confirmed_at: string }>(
       "select confirmed_by, kind, fields, confirmed_at from public.run_document_values where run_id = $1",
@@ -75,19 +75,19 @@ describe("run_document_values: хто зберігає й бачить підт�
     expect(await visibleTo(MANAGER_A)).toBe(1);
   });
 
-  it("AC-DOCAI-08: адміністратор зберігає й бачить значення будь-якого запуску", async () => {
+  it("AC-DOCAI-04: адміністратор зберігає й бачить значення будь-якого запуску", async () => {
     expect(await insertAs(ADMIN, RUN)).toBe("");
     expect(await visibleTo(ADMIN)).toBe(2);
   });
 
-  it("AC-DOCAI-08: вендор і виконавець, що не є менеджером запуску, не бачать і не зберігають значень", async () => {
+  it("AC-DOCAI-16: вендор і виконавець, що не є менеджером запуску, не бачать і не зберігають значень", async () => {
     expect(await visibleTo(VENDOR)).toBe(0);
     expect(await visibleTo(MANAGER_B)).toBe(0);
     expect(await insertAs(VENDOR, RUN)).toMatch(/row-level security/);
     expect(await insertAs(MANAGER_B, RUN)).toMatch(/row-level security/);
   });
 
-  it("AC-DOCAI-08: відвідувач без входу не має доступу до таблиці", async () => {
+  it("AC-DOCAI-16: відвідувач без входу не має доступу до таблиці", async () => {
     const denied = await t
       .asAnon("select id from public.run_document_values")
       .then(
@@ -97,11 +97,11 @@ describe("run_document_values: хто зберігає й бачить підт�
     expect(denied).toMatch(/permission denied/);
   });
 
-  it("AC-DOCAI-08: confirmed_by не підробити — колонкового права на неї немає", async () => {
+  it("AC-DOCAI-04: confirmed_by не підробити — колонкового права на неї немає", async () => {
     expect(await insertAs(MANAGER_A, RUN, ADMIN)).toMatch(/permission denied/);
   });
 
-  it("AC-DOCAI-08: підтверджений запис незмінний — ні update, ні delete", async () => {
+  it("AC-DOCAI-04: підтверджений запис незмінний — ні update, ні delete", async () => {
     const update = await t
       .asUser(MANAGER_A, "update public.run_document_values set kind = 'estimate' where run_id = $1", [RUN])
       .then(
@@ -119,7 +119,7 @@ describe("run_document_values: хто зберігає й бачить підт�
     expect(await visibleTo(ADMIN)).toBe(2);
   });
 
-  it("AC-DOCAI-08: лише тип «request» чи «estimate» і значення-об'єкт", async () => {
+  it("AC-DOCAI-04: лише тип «request» чи «estimate» і значення-об'єкт", async () => {
     const badKind = await t
       .asUser(MANAGER_A, "insert into public.run_document_values (run_id, kind, fields) values ($1, 'invoice', '{}')", [RUN])
       .then(

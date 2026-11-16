@@ -1,4 +1,4 @@
-// Дії «Parse document» і «Save values» після перевірки входу (src/lib/documents/service.ts): роль — до виклику моделі
+// Дії «Propose values» і «Save values» після перевірки входу (src/lib/documents/service.ts): роль — до виклику моделі
 // й до запису. Модель — справжній MockLanguageModelV4 (рахує виклики), клієнт Supabase — простий об'єкт, що записує
 // insert; власних модулів не мокаємо.
 import { APICallError } from "ai";
@@ -96,8 +96,8 @@ function requestValuesForm(values: Record<string, string>) {
   return data;
 }
 
-describe("requestValues — «Parse document»", () => {
-  it("AC-DOCAI-08: пропозиція моделі нічого не пише в базу; телефон — у формі коду", async () => {
+describe("requestValues — «Propose values»", () => {
+  it("AC-DOCAI-01: пропозиція моделі нічого не пише в базу; телефон — у формі коду", async () => {
     const { supabase, insert } = client({ run_manager_id: ME });
     const model = answering(REQUEST);
     const result = await requestValues({ supabase, user: manager, model }, parseForm("Hello, kitchen tap…"));
@@ -106,7 +106,7 @@ describe("requestValues — «Parse document»", () => {
     expect(insert).not.toHaveBeenCalled();
   });
 
-  it("AC-DOCAI-08: вендор, користувач без профілю, менеджер чужого запуску — відмова, модель не викликано", async () => {
+  it("AC-DOCAI-16: вендор, користувач без профілю, менеджер чужого запуску — відмова, модель не викликано", async () => {
     for (const [user, run] of [
       [vendor, { run_manager_id: ME }],
       [noProfile, { run_manager_id: ME }],
@@ -120,7 +120,7 @@ describe("requestValues — «Parse document»", () => {
     }
   });
 
-  it("AC-DOCAI-08: адміністратор розбирає документ будь-якого запуску", async () => {
+  it("AC-DOCAI-16: адміністратор розбирає документ будь-якого запуску", async () => {
     const model = answering(REQUEST);
     const result = await requestValues(
       { supabase: client({ run_manager_id: SOMEONE_ELSE }).supabase, user: admin, model },
@@ -129,7 +129,7 @@ describe("requestValues — «Parse document»", () => {
     expect(result.status).toBe("proposed");
   });
 
-  it("AC-DOCAI-08: порожній текст чи не UUID запуску — помилка до виклику моделі", async () => {
+  it("AC-DOCAI-11: порожній текст чи не UUID запуску — помилка до виклику моделі", async () => {
     const model = answering(REQUEST);
     const { supabase } = client({ run_manager_id: ME });
     expect(await requestValues({ supabase, user: manager, model }, parseForm("   "))).toMatchObject({
@@ -143,7 +143,7 @@ describe("requestValues — «Parse document»", () => {
     expect(model.doGenerateCalls).toHaveLength(0);
   });
 
-  it("AC-DOCAI-09: немає ключа — «недоступний», текст лишається для ручного вводу", async () => {
+  it("AC-DOCAI-13: немає ключа — «недоступний», текст лишається для ручного вводу", async () => {
     const result = await requestValues(
       { supabase: client({ run_manager_id: ME }).supabase, user: manager, model: null },
       parseForm("Hello, kitchen tap"),
@@ -151,7 +151,7 @@ describe("requestValues — «Parse document»", () => {
     expect(result).toEqual({ status: "unavailable", text: "Hello, kitchen tap", message: DOCUMENT_MESSAGES.unavailable });
   });
 
-  it("AC-DOCAI-09: ліміт моделі — той самий стан «недоступний», без повторів у циклі", async () => {
+  it("AC-DOCAI-13: ліміт моделі — той самий стан «недоступний», без повторів у циклі", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const model = rateLimited();
     const result = await requestValues(
@@ -165,7 +165,7 @@ describe("requestValues — «Parse document»", () => {
     warn.mockRestore();
   });
 
-  it("AC-DOCAI-07: не звернення й не кошторис — лише текст відмови, без значень", async () => {
+  it("AC-DOCAI-09: не звернення й не кошторис — лише текст відмови, без значень", async () => {
     const model = answering({ ...REQUEST, status: "refused", kind: null, phone: null, description: null, category: null, urgency: null });
     const result = await requestValues(
       { supabase: client({ run_manager_id: ME }).supabase, user: manager, model },
@@ -180,7 +180,7 @@ describe("requestValues — «Parse document»", () => {
 });
 
 describe("confirmValues — «Save values»", () => {
-  it("AC-DOCAI-08: зберігає лише значення з форми людини (виправлений опис), телефон — у формі коду", async () => {
+  it("AC-DOCAI-04: зберігає лише значення з форми людини (виправлений опис), телефон — у формі коду", async () => {
     const { supabase, insert } = client({ run_manager_id: ME });
     const result = await confirmValues(
       { supabase, user: manager },
@@ -200,7 +200,7 @@ describe("confirmValues — «Save values»", () => {
     });
   });
 
-  it("AC-DOCAI-09: значення, введені вручну, коли помічник недоступний, зберігає лише «Save values»", async () => {
+  it("AC-DOCAI-13: значення, введені вручну, коли помічник недоступний, зберігає лише «Save values»", async () => {
     const { supabase, insert } = client({ run_manager_id: ME });
     const data = new FormData();
     data.set("run_id", RUN);
@@ -222,14 +222,14 @@ describe("confirmValues — «Save values»", () => {
     });
   });
 
-  it("AC-DOCAI-08: неповні значення — помилка, нічого не записано", async () => {
+  it("AC-DOCAI-04: неповні значення — помилка, нічого не записано", async () => {
     const { supabase, insert } = client({ run_manager_id: ME });
     const result = await confirmValues({ supabase, user: manager }, requestValuesForm({ ...validRequest, category: "" }));
     expect(result).toEqual({ status: "error", message: DOCUMENT_ERRORS.invalidValues });
     expect(insert).not.toHaveBeenCalled();
   });
 
-  it("AC-DOCAI-08: вендор чи менеджер чужого запуску — відмова до запису", async () => {
+  it("AC-DOCAI-16: вендор чи менеджер чужого запуску — відмова до запису", async () => {
     const own = client({ run_manager_id: ME });
     const foreign = client({ run_manager_id: SOMEONE_ELSE });
     expect(await confirmValues({ supabase: own.supabase, user: vendor }, requestValuesForm(validRequest))).toEqual({
@@ -244,7 +244,7 @@ describe("confirmValues — «Save values»", () => {
     expect(foreign.insert).not.toHaveBeenCalled();
   });
 
-  it("AC-DOCAI-08: збій бази — загальна помилка, а не «збережено»", async () => {
+  it("AC-DOCAI-04: збій бази — загальна помилка, а не «збережено»", async () => {
     const { supabase } = client({ run_manager_id: ME }, { message: "new row violates row-level security policy" });
     const result = await confirmValues({ supabase, user: manager }, requestValuesForm(validRequest));
     expect(result).toEqual({ status: "error", message: DOCUMENT_ERRORS.unexpected });

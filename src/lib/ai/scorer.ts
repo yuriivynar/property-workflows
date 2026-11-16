@@ -10,7 +10,7 @@ import type { Item } from "./schema";
 /** Один golden case PM (solomchaak/property-workflows-spec#40). Формат файлу — tests/fixtures/golden/cases.json. */
 export type GoldenCase = {
   id: string; // "GC-01" — кейс 1 з #40
-  ac: string; // тимчасовий AC зрізу 4, який доводить кейс
+  ac: string | null; // AC вимоги PM solomchaak/property-workflows-spec#59, який доводить кейс; null — кейс без AC (лише поріг #55)
   input: string;
   // Лише поля, які PM фіксує однозначно. Порівнюються точно; notes — «має містити» (лише тексти, які формує код).
   expected: {

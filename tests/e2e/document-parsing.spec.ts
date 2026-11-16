@@ -1,4 +1,4 @@
-// AC-DOCAI-07, AC-DOCAI-08 — AI-розбір документа на сторінці запуску з ЖИВОЮ моделлю (безкоштовна модель OpenRouter
+// AC-DOCAI-09, AC-DOCAI-04 (вимога PM solomchaak/property-workflows-spec#59) — AI-розбір документа на сторінці запуску з ЖИВОЮ моделлю (безкоштовна модель OpenRouter
 // через ключ проду). Лише UAT на розгорнутому застосунку (`npm run uat -- --url … --grep AC-DOCAI`): у CI й локальній
 // збірці ключа немає, і живий виклик моделі в CI заборонено (design.md impl-document-parsing, «AI»): тег @live-ai
 // виключає playwright.config.ts, коли UAT_BASE_URL не задано. Кожен тест — один
@@ -26,15 +26,15 @@ async function savedCount(manager: Actor, runId: string): Promise<number> {
 }
 
 test(
-  "AC-DOCAI-07: менеджер запуску вставляє меню (golden case 9) — повідомлення «This document is not a maintenance request or an estimate.», жодних значень",
-  { tag: ["@uat", "@writes", "@live-ai"], annotation: { type: "ac", description: "AC-DOCAI-07" } },
+  "AC-DOCAI-09: менеджер запуску вставляє меню й обирає «Propose values» — «This document is not a maintenance request or an estimate.», жодного значення",
+  { tag: ["@uat", "@writes", "@live-ai"], annotation: { type: "ac", description: "AC-DOCAI-09" } },
   async ({ page }) => {
     const cast = new Cast("d07");
     try {
       let runId = "";
       let manager: Actor;
 
-      await given(`the run manager A and the text "${input("GC-09")}" (golden case 9)`, async () => {
+      await given(`run manager A and the pasted text "${input("GC-09")}"`, async () => {
         manager = await cast.create("mgr-a", "manager");
         runId = await launchAs(manager, TENANT_MOVE_IN, APARTMENT_12);
         await signInAs(page, manager);
@@ -42,18 +42,19 @@ test(
         await expect(page.getByTestId("parse-document")).toBeVisible();
       });
 
-      await when("A pastes the text in the run and asks to parse it", async () => {
+      await when('A chooses "Propose values"', async () => {
         await page.getByLabel("Document text").fill(input("GC-09"));
-        await page.getByRole("button", { name: "Parse document" }).click();
+        await page.getByRole("button", { name: "Propose values" }).click();
       });
 
       await thenStep(
         page,
         {
-          clause: 'A sees the message "This document is not a maintenance request or an estimate." and no values are proposed.',
+          clause: 'the block shows "This document is not a maintenance request or an estimate." and no value is proposed.',
           visible: [
             "повідомлення «This document is not a maintenance request or an estimate.»",
-            "під повідомленням немає форми значень і кнопки «Save values»",
+            "під повідомленням блок закінчується: немає форми значень і кнопки «Save values»",
+            "блок «Parse a document» — останній на сторінці: під карткою лише порожнє тло",
           ],
           hidden: ["у запуску немає збережених значень (run_document_values, 0 рядків)"],
         },
@@ -65,6 +66,9 @@ test(
           await expect(page.getByTestId("document-values-form")).toHaveCount(0);
           await expect(page.getByRole("button", { name: "Save values" })).toHaveCount(0);
           expect(await savedCount(manager, runId)).toBe(0);
+          // Кадр «Тоді» знімає лише вікно (1280×800): прокручуємо до самого низу сторінки — видно повідомлення, кінець блоку
+          // і порожнє тло під ним (форми значень немає, блок — останній на сторінці).
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
         },
       );
     } finally {
@@ -74,29 +78,31 @@ test(
 );
 
 test(
-  "AC-DOCAI-08: менеджер запуску змінює urgency пропозиції golden case 1 на «urgent» і підтверджує — збережені значення з «urgent», до підтвердження нічого не збережено",
-  { tag: ["@uat", "@writes", "@live-ai"], annotation: { type: "ac", description: "AC-DOCAI-08" } },
+  "AC-DOCAI-04: менеджер запуску змінює Urgency пропозиції на «urgent» і обирає «Save values» — один запис з «urgent», email і часом",
+  { tag: ["@uat", "@writes", "@live-ai"], annotation: { type: "ac", description: "AC-DOCAI-04" } },
   async ({ page }) => {
     const cast = new Cast("d08");
     try {
       let runId = "";
       let manager: Actor;
 
-      await given("the run manager A sees the proposal for golden case 1, and the run has no saved values yet", async () => {
+      await given('run manager A with Document type "Maintenance request", Phone "555-0101", Category "plumbing" and Urgency "not urgent" proposed in the block', async () => {
         manager = await cast.create("mgr-a", "manager");
         runId = await launchAs(manager, TENANT_MOVE_IN, APARTMENT_12);
         await signInAs(page, manager);
         await page.goto(`/runs/${runId}`);
         await page.getByLabel("Document text").fill(input("GC-01"));
-        await page.getByRole("button", { name: "Parse document" }).click();
+        await page.getByRole("button", { name: "Propose values" }).click();
         const form = page.getByTestId("document-values-form");
         await expect(form).toBeVisible({ timeout: 120_000 });
         await expect(form.getByLabel("Phone")).toHaveValue("555-0101");
+        await expect(form.getByLabel("Category")).toHaveValue("plumbing");
+        await expect(form.getByLabel("Urgency")).toHaveValue("not urgent");
         await expect(page.getByTestId("document-values")).toHaveCount(0);
         expect(await savedCount(manager, runId)).toBe(0);
       });
 
-      await when('A changes urgency to "urgent" and confirms', async () => {
+      await when('A changes Urgency to "urgent" and chooses "Save values"', async () => {
         const form = page.getByTestId("document-values-form");
         await form.getByLabel("Urgency").selectOption("urgent");
         await form.getByRole("button", { name: "Save values" }).click();
@@ -106,10 +112,10 @@ test(
       await thenStep(
         page,
         {
-          clause: 'the run page shows the saved values with urgency "urgent".',
+          clause: 'the page of the run shows one saved record with Document type "Maintenance request", Phone "555-0101", Category "plumbing" and Urgency "urgent", the email of A and the date and time of the confirmation.',
           visible: [
             "розділ «Document values» із записом «Maintenance request»",
-            "у записі urgency «urgent» і телефон «555-0101»",
+            "у записі Phone «555-0101», Category «plumbing» і Urgency «urgent»",
             "«Confirmed by» з email менеджера A і часом підтвердження",
           ],
           hidden: [
@@ -124,8 +130,11 @@ test(
           await expect(record).toContainText("urgent");
           await expect(record).not.toContainText("not urgent");
           await expect(record).toContainText("555-0101");
+          await expect(record).toContainText("plumbing");
           await expect(record).toContainText(`Confirmed by ${manager.email}`);
           expect(await savedCount(manager, runId)).toBe(1);
+          // Кадр «Тоді» знімає лише вікно: прокручуємо до розділу «Document values» із записом і «Confirmed by».
+          await page.getByTestId("document-values").evaluate((el) => el.scrollIntoView({ block: "center" }));
         },
       );
     } finally {

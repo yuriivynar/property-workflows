@@ -10,7 +10,7 @@ afterEach(() => {
 })
 
 describe("PendingButton", () => {
-  it("AC-DOCAI-08: під час відправлення — неактивна, aria-busy, текст «Save values» не змінюється", () => {
+  it("AC-DOCAI-03: під час відправлення — неактивна, aria-busy, текст «Save values» не змінюється", () => {
     render(
       <form>
         <PendingButton pending>Save values</PendingButton>
@@ -23,7 +23,7 @@ describe("PendingButton", () => {
     expect(button.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true")
   })
 
-  it("AC-DOCAI-08: поза відправленням — активна, без aria-busy та іконки", () => {
+  it("AC-DOCAI-03: поза відправленням — активна, без aria-busy та іконки", () => {
     render(
       <form>
         <PendingButton pending={false}>Save values</PendingButton>
