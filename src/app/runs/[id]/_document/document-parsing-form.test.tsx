@@ -145,4 +145,30 @@ describe("DocumentParsingForm", () => {
     expect((screen.getByLabelText(/^Item/) as HTMLInputElement).value).toBe("Estimate B item");
     expect((screen.getByLabelText(/^Total/) as HTMLInputElement).value).toBe("20");
   });
+  it("AC-DOCAI-08: поки модель читає документ — кнопка неактивна й aria-busy, замість форми заглушка зі статусом", async () => {
+    let finish: (state: ParseState) => void = () => {};
+    const request = vi.fn(() => new Promise<ParseState>((resolve) => (finish = resolve)));
+    render(<DocumentParsingForm runId={RUN} requestAction={request} confirmAction={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Document text"), { target: { value: "Kitchen tap" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Parse document" }));
+    });
+
+    const button = screen.getByRole("button", { name: "Parse document" }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("status").textContent).toBe("Reading the document. This usually takes 5 to 30 seconds.");
+    expect(screen.getByTestId("document-parsing")).toBeTruthy();
+
+    await act(async () => {
+      finish({
+        status: "proposed",
+        text: "Kitchen tap",
+        view: { ...emptyView(), description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+      });
+    });
+    expect(screen.queryByTestId("document-parsing")).toBeNull();
+    expect(screen.getByTestId("document-values-form")).toBeTruthy();
+    expect(button.getAttribute("aria-busy")).toBeNull();
+  });
 });
