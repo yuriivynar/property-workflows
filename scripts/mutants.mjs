@@ -19,6 +19,8 @@ const VENDOR_ROLE = "supabase/migrations/20261102133035_vendor_role.sql";
 const VENDOR_DB = "tests/db/vendor-work.test.ts";
 const WS7_RULES = "supabase/migrations/20261115134842_ws7_review_template_rules.sql";
 const RULES_DB = "tests/db/template-rules-review.test.ts";
+const DOC_VALUES = "supabase/migrations/20261116092131_run_document_values.sql";
+const DOC_VALUES_DB = "tests/db/document-values.test.ts";
 
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
@@ -195,6 +197,22 @@ export const mutants = [
     what: "немає унікальності (section_id, position): дві задачі розділу з однаковою позицією",
     find: "add constraint template_tasks_section_position_key unique (section_id, position) deferrable initially deferred;",
     replace: "add constraint template_tasks_section_position_key check (position > 0);",
+  },
+
+  // ── Зріз 4: підтверджені значення документа (AC-DOCAI-08, тимчасовий AC) ───────────────────────────────────────
+  {
+    id: "D08a", kind: "sql", ac: "AC-DOCAI-08", file: DOC_VALUES, tests: [DOC_VALUES_DB],
+    what: "can_manage_run_documents: виконавець задачі запуску (зокрема вендор) — теж «менеджер» значень документа",
+    find: "          and r.run_manager_id = (select auth.uid())\n",
+    replace:
+      "          and r.run_manager_id = (select auth.uid())\n" +
+      "        )\n        or (\n          exists (select 1 from public.run_tasks as t where t.run_id = r.id and t.assignee_id = (select auth.uid()))\n",
+  },
+  {
+    id: "D08b", kind: "sql", ac: "AC-DOCAI-08", file: DOC_VALUES, tests: [DOC_VALUES_DB],
+    what: "колонковий grant insert включає confirmed_by: користувач підписує запис іменем іншого",
+    find: "grant insert (run_id, kind, fields) on table public.run_document_values to authenticated;",
+    replace: "grant insert (run_id, kind, fields, confirmed_by) on table public.run_document_values to authenticated;",
   },
 ];
 

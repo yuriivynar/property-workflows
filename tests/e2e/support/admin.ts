@@ -19,7 +19,11 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // У нас: runs.run_manager_id → profiles без cascade (зріз 3 створює синтетичні запуски); run_sections і run_tasks
 // видаляються каскадом разом із запуском, а run_tasks.assignee_id (вендор, менеджер) — теж без cascade, тож запуски
 // мають зникнути РАНІШЕ за будь-якого користувача (порядок — у deleteUatUsers).
-const OWNED_ROWS: { table: string; column: string }[] = [{ table: "runs", column: "run_manager_id" }];
+// run_document_values — до runs: значення, які синтетичний адміністратор підтвердив у чужому запуску, тримають його профіль (FK без cascade).
+const OWNED_ROWS: { table: string; column: string }[] = [
+  { table: "run_document_values", column: "confirmed_by" },
+  { table: "runs", column: "run_manager_id" },
+];
 
 /** Лише такі адреси прибирання має право видалити: uat-<run>[-<суфікс>]@example.test. */
 export const UAT_EMAIL = /^uat-[0-9a-z-]+@example\.test$/;

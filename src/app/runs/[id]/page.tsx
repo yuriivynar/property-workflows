@@ -22,6 +22,7 @@ import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { BackLink } from "@/components/ui/back-link";
+import { RunDocuments } from "./_document/run-documents";
 
 // Сторінка запуску: прогрес «N of M done», задачі за розділами з виконавцем, позначкою обов'язковості й статусом
 // (AC-TASK-05, AC-TASK-08; робоче рішення до solomchaak/property-workflows-spec#11), кнопка позначки — лише там, де
@@ -161,6 +162,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           </Card>
         </section>
       ))}
+
+      <RunDocuments supabase={supabase} runId={runId} viewer={viewer} runManagerId={runManagerId} names={names} />
       </div>
       </div>
     </main>
