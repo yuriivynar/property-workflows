@@ -187,6 +187,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      run_document_values: {
+        Row: {
+          id: string;
+          run_id: string;
+          kind: string;
+          fields: Json;
+          confirmed_by: string;
+          confirmed_at: string;
+        };
+        Insert: {
+          id?: string;
+          run_id: string;
+          kind: string;
+          fields: Json;
+          confirmed_by?: string;
+          confirmed_at?: string;
+        };
+        Update: {
+          id?: string;
+          run_id?: string;
+          kind?: string;
+          fields?: Json;
+          confirmed_by?: string;
+          confirmed_at?: string;
+        };
+        Relationships: [];
+      };
       run_sections: {
         Row: {
           id: string;
