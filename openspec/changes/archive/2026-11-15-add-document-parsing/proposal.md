@@ -94,7 +94,7 @@
   лишається для ручного вводу — варіант A з solomchaak/property-workflows-spec#52.
 - Текст примітки golden case 5 — «the email has two problems» — варіант A з solomchaak/property-workflows-spec#54.
 - Точно перевіряються phone, category, urgency, позиції, total, попередження й повідомлення відмови; description і
-  примітка без лапок (golden cases 3, 5) — за змістом (що має й чого не має згадувати), до відповіді на Q17.
+  примітка без лапок (golden cases 3, 5) — за змістом (що має й чого не має згадувати), до відповіді на Q17 (solomchaak/property-workflows-spec#56).
 - Телефон — у формі «555-01xx», як у кейсах; сказаний словами номер (golden case 3) переводиться в цю форму.
 
 ## Open questions
@@ -102,9 +102,9 @@
 У #40 відкритих питань немає. Питання до PM (журнал — `docs/spec-reading.md`), до відповіді — текст #40 як є і
 припущення вище:
 
-- Q17 — description з лапками в кейсах перевіряється дослівно чи за змістом (нове питання, issue — після публікації);
+- Q17 — description з лапками в кейсах перевіряється дослівно чи за змістом (solomchaak/property-workflows-spec#56);
 - Q18 — поріг приймання: скільки кейсів з 10 має пройти і які обов'язкові; і чи опублікує PM вимогу зрізу 4 з AC
-  (нове питання, issue — після публікації);
+  (solomchaak/property-workflows-spec#55);
 - питання колеги, не дублюємо: solomchaak/property-workflows-spec#52 (що бачить користувач, коли помічник недоступний,
   AC-DOCAI-09), solomchaak/property-workflows-spec#53 (хто користується розбором і де він), solomchaak/property-workflows-spec#54
   (текст примітки golden case 5 і куди зберігати підтверджені значення).

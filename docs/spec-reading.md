@@ -237,8 +237,8 @@ solomchaak/property-workflows-spec#52 (стан «помічник недост�
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q17 | AC-DOCAI-01, -02, -04, -10 (solomchaak/property-workflows-spec#40) | Description у лапках у golden cases перевіряється дослівно чи за змістом? | A: за змістом; phone, category, urgency, позиції, total, попередження й відмова — точно | (після публікації) | очікуємо | Assumptions зміни `add-document-parsing`; eval оцінює description за змістом |
-| Q18 | — (solomchaak/property-workflows-spec#40) | Поріг приймання 10 golden cases і вимога зрізу 4 з AC | A: ≥ 8 з 10, кейси 9 і 10 — обов'язково; AC розробника до issue «Вимога» | (після публікації) | очікуємо | звіт eval порівнює частку успіху з варіантом A |
+| Q17 | AC-DOCAI-01, -02, -04, -10 (solomchaak/property-workflows-spec#40) | Description у лапках у golden cases перевіряється дослівно чи за змістом? | A: за змістом; phone, category, urgency, позиції, total, попередження й відмова — точно | solomchaak/property-workflows-spec#56 | очікуємо | Assumptions зміни `add-document-parsing`; eval оцінює description за змістом |
+| Q18 | — (solomchaak/property-workflows-spec#40) | Поріг приймання 10 golden cases і вимога зрізу 4 з AC | A: ≥ 8 з 10, кейси 9 і 10 — обов'язково; AC розробника до issue «Вимога» | solomchaak/property-workflows-spec#55 | очікуємо | звіт eval порівнює частку успіху з варіантом A |
 
 ### Власні припущення (зріз 4)
 
