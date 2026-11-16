@@ -79,7 +79,8 @@ function DocumentParsingBlock({ runId, requestAction, confirmAction, onDiscard }
     startTransition(() => parseAction(data));
   };
 
-  const values = uploadError ? null : valuesOf(parse);
+  // Помилка файла не прибирає форму значень: виправлення людини лишаються до нового розбору чи «Discard».
+  const values = valuesOf(parse);
 
   return (
     <div className="flex flex-col gap-4">
@@ -133,12 +134,16 @@ function DocumentParsingBlock({ runId, requestAction, confirmAction, onDiscard }
 function useTextUpload(setText: (text: string) => void) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  // Номер останнього вибору: читання раніше вибраного файла, що закінчилось пізніше, не перезапише новіший.
+  const selection = useRef(0);
   const upload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    const current = ++selection.current;
     if (!isPlainTextFile(file)) return setUploadError(DOCUMENT_ERRORS.onlyText);
     const content = await file.text();
+    if (current !== selection.current) return;
     if (content.length > MAX_INPUT_CHARS) return setUploadError(DOCUMENT_ERRORS.tooLong);
     setUploadError(null);
     setText(content);

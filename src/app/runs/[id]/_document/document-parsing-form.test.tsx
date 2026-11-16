@@ -222,4 +222,35 @@ describe("DocumentParsingForm", () => {
     expect(screen.getByText("Paste the text of a document")).toBeTruthy();
     expect(screen.queryByTestId("document-values-form")).toBeNull();
   });
+  it("AC-DOCAI-12: відхилений файл не прибирає форму значень — виправлення людини лишаються", async () => {
+    await parseWith({
+      status: "proposed",
+      text: "Kitchen tap",
+      view: { ...emptyView(), phone: "555-0101", description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Description/), { target: { value: "Kitchen tap drips, apartment 12" } });
+    const photo = new File([new Uint8Array([137, 80, 78, 71])], "photo.png", { type: "image/png" });
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("document-file"), { target: { files: [photo] } });
+    });
+
+    expect(screen.getByTestId("document-upload-error").textContent).toBe("Only plain text files (.txt) are accepted");
+    expect((screen.getByLabelText(/^Description/) as HTMLInputElement).value).toBe("Kitchen tap drips, apartment 12");
+  });
+
+  it("AC-DOCAI-12: два файли поспіль — у полі текст останнього вибраного, навіть якщо перший читався довше", async () => {
+    render(<DocumentParsingForm runId={RUN} requestAction={vi.fn()} confirmAction={vi.fn()} />);
+    let finishA: (text: string) => void = () => {};
+    const fileA = { name: "a.txt", type: "text/plain", text: () => new Promise<string>((resolve) => (finishA = resolve)) };
+    const fileB = { name: "b.txt", type: "text/plain", text: async () => "Document B" };
+    await act(async () => {
+      fireEvent.change(screen.getByTestId("document-file"), { target: { files: [fileA] } });
+      fireEvent.change(screen.getByTestId("document-file"), { target: { files: [fileB] } });
+    });
+    await act(async () => {
+      finishA("Document A");
+    });
+
+    expect((screen.getByLabelText("Document text") as HTMLTextAreaElement).value).toBe("Document B");
+  });
 });
