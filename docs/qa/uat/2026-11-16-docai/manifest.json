@@ -1,0 +1,120 @@
+{
+  "kind": "uat",
+  "generatedAt": "2026-11-16T15:59:55.254Z",
+  "baseURL": "https://property-workflows-eta.vercel.app",
+  "deployedSha": "304a5c970669534f7b7694c8c5c18cc654007409",
+  "testsCommit": "1ff38c84b195b3bef9ee52b179e1b77a0bab282b",
+  "reviewer": {
+    "model": "claude-haiku-5-5",
+    "disputes": "claude-sonnet-5-5"
+  },
+  "note": "Відео й траси не в git (test-results/ локально, артефакт CI). check-recordings конвеєра WS9 вимагає відео на диску — для нього цей manifest треба доповнити.",
+  "results": [
+    {
+      "id": "AC-DOCAI-07",
+      "proof": "AC-DOCAI-07",
+      "title": "AC-DOCAI-07: менеджер запуску вставляє меню (golden case 9) — повідомлення «This document is not a maintenance request or an estimate.», жодних значень",
+      "screenshot": "docs/qa/uat/2026-11-16-docai/frames/AC-DOCAI-07-then-1.png",
+      "video": "test-results/artifacts/document-parsing-AC-DOCAI--79c97-n-estimate-»-жодних-значень-chromium/video.webm",
+      "trace": "test-results/artifacts/document-parsing-AC-DOCAI--79c97-n-estimate-»-жодних-значень-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі блок «Parse a document» містить введений текст меню, кнопку «Parse document» і одне повідомлення «This document is not a maintenance request or an estimate.», після якого блок закінчується. Кнопки «Save values» і жодних полів значень на кадрі немає, а під карткою видно лише порожній фон. Текст повідомлення збігається з критерієм посимвольно."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "This document is not a maintenance request or an estimate.",
+          "onPage": true
+        },
+        {
+          "quote": "This document is not a maintenance request or an estimate.",
+          "onPage": true
+        },
+        {
+          "quote": "Parse a document",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 20348,
+      "reviewCostUsd": 0.00202,
+      "reviewWallMs": 12327
+    },
+    {
+      "id": "AC-DOCAI-08",
+      "proof": "AC-DOCAI-08",
+      "title": "AC-DOCAI-08: менеджер запуску змінює urgency пропозиції golden case 1 на «urgent» і підтверджує — збережені значення з «urgent», до підтвердження нічого не збережено",
+      "screenshot": "docs/qa/uat/2026-11-16-docai/frames/AC-DOCAI-08-then-1.png",
+      "video": "test-results/artifacts/document-parsing-AC-DOCAI--d2375-рдження-нічого-не-збережено-chromium/video.webm",
+      "trace": "test-results/artifacts/document-parsing-AC-DOCAI--d2375-рдження-нічого-не-збережено-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі є розділ «Document values» із записом «Maintenance request», Phone 555-0101 та Urgency urgent. Рядок «Confirmed by» містить email менеджера A і час 16.11.2026 17:59. Частини «Не з кадрів» не оцінювались."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Document values",
+          "onPage": true
+        },
+        {
+          "quote": "Maintenance request",
+          "onPage": true
+        },
+        {
+          "quote": "Phone",
+          "onPage": true
+        },
+        {
+          "quote": "555-0101",
+          "onPage": true
+        },
+        {
+          "quote": "Urgency",
+          "onPage": true
+        },
+        {
+          "quote": "urgent",
+          "onPage": true
+        },
+        {
+          "quote": "Confirmed by uat-261116155827-d08-mgr-a@example.test · 16.11.2026 17:59",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 26217,
+      "reviewCostUsd": 0.03321,
+      "reviewWallMs": 19325
+    }
+  ],
+  "negativeControls": [],
+  "cleanup": {
+    "at": "2026-11-16T15:59:33.814Z",
+    "deleted": [
+      "uat-261116155827-d07-mgr-a@example.test",
+      "uat-261116155827-d08-mgr-a@example.test"
+    ],
+    "remaining": [],
+    "leftoverRequests": 0
+  }
+}
