@@ -69,47 +69,24 @@ describe.skipIf(!key)("golden cases, живий прогін (безкоштов
         const result = await proposeDocumentValues(c.input, makeProductModel(key), { maxRetries: 0, timeoutMs: 90_000 });
         if (!result.ok) {
           // Рядок у звіт — ДО перевірки: інакше кейс зникає зі звіту, і частку успіху рахують з меншого знаменника.
-          if (result.reason === "rate_limited") {
-            stoppedAt = `${c.id}, прогін ${run}`;
-            rows.push({ run, id: c.id, modelId: "—", fields: false, pass: false, notRun: true, why: `NOT RUN: 429 — ${result.message}` });
-            return ctx.skip();
-          }
-          // Таймаут, помилка постачальника, відповідь не за схемою — це FAIL з причиною, він входить у частку успіху.
-          rows.push({ run, id: c.id, modelId: "—", fields: false, pass: false, why: `${result.reason}: ${result.message}` });
+          if (reportModelFailure(run, c, result)) return ctx.skip();
         }
         expect(result.ok, result.ok ? "" : `${result.reason}: ${result.message}`).toBe(true);
         if (!result.ok) return;
         const view = toProposalView(result.proposal, c.input);
         const fields = scoreFields(c.expected, view);
-        let verdict: { pass: boolean; reason: string } | undefined;
-        if (c.rubric) {
-          try {
-            verdict = await judgeFreeText(makeJudgeModel(key), c.rubric, freeText(view));
-          } catch (error) {
-            // Суддя теж може отримати 429 чи не відповісти — кейс лишається у звіті з причиною.
-            const failure = classifyError(error);
-            if (failure.reason === "rate_limited") {
-              stoppedAt = `${c.id}, прогін ${run}, суддя`;
-              rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, pass: false, notRun: true, why: `NOT RUN: суддя — 429` });
-              return ctx.skip();
-            }
-            verdict = { pass: false, reason: `суддя: ${failure.reason}` };
-          }
+        const judged = await judgeCase(c, view);
+        if (judged === "rate_limited") {
+          stoppedAt = `${c.id}, прогін ${run}, суддя`;
+          rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, pass: false, notRun: true, why: `NOT RUN: суддя — 429` });
+          return ctx.skip();
         }
-        const pass = fields.pass && (verdict?.pass ?? true);
-        const fieldWhy = fields.pass ? "" : `поля: ${fields.mismatches.map((m) => `${m.field}=${JSON.stringify(m.actual)} (очікувано ${JSON.stringify(m.expected)})`).join(", ")}`;
-        rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, judge: verdict?.pass, pass, why: [fieldWhy, verdict?.reason].filter(Boolean).join("; ") });
+        const pass = fields.pass && (judged?.pass ?? true);
+        rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, judge: judged?.pass, pass, why: [fieldsWhy(fields.mismatches), judged?.reason].filter(Boolean).join("; ") });
         // Записуємо ЛИШЕ успішні відповіді: офлайн-реплей у CI має лишатися зеленим.
-        if (RECORD && pass) {
-          fresh[c.id] = {
-            modelId: result.modelId,
-            recordedAt: new Date().toISOString(),
-            promptVersion: DRAFT_PROMPT_VERSION,
-            text: JSON.stringify(ProposalSchema.parse(result.proposal)),
-          };
-        }
+        if (RECORD && pass) fresh[c.id] = recording(result);
         expect(fields.mismatches).toEqual([]);
-        if (verdict) expect(verdict.pass, verdict.reason).toBe(true);
+        if (judged) expect(judged.pass, judged.reason).toBe(true);
       });
     }
   }
@@ -124,6 +101,48 @@ describe.skipIf(!key)("golden cases, живий прогін (безкоштов
     }
   });
 });
+
+type Failure = Extract<Awaited<ReturnType<typeof proposeDocumentValues>>, { ok: false }>;
+type Success = Extract<Awaited<ReturnType<typeof proposeDocumentValues>>, { ok: true }>;
+
+/** Рядок звіту для збою моделі; true — це 429: прогін зупиняється, кейс — NOT RUN, а не FAIL. */
+function reportModelFailure(run: number, c: GoldenCase, result: Failure): boolean {
+  if (result.reason === "rate_limited") {
+    stoppedAt = `${c.id}, прогін ${run}`;
+    rows.push({ run, id: c.id, modelId: "—", fields: false, pass: false, notRun: true, why: `NOT RUN: 429 — ${result.message}` });
+    return true;
+  }
+  // Таймаут, помилка постачальника, відповідь не за схемою — це FAIL з причиною, він входить у частку успіху.
+  rows.push({ run, id: c.id, modelId: "—", fields: false, pass: false, why: `${result.reason}: ${result.message}` });
+  return false;
+}
+
+/** Вердикт судді для вільного тексту; undefined — кейс без rubric; "rate_limited" — суддя отримав 429. */
+async function judgeCase(c: GoldenCase, view: ReturnType<typeof toProposalView>) {
+  if (!c.rubric) return undefined;
+  try {
+    return await judgeFreeText(makeJudgeModel(key), c.rubric, freeText(view));
+  } catch (error) {
+    // Суддя теж може отримати 429 чи не відповісти — кейс лишається у звіті з причиною.
+    const failure = classifyError(error);
+    if (failure.reason === "rate_limited") return "rate_limited" as const;
+    return { pass: false, reason: `суддя: ${failure.reason}` };
+  }
+}
+
+function fieldsWhy(mismatches: ReturnType<typeof scoreFields>["mismatches"]): string {
+  if (mismatches.length === 0) return "";
+  return `поля: ${mismatches.map((m) => `${m.field}=${JSON.stringify(m.actual)} (очікувано ${JSON.stringify(m.expected)})`).join(", ")}`;
+}
+
+function recording(result: Success): Recording {
+  return {
+    modelId: result.modelId,
+    recordedAt: new Date().toISOString(),
+    promptVersion: DRAFT_PROMPT_VERSION,
+    text: JSON.stringify(ProposalSchema.parse(result.proposal)),
+  };
+}
 
 // Звіт для домашки: частка успіху загалом і за моделлю + кожен кейс. Файл комітять (він без секретів).
 function writeReport() {

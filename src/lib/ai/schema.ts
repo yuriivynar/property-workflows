@@ -20,10 +20,6 @@ export const CATEGORIES = [
 export const URGENCIES = ["urgent", "not urgent"] as const;
 export const KINDS = ["request", "estimate"] as const;
 
-export type Category = (typeof CATEGORIES)[number];
-export type Urgency = (typeof URGENCIES)[number];
-export type DocumentKind = (typeof KINDS)[number];
-
 export const ItemSchema = z.object({
   name: z.string().trim().min(1).max(200),
   quantity: z.number().positive().max(1_000_000),
