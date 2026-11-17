@@ -227,35 +227,8 @@ export const mutants = [
   {
     id: "T01b", kind: "sql", ac: "AC-EDITOR-08", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
     what: "add_template_section: роль не перевіряється — менеджер додає розділ прямим викликом",
-    find:
-      "  if (select private.current_app_role()) is distinct from 'admin' then
-" +
-      "    raise exception 'NOT_ALLOWED' using errcode = '42501';                    -- AC-EDITOR-08
-" +
-      "  end if;
-
-" +
-      "  perform 1 from public.templates as t where t.id = p_template_id for update;
-" +
-      "  if not found then
-" +
-      "    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
-" +
-      "  end if;
-
-" +
-      "  insert into public.template_sections",
-    replace:
-      "  perform 1 from public.templates as t where t.id = p_template_id for update;
-" +
-      "  if not found then
-" +
-      "    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
-" +
-      "  end if;
-
-" +
-      "  insert into public.template_sections",
+    find: "  if (select private.current_app_role()) is distinct from 'admin' then\n    raise exception 'NOT_ALLOWED' using errcode = '42501';                    -- AC-EDITOR-08\n  end if;\n\n  perform 1 from public.templates as t where t.id = p_template_id for update;\n  if not found then\n    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';\n  end if;\n\n  insert into public.template_sections",
+    replace: "  perform 1 from public.templates as t where t.id = p_template_id for update;\n  if not found then\n    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';\n  end if;\n\n  insert into public.template_sections",
   },
   {
     id: "T01c", kind: "sql", ac: "AC-EDITOR-08", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
@@ -266,10 +239,8 @@ export const mutants = [
   {
     id: "T01d", kind: "sql", ac: "AC-EDITOR-01", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
     what: "add_template_task: позиція рахується за всім шаблоном, а не за розділом — позиції в розділі не з 1",
-    find: "  where tt.section_id = p_section_id
-  returning id into v_id;",
-    replace: "  where tt.template_id = p_template_id
-  returning id into v_id;",
+    find: "  where tt.section_id = p_section_id\n  returning id into v_id;",
+    replace: "  where tt.template_id = p_template_id\n  returning id into v_id;",
   },
   {
     id: "T21", kind: "sql", ac: "AC-EDITOR-21", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
