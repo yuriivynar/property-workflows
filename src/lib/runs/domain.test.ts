@@ -97,6 +97,11 @@ describe("Позначка задачі", () => {
     );
   });
 
+  it("AC-TASK-03: користувач, якого понизили до вендора, лишаючись менеджером запуску, кнопки не бачить — база його не пустить", () => {
+    expect(canMarkTask({ ...base, userId: "manager-a", role: "vendor" })).toBe(false);
+    expect(canMarkTask({ ...base, userId: "manager-a", role: null })).toBe(false);
+  });
+
   it("AC-TASK-01: на задачі «done» кнопки немає — позначка остаточна", () => {
     expect(canMarkTask({ ...base, status: "done", userId: "manager-b", role: "manager" })).toBe(false);
   });

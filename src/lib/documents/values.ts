@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_DOCUMENT_CHARS } from "@/lib/ai/prompts/draft";
 import { CATEGORIES, ItemSchema, URGENCIES, type Item, type Proposal } from "@/lib/ai/schema";
 
 // AI-розбір документа (openspec/specs/document-parsing): правила, які перевіряє КОД, а не лише промпт.
@@ -17,6 +18,8 @@ export const DOCUMENT_MESSAGES = {
   twoProblems: "the email has two problems",
   /** AC-DOCAI-10 — golden case 10. */
   instructionsIgnored: "the text contains instructions to the AI that were ignored",
+  /** Текст довший, ніж бачить модель (MAX_DOCUMENT_CHARS): людина має знати, що решту не прочитано. */
+  truncated: `Only the first ${MAX_DOCUMENT_CHARS} characters were read`,
 } as const;
 
 /** Найдовший текст, який приймає форма (символів). Моделі йде не більше MAX_DOCUMENT_CHARS з промпту. */

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LanguageModel } from "ai";
 import { proposeDocumentValues } from "@/lib/ai/draft";
+import { isTruncatedForModel } from "@/lib/ai/prompts/draft";
 import type { RoleCheck } from "@/lib/auth/require-role";
 import { isUuid } from "@/lib/runs/domain";
 import type { Database } from "@/lib/supabase/database.types";
@@ -75,7 +76,7 @@ export async function requestValues(
 
   const view = toProposalView(result.proposal, input.text);
   if (view.state === "refused") return { status: "refused", text: input.text, message: view.message };
-  return { status: "proposed", text: input.text, view };
+  return { status: "proposed", text: input.text, view, truncated: isTruncatedForModel(input.text) };
 }
 
 /**

@@ -44,7 +44,14 @@ export const DRAFT_INSTRUCTIONS = [
 
 // Недовірений текст завжди загортаємо як дані: теги-межі з самого тексту вирізаємо (інакше документ «закрив» би межу
 // й дописав би інструкції поза нею), довжину обмежуємо (AC-DOCAI-10).
+const withoutDocumentTags = (text: string) => text.replace(/<\s*\/?\s*document\b[^>]*>/gi, " ");
+
 export function wrapDocument(text: string): string {
-  const clean = text.replace(/<\s*\/?\s*document\b[^>]*>/gi, " ").slice(0, MAX_DOCUMENT_CHARS);
+  const clean = withoutDocumentTags(text).slice(0, MAX_DOCUMENT_CHARS);
   return `<document>\n${clean}\n</document>`;
+}
+
+/** Чи модель побачить не весь текст: форма приймає більше (MAX_INPUT_CHARS), ніж wrapDocument передає моделі. */
+export function isTruncatedForModel(text: string): boolean {
+  return withoutDocumentTags(text).length > MAX_DOCUMENT_CHARS;
 }

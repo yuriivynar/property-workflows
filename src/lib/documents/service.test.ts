@@ -113,6 +113,14 @@ describe("requestValues — «Propose values»", () => {
     expect(insert).not.toHaveBeenCalled();
   });
 
+  it("AC-DOCAI-01: понад 8000 символів — модель бачить лише початок, відповідь це позначає; рівно 8000 — ні", async () => {
+    const { supabase } = client({ run_manager_id: ME });
+    const long = await requestValues({ supabase, user: manager, model: answering(REQUEST) }, parseForm("x".repeat(8_001)));
+    const exact = await requestValues({ supabase, user: manager, model: answering(REQUEST) }, parseForm("x".repeat(8_000)));
+    expect(long).toMatchObject({ status: "proposed", truncated: true });
+    expect(exact).toMatchObject({ status: "proposed", truncated: false });
+  });
+
   it("AC-DOCAI-16: вендор, користувач без профілю, менеджер чужого запуску — відмова, модель не викликано", async () => {
     for (const [user, run] of [
       [vendor, { run_manager_id: ME }],

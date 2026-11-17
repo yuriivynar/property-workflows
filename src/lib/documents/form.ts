@@ -58,7 +58,8 @@ export type ParseState =
   | { status: "unavailable"; text: string; message: string }
   /** AC-DOCAI-09: не звернення й не кошторис — жодних значень. */
   | { status: "refused"; text: string; message: string }
-  | { status: "proposed"; text: string; view: ProposedView };
+  /** `truncated`: модель прочитала лише початок довгого тексту (сервер ставить завжди; немає — не показуємо). */
+  | { status: "proposed"; text: string; view: ProposedView; truncated?: boolean };
 
 export type SaveState =
   | { status: "idle" }

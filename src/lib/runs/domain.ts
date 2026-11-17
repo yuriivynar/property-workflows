@@ -104,7 +104,9 @@ export function groupBySection<T extends { section_name: string; section_positio
 
 /**
  * Чи показувати кнопку позначки: виконавець задачі, менеджер запуску або адміністратор (AC-TASK-01, AC-TASK-02,
- * AC-TASK-07). Лише для інтерфейсу — остаточно вирішує функція бази mark_task_done (AC-TASK-03).
+ * AC-TASK-07). Лише для інтерфейсу — остаточно вирішує функція бази mark_task_done (AC-TASK-03). Правило те саме, що
+ * в private.mark_task_done: «менеджер запуску» — лише з роллю manager (колишнього менеджера, якого понизили до вендора,
+ * база не пустить, тож кнопку не показуємо). Збіг доводить tests/db/rule-parity.test.ts на всій матриці.
  */
 export function canMarkTask(input: {
   userId: string;
@@ -114,7 +116,11 @@ export function canMarkTask(input: {
   status: string;
 }): boolean {
   if (input.status === "done") return false;
-  return input.role === "admin" || input.userId === input.runManagerId || input.userId === input.assigneeId;
+  return (
+    input.role === "admin" ||
+    (input.role === "manager" && input.userId === input.runManagerId) ||
+    input.userId === input.assigneeId
+  );
 }
 
 /** Підпис колеги у виборі виконавця й біля задачі — лише email (рішення PM у solomchaak/property-workflows-spec#5; AC-RUN-10, AC-TASK-11). */
