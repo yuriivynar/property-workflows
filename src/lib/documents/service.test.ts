@@ -58,15 +58,22 @@ const rateLimited = () =>
   });
 
 /** Клієнт Supabase: запуск (під RLS — null, якщо його не видно) і insert, який записує рядок. */
-function client(run: { run_manager_id: string } | null, insertError: { message: string } | null = null) {
+function client(
+  run: { run_manager_id: string } | null,
+  insertError: { message: string } | null = null,
+  slot: { data: string | null; error: { message: string } | null } = { data: "allowed", error: null },
+) {
   const insert = vi.fn(async (row: unknown) => ({ error: insertError, row }));
+  // rpc("take_ai_request") — ліміт запитів до моделі (private.take_ai_request у базі).
+  const rpc = vi.fn<(name: string) => Promise<typeof slot>>(async () => slot);
   const supabase = {
     from: () => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: run, error: null }) }) }),
       insert,
     }),
+    rpc,
   } as unknown as DocumentDeps["supabase"];
-  return { supabase, insert };
+  return { supabase, insert, rpc };
 }
 
 const manager: RoleCheck = { ok: true, userId: ME, role: "manager" };
@@ -159,10 +166,53 @@ describe("requestValues — «Propose values»", () => {
       parseForm("Hello, kitchen tap"),
     );
     expect(result).toMatchObject({ status: "unavailable", message: DOCUMENT_MESSAGES.unavailable });
-    expect(model.doGenerateCalls.length).toBeLessThanOrEqual(2); // maxRetries 1
+    // Рівно один виклик постачальника на слот ліміту: повтор витратив би квоту вдруге.
+    expect(model.doGenerateCalls).toHaveLength(1);
     // У лог — лише причина, без тексту документа.
     expect(warn).toHaveBeenCalledWith("document parsing unavailable: rate_limited");
     warn.mockRestore();
+  });
+
+  it("AC-DOCAI-13: вичерпаний ліміт користувача чи застосунку — «недоступний», модель не викликано, у лог — причина", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    for (const reason of ["user_limit", "app_limit"]) {
+      const model = answering(REQUEST);
+      const { supabase, rpc } = client({ run_manager_id: ME }, null, { data: reason, error: null });
+      const result = await requestValues({ supabase, user: manager, model }, parseForm("Hello, kitchen tap"));
+      expect(result).toEqual({ status: "unavailable", text: "Hello, kitchen tap", message: DOCUMENT_MESSAGES.unavailable });
+      expect(rpc).toHaveBeenCalledWith("take_ai_request");
+      expect(model.doGenerateCalls).toHaveLength(0);
+      expect(warn).toHaveBeenCalledWith(`document parsing unavailable: ${reason}`);
+    }
+    warn.mockRestore();
+  });
+
+  it("AC-DOCAI-13: збій самої перевірки ліміту — теж «недоступний», а не безкоштовний виклик моделі", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const model = answering(REQUEST);
+    const { supabase } = client({ run_manager_id: ME }, null, { data: null, error: { message: "boom" } });
+    const result = await requestValues({ supabase, user: manager, model }, parseForm("Hello"));
+    expect(result).toMatchObject({ status: "unavailable", message: DOCUMENT_MESSAGES.unavailable });
+    expect(model.doGenerateCalls).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith("document parsing unavailable: check_failed");
+    warn.mockRestore();
+  });
+
+  it("AC-DOCAI-16: ліміт беремо лише після перевірки ролі — відмова й порожній текст не витрачають запитів", async () => {
+    const denied = client({ run_manager_id: SOMEONE_ELSE });
+    await requestValues({ supabase: denied.supabase, user: manager, model: answering(REQUEST) }, parseForm("Hello"));
+    const empty = client({ run_manager_id: ME });
+    await requestValues({ supabase: empty.supabase, user: manager, model: answering(REQUEST) }, parseForm("   "));
+    expect(denied.rpc).not.toHaveBeenCalled();
+    expect(empty.rpc).not.toHaveBeenCalled();
+  });
+
+  it("AC-DOCAI-01: дозволений запит бере рівно один слот ліміту перед викликом моделі", async () => {
+    const { supabase, rpc } = client({ run_manager_id: ME });
+    const model = answering(REQUEST);
+    await requestValues({ supabase, user: manager, model }, parseForm("Hello, kitchen tap"));
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(model.doGenerateCalls).toHaveLength(1);
   });
 
   it("AC-DOCAI-09: не звернення й не кошторис — лише текст відмови, без значень", async () => {
