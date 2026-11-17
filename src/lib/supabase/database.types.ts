@@ -307,6 +307,22 @@ export type Database = {
         };
         Returns: number;
       };
+      add_template_section: {
+        Args: {
+          p_template_id: string;
+          p_name: string;
+        };
+        Returns: string;
+      };
+      add_template_task: {
+        Args: {
+          p_template_id: string;
+          p_section_id: string;
+          p_name: string;
+          p_is_required?: boolean;
+        };
+        Returns: string;
+      };
       move_template_item: {
         Args: {
           p_kind: string;

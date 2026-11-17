@@ -21,6 +21,8 @@ const WS7_RULES = "supabase/migrations/20261115134842_ws7_review_template_rules.
 const RULES_DB = "tests/db/template-rules-review.test.ts";
 const DOC_VALUES = "supabase/migrations/20261116092131_run_document_values.sql";
 const DOC_VALUES_DB = "tests/db/document-values.test.ts";
+const ATOMIC_ADDS = "supabase/migrations/20261117094426_template_editor_atomic_adds.sql";
+const ATOMIC_ADDS_DB = "tests/db/template-atomic-adds.test.ts";
 
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
@@ -213,6 +215,67 @@ export const mutants = [
     what: "колонковий grant insert включає confirmed_by: користувач підписує запис іменем іншого",
     find: "grant insert (run_id, kind, fields) on table public.run_document_values to authenticated;",
     replace: "grant insert (run_id, kind, fields, confirmed_by) on table public.run_document_values to authenticated;",
+  },
+
+  // ── Рев'ю безпеки 2026-11-17: атомарне додавання розділів і задач, upsert робочої назви ─────────────────────────
+  {
+    id: "T01a", kind: "sql", ac: "AC-EDITOR-01", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
+    what: "add_template_section: позиція = кількість розділів + 1 замість max + 1 — після видалення з середини дубль позиції",
+    find: "select p_template_id, p_name, coalesce(max(s.position), 0) + 1",
+    replace: "select p_template_id, p_name, count(s.position) + 1",
+  },
+  {
+    id: "T01b", kind: "sql", ac: "AC-EDITOR-08", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
+    what: "add_template_section: роль не перевіряється — менеджер додає розділ прямим викликом",
+    find:
+      "  if (select private.current_app_role()) is distinct from 'admin' then
+" +
+      "    raise exception 'NOT_ALLOWED' using errcode = '42501';                    -- AC-EDITOR-08
+" +
+      "  end if;
+
+" +
+      "  perform 1 from public.templates as t where t.id = p_template_id for update;
+" +
+      "  if not found then
+" +
+      "    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
+" +
+      "  end if;
+
+" +
+      "  insert into public.template_sections",
+    replace:
+      "  perform 1 from public.templates as t where t.id = p_template_id for update;
+" +
+      "  if not found then
+" +
+      "    raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
+" +
+      "  end if;
+
+" +
+      "  insert into public.template_sections",
+  },
+  {
+    id: "T01c", kind: "sql", ac: "AC-EDITOR-08", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
+    what: "add_template_task: розділ іншого шаблону не відхиляється як TEMPLATE_ITEM_NOT_FOUND",
+    find: "  perform 1 from public.template_sections as s where s.id = p_section_id and s.template_id = p_template_id;",
+    replace: "  perform 1;",
+  },
+  {
+    id: "T01d", kind: "sql", ac: "AC-EDITOR-01", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
+    what: "add_template_task: позиція рахується за всім шаблоном, а не за розділом — позиції в розділі не з 1",
+    find: "  where tt.section_id = p_section_id
+  returning id into v_id;",
+    replace: "  where tt.template_id = p_template_id
+  returning id into v_id;",
+  },
+  {
+    id: "T21", kind: "sql", ac: "AC-EDITOR-21", file: ATOMIC_ADDS, tests: [ATOMIC_ADDS_DB],
+    what: "немає колонкового grant update (template_id): upsert робочої назви (як його генерує PostgREST) падає з permission denied",
+    find: "grant update (template_id) on table public.template_draft_names to authenticated;",
+    replace: "-- (grant update (template_id) прибрано мутантом)",
   },
 ];
 

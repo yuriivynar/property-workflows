@@ -14,6 +14,9 @@ const state = vi.hoisted(() => ({
   // Аргументи запису й фільтри — щоб перевірити, що саме й куди пише дія.
   payloads: [] as unknown[],
   filters: [] as [string, unknown][],
+  // Аргументи rpc(...) і параметри upsert(..., options): що саме дія просить у бази.
+  rpcArgs: [] as unknown[],
+  upsertOptions: [] as unknown[],
 }));
 
 vi.mock("next/navigation", () => ({
@@ -51,14 +54,20 @@ vi.mock("@/lib/supabase/server", () => ({
           state.payloads.push(values);
           return write("update");
         },
+        upsert: (values: unknown, options: unknown) => {
+          state.payloads.push(values);
+          state.upsertOptions.push(options);
+          return write("upsert");
+        },
         delete: () => write("delete"),
         then: (resolve: (v: unknown) => void) =>
           resolve({ data: lastOp === "update" || lastOp === "delete" ? state.updatedRows : null, error: null }),
       };
       return chain;
     },
-    rpc: async (fn: string) => {
+    rpc: async (fn: string, args: unknown) => {
       state.writes.push(`rpc:${fn}`);
+      state.rpcArgs.push(args);
       return { data: 2, error: null };
     },
   }),
@@ -84,6 +93,8 @@ beforeEach(() => {
   state.updatedRows = [];
   state.payloads = [];
   state.filters = [];
+  state.rpcArgs = [];
+  state.upsertOptions = [];
 });
 
 describe("Дії редактора шаблону", () => {
@@ -144,13 +155,10 @@ describe("Дії редактора шаблону", () => {
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2026)" })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
-    // Робочої назви ще немає: update не змінив жодного рядка, тож дія вставляє її. templates не чіпаємо.
-    expect(state.writes).toEqual(["update:template_draft_names", "insert:template_draft_names"]);
-    expect(state.payloads).toEqual([
-      { name: "Tenant move-in (2026)" },
-      { template_id: TEMPLATE, name: "Tenant move-in (2026)" },
-    ]);
-    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
+    // Один upsert за template_id (без «update, а потім insert» — гонка при подвійному кліку). templates не чіпаємо.
+    expect(state.writes).toEqual(["upsert:template_draft_names"]);
+    expect(state.payloads).toEqual([{ template_id: TEMPLATE, name: "Tenant move-in (2026)" }]);
+    expect(state.upsertOptions).toEqual([{ onConflict: "template_id" }]);
 
     state.writes = [];
     expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "  " })))).toBe(
@@ -206,18 +214,38 @@ describe("Дії редактора шаблону", () => {
     expect(await add("  ")).toEqual({ ok: false, code: "NAME_REQUIRED" });
     expect(state.writes).toEqual([]);
     expect(await add("Sign handover act")).toEqual({ ok: true });
-    expect(state.writes).toEqual(["insert:template_tasks"]);
+    // Позицію рахує база в тій самій транзакції (rpc), а не дія двома запитами.
+    expect(state.writes).toEqual(["rpc:add_template_task"]);
+    expect(state.rpcArgs).toEqual([
+      { p_template_id: TEMPLATE, p_section_id: SECTION, p_name: "Sign handover act", p_is_required: false },
+    ]);
   });
 
-  it("AC-EDITOR-21: повторне перейменування оновлює наявну робочу назву — лише update, без insert", async () => {
+  it("AC-EDITOR-01: розділ додається функцією бази; менеджер — без запису, порожня назва — без запису", async () => {
+    expect(await redirectOf(actions.addSection(form({ template_id: TEMPLATE, name: "Keys" })))).toMatch(/error=NOT_ALLOWED/);
+    expect(state.writes).toEqual([]);
     state.role = "admin";
-    state.updatedRows = [{ template_id: TEMPLATE }];
-    expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name: "Tenant move-in (2027)" })))).toBe(
+    expect(await redirectOf(actions.addSection(form({ template_id: TEMPLATE, name: "  " })))).toMatch(/error=NAME_REQUIRED/);
+    expect(state.writes).toEqual([]);
+    expect(await redirectOf(actions.addSection(form({ template_id: TEMPLATE, name: "Keys" })))).toBe(
       `REDIRECT:/templates/${TEMPLATE}/edit`,
     );
-    expect(state.writes).toEqual(["update:template_draft_names"]);
-    expect(state.payloads).toEqual([{ name: "Tenant move-in (2027)" }]);
-    expect(state.filters).toContainEqual(["template_id", TEMPLATE]);
+    expect(state.writes).toEqual(["rpc:add_template_section"]);
+    expect(state.rpcArgs).toEqual([{ p_template_id: TEMPLATE, p_name: "Keys" }]);
+  });
+
+  it("AC-EDITOR-21: повторне перейменування — той самий один upsert, а не окремі update чи insert", async () => {
+    state.role = "admin";
+    for (const name of ["Tenant move-in (2027)", "Tenant move-in (2028)"]) {
+      expect(await redirectOf(actions.renameTemplate(form({ template_id: TEMPLATE, name })))).toBe(
+        `REDIRECT:/templates/${TEMPLATE}/edit`,
+      );
+    }
+    expect(state.writes).toEqual(["upsert:template_draft_names", "upsert:template_draft_names"]);
+    expect(state.payloads).toEqual([
+      { template_id: TEMPLATE, name: "Tenant move-in (2027)" },
+      { template_id: TEMPLATE, name: "Tenant move-in (2028)" },
+    ]);
   });
 
   // Рев'ю WS7 №2: дія пише лише в елемент цього шаблону й помічає, що нічого не змінилося (стара вкладка, чужий id).

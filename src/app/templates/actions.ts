@@ -73,14 +73,13 @@ export async function renameTemplate(form: FormData) {
   const supabase = await adminClient(editPath(templateId));
   const name = cleanName(form.get("name"));
   if (!name) redirect(`${editPath(templateId)}?error=TEMPLATE_NAME_REQUIRED`);
-  const { data: updated, error } = await supabase
+  // Один upsert замість «update, а якщо рядків немає — insert»: подвійний клік чи дві вкладки не дають двох вставок
+  // з однаковим template_id (помилка унікальності). Права на це — колонковий grant update (template_id), міграція
+  // 20261117094426_template_editor_atomic_adds.sql.
+  const { error } = await supabase
     .from("template_draft_names")
-    .update({ name })
-    .eq("template_id", templateId)
-    .select("template_id");
-  if (error || (updated && updated.length > 0)) done(templateId, error);
-  const { error: insertError } = await supabase.from("template_draft_names").insert({ template_id: templateId, name });
-  done(templateId, insertError);
+    .upsert({ template_id: templateId, name }, { onConflict: "template_id" });
+  done(templateId, error);
 }
 
 export async function addSection(form: FormData) {
@@ -89,16 +88,8 @@ export async function addSection(form: FormData) {
   const supabase = await adminClient(editPath(templateId));
   const name = cleanName(form.get("name"));
   if (!name) redirect(`${editPath(templateId)}?error=NAME_REQUIRED`);
-  const { data: last } = await supabase
-    .from("template_sections")
-    .select("position")
-    .eq("template_id", templateId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const { error } = await supabase
-    .from("template_sections")
-    .insert({ template_id: templateId, name, position: (last?.position ?? 0) + 1 });
+  // Позицію (max + 1) рахує база в тій самій транзакції, що й вставка, під блокуванням рядка шаблону.
+  const { error } = await supabase.rpc("add_template_section", { p_template_id: templateId, p_name: name });
   done(templateId, error);
 }
 
@@ -147,19 +138,11 @@ export async function addTaskInline(form: FormData): Promise<InlineResult> {
   if (!templateId || !sectionId) return { ok: false, code: "TEMPLATE_NOT_FOUND" };
   const name = cleanName(form.get("name"));
   if (!name) return { ok: false, code: "NAME_REQUIRED" };
-  const { data: last } = await supabase
-    .from("template_tasks")
-    .select("position")
-    .eq("section_id", sectionId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const { error } = await supabase.from("template_tasks").insert({
-    template_id: templateId,
-    section_id: sectionId,
-    name,
-    is_required: form.get("is_required") === "on",
-    position: (last?.position ?? 0) + 1,
+  const { error } = await supabase.rpc("add_template_task", {
+    p_template_id: templateId,
+    p_section_id: sectionId,
+    p_name: name,
+    p_is_required: form.get("is_required") === "on",
   });
   if (error) return { ok: false, code: templateErrorCode(error) };
   revalidatePath(editPath(templateId));
