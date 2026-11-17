@@ -53,6 +53,33 @@ describe("DocumentParsingForm", () => {
     expect((screen.getByLabelText("Document text") as HTMLTextAreaElement).value).toBe("Kitchen tap");
   });
 
+  it("AC-DOCAI-01: текст довший за те, що читає модель, — над формою значень «Only the first 8000 characters were read»", async () => {
+    await parseWith({
+      status: "proposed",
+      text: "x".repeat(9_000),
+      view: { ...emptyView(), description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+      truncated: true,
+    });
+
+    const notice = screen.getByTestId("document-truncated");
+    expect(notice.textContent).toBe("Only the first 8000 characters were read");
+    // Попередження стоїть над формою значень, а не під нею.
+    const form = screen.getByTestId("document-values-form");
+    expect(notice.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("AC-DOCAI-01: короткий текст — попередження про обрізання немає", async () => {
+    await parseWith({
+      status: "proposed",
+      text: "Kitchen tap in apartment 12 drips.",
+      view: { ...emptyView(), description: "Kitchen tap drips", category: "plumbing", urgency: "not urgent" },
+      truncated: false,
+    });
+
+    expect(screen.queryByTestId("document-truncated")).toBeNull();
+    expect(screen.getByTestId("document-values-form")).toBeTruthy();
+  });
+
   it("AC-DOCAI-06: поле, якого немає в документі, позначено «not found»", async () => {
     await parseWith({
       status: "proposed",

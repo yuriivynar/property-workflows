@@ -116,6 +116,13 @@ function DocumentParsingBlock({ runId, requestAction, confirmAction, onDiscard }
           попередньої (і стару не можна зберегти, поки йде розбір). */}
       {parsing ? <ParsingPlaceholder /> : null}
 
+      {/* Модель читає лише початок довгого тексту — попередження над формою значень, щоб людина перевірила решту сама. */}
+      {parse.status === "proposed" && parse.truncated && !parsing ? (
+        <Alert data-testid="document-truncated">
+          <AlertDescription>{DOCUMENT_MESSAGES.truncated}</AlertDescription>
+        </Alert>
+      ) : null}
+
       {values && !parsing ? (
         <ValuesForm
           key={`values-${round}`}
