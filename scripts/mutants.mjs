@@ -21,6 +21,8 @@ const WS7_RULES = "supabase/migrations/20261115134842_ws7_review_template_rules.
 const RULES_DB = "tests/db/template-rules-review.test.ts";
 const DOC_VALUES = "supabase/migrations/20261116092131_run_document_values.sql";
 const DOC_VALUES_DB = "tests/db/document-values.test.ts";
+const AI_LIMITS = "supabase/migrations/20261117092135_ai_requests_limits_and_profile_email_sync.sql";
+const AI_LIMITS_DB = "tests/db/ai-requests.test.ts";
 
 export const mutants = [
   // ── Мутанти правил у SQL за нашими 3 AC (WS8) ──────────────────────────────────────────────────────────────────
@@ -213,6 +215,56 @@ export const mutants = [
     what: "колонковий grant insert включає confirmed_by: користувач підписує запис іменем іншого",
     find: "grant insert (run_id, kind, fields) on table public.run_document_values to authenticated;",
     replace: "grant insert (run_id, kind, fields, confirmed_by) on table public.run_document_values to authenticated;",
+  },
+
+  // ── Рев'ю безпеки 2026-11-17: ліміт запитів до моделі, розмір значень, синхронізація email ─────────────────────
+  {
+    id: "Q13a", kind: "sql", ac: "AC-DOCAI-13", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "take_ai_request: годинна межа користувача зсунута на один — одинадцятий запит ще проходить",
+    find: ") >= c_user_per_hour then",
+    replace: ") > c_user_per_hour then",
+  },
+  {
+    id: "Q13b", kind: "sql", ac: "AC-DOCAI-13", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "take_ai_request: добова межа застосунку зсунута на один — сорок перший запит ще проходить",
+    find: ") >= c_app_per_day then",
+    replace: ") > c_app_per_day then",
+  },
+  {
+    id: "Q13c", kind: "sql", ac: "AC-DOCAI-16", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "take_ai_request: роль не перевіряється — вендор теж бере запити до моделі",
+    find: "if v_user is null or v_role is null or v_role not in ('manager', 'admin') then",
+    replace: "if v_user is null then",
+  },
+  {
+    id: "Q13d", kind: "sql", ac: "AC-DOCAI-13", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "take_ai_request: годинний ліміт рахує запити всіх, а не лише викликача — один користувач блокує інших",
+    find: "where user_id = v_user and created_at > now() - interval '1 hour'",
+    replace: "where created_at > now() - interval '1 hour'",
+  },
+  {
+    id: "Q13e", kind: "sql", ac: "AC-DOCAI-13", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "ai_requests: authenticated отримує select на таблицю обліку — клієнт бачить чужі запити",
+    find: "grant select, insert, update, delete on table public.ai_requests to service_role;",
+    replace: "grant select, insert, update, delete on table public.ai_requests to service_role;\ngrant select on table public.ai_requests to authenticated;",
+  },
+  {
+    id: "S05", kind: "sql", ac: "—", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "run_document_values.fields: межа розміру зсунута з 32 КБ до 3 МБ — довільно великий jsonb проходить",
+    find: "pg_catalog.pg_column_size(fields) < 32768",
+    replace: "pg_catalog.pg_column_size(fields) < 3276800",
+  },
+  {
+    id: "S08a", kind: "sql", ac: "—", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "sync_profile_email: оновлення без where id = new.id — зміна email одного користувача переписує всі профілі",
+    find: "   where id = new.id\n     and email is distinct from new.email;",
+    replace: "   where email is distinct from new.email;",
+  },
+  {
+    id: "S08b", kind: "sql", ac: "—", file: AI_LIMITS, tests: [AI_LIMITS_DB],
+    what: "on_auth_user_email_changed: тригер слухає не колонку email — зміна email у Auth не доходить до профілю",
+    find: "after update of email on auth.users",
+    replace: "after update of raw_user_meta_data on auth.users",
   },
 ];
 
