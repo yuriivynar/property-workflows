@@ -154,8 +154,18 @@ describe("run_document_values.fields: обмеження розміру", () => 
     expect(await insert(fields)).toBe("");
   });
 
-  it("значення понад 32 КБ база відхиляє, хоч би що надіслав прямий запит", async () => {
-    expect(await insert({ notes: ["x".repeat(40_000)] })).toMatch(/run_document_values_fields_size_check/);
+  it("той самий кошторис символами на 3 байти (CJK, ~38 000 байт) теж зберігається", async () => {
+    const fields = {
+      items: Array.from({ length: 50 }, (_, i) => ({ name: `${i}`.padEnd(200, "漢"), quantity: 1_000_000, unitPrice: 99_999_999.99 })),
+      total: 100_000_000,
+      notes: Array.from({ length: 7 }, () => "漢".repeat(200)),
+      warning: "w".repeat(70),
+    };
+    expect(await insert(fields)).toBe("");
+  });
+
+  it("значення понад 64 КБ база відхиляє, хоч би що надіслав прямий запит", async () => {
+    expect(await insert({ notes: ["x".repeat(70_000)] })).toMatch(/run_document_values_fields_size_check/);
   });
 });
 

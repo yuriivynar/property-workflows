@@ -166,7 +166,8 @@ describe("requestValues — «Propose values»", () => {
       parseForm("Hello, kitchen tap"),
     );
     expect(result).toMatchObject({ status: "unavailable", message: DOCUMENT_MESSAGES.unavailable });
-    expect(model.doGenerateCalls.length).toBeLessThanOrEqual(2); // maxRetries 1
+    // Рівно один виклик постачальника на слот ліміту: повтор витратив би квоту вдруге.
+    expect(model.doGenerateCalls).toHaveLength(1);
     // У лог — лише причина, без тексту документа.
     expect(warn).toHaveBeenCalledWith("document parsing unavailable: rate_limited");
     warn.mockRestore();

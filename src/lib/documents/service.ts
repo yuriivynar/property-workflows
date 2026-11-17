@@ -64,7 +64,9 @@ export async function requestValues(
     console.warn(`document parsing unavailable: ${slot}`);
     return { status: "unavailable", text: input.text, message: DOCUMENT_MESSAGES.unavailable };
   }
-  const result = await proposeDocumentValues(input.text, deps.model);
+  // Без повторів: один слот ліміту = один виклик постачальника. Повтор після 429/503 витратив би квоту вдруге, і 40 слотів
+  // на добу дали б до 80 викликів проти квоти 50 (рев'ю CodeRabbit, PR #93). Збій — той самий стан «недоступний».
+  const result = await proposeDocumentValues(input.text, deps.model, { maxRetries: 0 });
   if (!result.ok) {
     // У лог — лише причина, без тексту документа (у ньому можуть бути телефони й імена).
     console.warn(`document parsing unavailable: ${result.reason}`);

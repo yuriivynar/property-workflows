@@ -85,10 +85,11 @@ grant execute on function public.take_ai_request() to authenticated;
 
 -- ── 5) Розмір підтверджених значень ──────────────────────────────────────────
 -- Найбільший кошторис, який пропускає форма (50 позицій по 200 символів і 7 приміток, src/lib/documents/values.ts),
--- займає 15 378 байт для ASCII і 26 578 для кирилиці (виміряно pg_column_size), тож межа 16 КБ відхиляла б валідні дані:
--- беремо 32 КБ. Обмеження лише не дає прямому запиту з публічним ключем записати довільно великий jsonb.
+-- за pg_column_size займає 15 378 байт для ASCII, 26 578 для кирилиці і близько 38 000 для символів на 3 байти
+-- (CJK; zod міряє довжину в одиницях UTF-16, а не в байтах), тож межа 16 чи 32 КБ відхиляла б валідні дані: беремо
+-- 64 КБ. Обмеження лише не дає прямому запиту з публічним ключем записати довільно великий jsonb.
 alter table public.run_document_values
-  add constraint run_document_values_fields_size_check check (pg_catalog.pg_column_size(fields) < 32768);
+  add constraint run_document_values_fields_size_check check (pg_catalog.pg_column_size(fields) < 65536);
 
 -- ── 8) profiles.email слідом за auth.users.email ─────────────────────────────
 -- Спершу вирівнюємо вже розбіжні рядки, далі тригер тримає їх узгодженими. Оновлює лише рядок цього користувача

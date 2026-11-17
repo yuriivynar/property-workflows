@@ -250,8 +250,8 @@ export const mutants = [
   },
   {
     id: "S05", kind: "sql", ac: "—", file: AI_LIMITS, tests: [AI_LIMITS_DB],
-    what: "run_document_values.fields: межа розміру зсунута з 32 КБ до 3 МБ — довільно великий jsonb проходить",
-    find: "pg_catalog.pg_column_size(fields) < 32768",
+    what: "run_document_values.fields: межа розміру зсунута з 64 КБ до 3 МБ — довільно великий jsonb проходить",
+    find: "pg_catalog.pg_column_size(fields) < 65536",
     replace: "pg_catalog.pg_column_size(fields) < 3276800",
   },
   {
