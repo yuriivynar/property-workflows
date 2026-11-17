@@ -285,6 +285,10 @@ export type Database = {
       };
     };
     Functions: {
+      take_ai_request: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
       mark_task_done: {
         Args: {
           p_task_id: string;
