@@ -1,7 +1,8 @@
 // Ліміт запитів до моделі, розмір підтверджених значень і синхронізація email — правила бази на справжньому Postgres
 // (PGlite) з усіма міграціями: supabase/migrations/20261117092135_ai_requests_limits_and_profile_email_sync.sql.
 // Межа емуляції: PGlite — одне з'єднання, тож справжньої паралельності тут немає; атомарність забезпечує advisory
-// lock у private.take_ai_request(), а мутант Q13d у scripts/mutants.mjs доводить, що кожен виклик рахує за станом таблиці.
+// lock у private.take_ai_request() (його поведінку під навантаженням цей тест не доводить — лише межі й права).
+// Мутанти правил — Q13a–e, S05, S08a–b у scripts/mutants.mjs.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
