@@ -44,7 +44,7 @@ declare
   v_user uuid := (select auth.uid());
   v_role text := (select private.current_app_role());
 begin
-  if v_user is null or v_role is null or v_role not in ('manager', 'admin') then
+  if v_user is null or coalesce(v_role, '') not in ('manager', 'admin') then
     return 'not_allowed';
   end if;
 

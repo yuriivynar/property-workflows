@@ -233,7 +233,7 @@ export const mutants = [
   {
     id: "Q13c", kind: "sql", ac: "AC-DOCAI-16", file: AI_LIMITS, tests: [AI_LIMITS_DB],
     what: "take_ai_request: роль не перевіряється — вендор теж бере запити до моделі",
-    find: "if v_user is null or v_role is null or v_role not in ('manager', 'admin') then",
+    find: "if v_user is null or coalesce(v_role, '') not in ('manager', 'admin') then",
     replace: "if v_user is null then",
   },
   {
