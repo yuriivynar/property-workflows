@@ -32,6 +32,16 @@ async function mayWorkWithDocuments({ supabase, user }: DocumentDeps, runId: str
   return canUseDocumentBlock(user, run.run_manager_id);
 }
 
+/** Відповідь public.take_ai_request(); `check_failed` — самої перевірки не вдалося виконати (діємо як при відмові). */
+type AiSlot = "allowed" | "user_limit" | "app_limit" | "not_allowed" | "check_failed";
+
+/** Бере один запит до моделі з ліміту (10 на годину на користувача, 40 на добу на застосунок — у SQL). */
+async function takeAiRequest(supabase: Client): Promise<AiSlot> {
+  const { data, error } = await supabase.rpc("take_ai_request");
+  if (error) return "check_failed";
+  return data === "allowed" || data === "user_limit" || data === "app_limit" || data === "not_allowed" ? data : "check_failed";
+}
+
 /** «Propose values»: пропозиція моделі для людини. Нічого не пише в базу (AC-DOCAI-08). */
 export async function requestValues(
   deps: DocumentDeps & { model: LanguageModel | null },
@@ -46,7 +56,17 @@ export async function requestValues(
   // Немає ключа, 429, таймаут, відповідь не за схемою, помилка постачальника — той самий стан «недоступний» і ручний
   // ввід, без повторів у циклі (AC-DOCAI-09; варіант A #52).
   if (!deps.model) return { status: "unavailable", text: input.text, message: DOCUMENT_MESSAGES.unavailable };
-  const result = await proposeDocumentValues(input.text, deps.model);
+
+  // Ліміт запитів — ПІСЛЯ перевірки ролі й ДО моделі: без нього один менеджер скриптом вичерпав би денну квоту
+  // безкоштовних запитів для всіх. Користувач бачить той самий стан «недоступний», у лог іде лише конкретна причина.
+  const slot = await takeAiRequest(deps.supabase);
+  if (slot !== "allowed") {
+    console.warn(`document parsing unavailable: ${slot}`);
+    return { status: "unavailable", text: input.text, message: DOCUMENT_MESSAGES.unavailable };
+  }
+  // Без повторів: один слот ліміту = один виклик постачальника. Повтор після 429/503 витратив би квоту вдруге, і 40 слотів
+  // на добу дали б до 80 викликів проти квоти 50 (рев'ю CodeRabbit, PR #93). Збій — той самий стан «недоступний».
+  const result = await proposeDocumentValues(input.text, deps.model, { maxRetries: 0 });
   if (!result.ok) {
     // У лог — лише причина, без тексту документа (у ньому можуть бути телефони й імена).
     console.warn(`document parsing unavailable: ${result.reason}`);

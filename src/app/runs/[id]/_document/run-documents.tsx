@@ -24,7 +24,8 @@ export async function RunDocuments({ supabase, runId, viewer, runManagerId, name
     .from("run_document_values")
     .select("id, kind, fields, confirmed_by, confirmed_at")
     .eq("run_id", runId)
-    .order("confirmed_at", { ascending: false });
+    .order("confirmed_at", { ascending: false })
+    .limit(50); // найновіші 50: історія значень не росте на сторінці без межі
 
   return (
     <>
