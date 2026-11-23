@@ -22,7 +22,9 @@ const kyivTime = (iso) =>
   }).format(new Date(iso));
 const sec = (ms) => `${(ms / 1000).toFixed(1)} с`;
 const usd = (x) => `$${x.toFixed(4)}`;
-const md = (s = "") => String(s).replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+// Комірка таблиці Markdown: спершу екрануємо «\», потім «|» — інакше «\|» у тексті закрив би екранування й зламав
+// таблицю (CodeQL js/incomplete-sanitization).
+const md = (s = "") => String(s).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
 
 export function report(rows = combine(), { out } = {}) {
   const runFile = path.join(WORK, "run.json");
