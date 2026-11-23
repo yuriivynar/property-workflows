@@ -1,6 +1,6 @@
 // D0: /api/health відрізняє «база відповіла» від «база недоступна, призупинена чи ключ хибний».
 import { describe, expect, it } from "vitest";
-import { classifyDbProbe } from "@/lib/health";
+import { appEnvFrom, classifyDbProbe, supabaseRefFrom } from "@/lib/health";
 
 describe("classifyDbProbe (/api/health)", () => {
   it("рахує базу живою, коли запит пройшов або Postgres відмовив у правах (42501)", () => {
@@ -37,5 +37,22 @@ describe("classifyDbProbe (/api/health)", () => {
       reason: "status-503-08006",
     });
     expect(classifyDbProbe({ status: 500, error: { code: "57P01", message: "terminating connection" } }).db).toBe("down");
+  });
+});
+
+describe("appEnv і supabaseRef (/api/health, WS11)", () => {
+  it("appEnv — значення APP_ENV, без змінної чи з порожньою — null", () => {
+    expect(appEnvFrom("staging")).toBe("staging");
+    expect(appEnvFrom(" staging ")).toBe("staging");
+    expect(appEnvFrom("")).toBeNull();
+    expect(appEnvFrom(undefined)).toBeNull();
+  });
+
+  it("supabaseRef — перший сегмент хоста адреси бази, без змінної чи з некоректною адресою — null", () => {
+    expect(supabaseRefFrom("https://abcdefghijklmnopqrst.supabase.co")).toBe("abcdefghijklmnopqrst");
+    expect(supabaseRefFrom("https://abcdefghijklmnopqrst.supabase.co/")).toBe("abcdefghijklmnopqrst");
+    expect(supabaseRefFrom(undefined)).toBeNull();
+    expect(supabaseRefFrom("")).toBeNull();
+    expect(supabaseRefFrom("not a url")).toBeNull();
   });
 });

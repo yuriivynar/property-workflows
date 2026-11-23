@@ -23,3 +23,24 @@ export function classifyDbProbe({ status, error }: DbProbe): DbHealth {
   // PGRST000–003 з не-5xx статусом.
   return { db: "down", reason: `status-${status}${code ? `-${code}` : ""}` };
 }
+
+/** WS11: назва середовища з APP_ENV (на staging — «staging»; VERCEL_ENV там теж «preview»). Без змінної — null. */
+export function appEnvFrom(value: string | undefined): string | null {
+  const v = value?.trim();
+  return v ? v : null;
+}
+
+/**
+ * WS11: ref проєкту Supabase — перший сегмент хоста публічної адреси бази (https://<ref>.supabase.co). Не секрет:
+ * та сама адреса є в браузері. За ним видно, що staging і preview ходять не в прод-базу. Без змінної чи з
+ * некоректною адресою — null.
+ */
+export function supabaseRefFrom(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const ref = new URL(url).hostname.split(".")[0];
+    return ref ? ref : null;
+  } catch {
+    return null;
+  }
+}
