@@ -1,12 +1,13 @@
 // D0: публічна перевірка здоров'я проду — GET /api/health → { ok, sha, env, appEnv, supabaseRef, db, reason }.
 // WS11: appEnv (APP_ENV, лише для гілки staging) і supabaseRef (ref бази з NEXT_PUBLIC_SUPABASE_URL) — видно, яке це
-// середовище і в яку базу воно ходить. Обидва не секрети.
+// середовище і в яку базу воно ходить. Обидва не секрети. suspectEnv — назва змінної, яку перевірити першою, коли база
+// «down» (лише назва; дія з postmortem docs/incidents/2026-11-23-staging-bad-supabase-url.md).
 // Без секретів і без даних користувачів: коміт збірки (Vercel) і чи відповідає база (один дешевий запит публічним
 // ключем). Шлях — у PUBLIC_PATHS (src/lib/supabase/proxy.ts), інакше proxy віддав би 307 на /login.
 // Читають: scripts/smoke.mjs, .github/workflows/smoke.yml і перевірка розгортань курсу.
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { appEnvFrom, classifyDbProbe, supabaseRefFrom } from "@/lib/health";
+import { appEnvFrom, classifyDbProbe, suspectEnvFor, supabaseRefFrom } from "@/lib/health";
 import type { Database } from "@/lib/supabase/database.types";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +32,12 @@ export async function GET() {
   } catch {
     health = { db: "down", reason: "exception" };
   }
+  const suspectEnv = suspectEnvFor(health, {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
   return NextResponse.json(
-    { ok: health.db === "ok", sha, env, appEnv, supabaseRef, ...health },
+    { ok: health.db === "ok", sha, env, appEnv, supabaseRef, ...health, suspectEnv },
     { status: health.db === "ok" ? 200 : 503, headers: { "cache-control": "no-store" } },
   );
 }

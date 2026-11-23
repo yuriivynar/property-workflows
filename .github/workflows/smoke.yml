@@ -84,6 +84,8 @@ jobs:
           fi
       - name: Прод = main, сторінка входу відкривається, база відповідає
         env:
+          # Дія з postmortem 2026-11-23: прод ходить саме в прод-базу (ref не секрет).
+          EXPECT_SUPABASE_REF: ${{ vars.SUPABASE_PROD_REF }}
           # Прод не за захистом (Standard Protection), але заголовок не шкодить, якщо колись увімкнуть All Deployments.
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: node scripts/smoke.mjs "$PROD_URL" "$EXPECT_SHA"
@@ -152,6 +154,9 @@ jobs:
           echo "Середовище: $DEPLOY_ENV; гілка: ${DEPLOY_BRANCH:-?}; коміт: ${EXPECT_SHA:0:7}"
       - name: Деплой відкривається з обходом захисту, база відповідає, коміт той самий
         env:
+          # Дія з postmortem 2026-11-23 (docs/incidents/2026-11-23-staging-bad-supabase-url.md): кожен непродовий деплой
+          # (preview з PR і гілка staging) ходить у базу staging, а не в прод і не за хибною адресою.
+          EXPECT_SUPABASE_REF: ${{ vars.SUPABASE_STAGING_REF }}
           # Значення — лише з GitHub Secrets; скрипт додає заголовок x-vercel-protection-bypass і не друкує секрет.
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: node scripts/smoke.mjs "$DEPLOY_URL" "$EXPECT_SHA"
