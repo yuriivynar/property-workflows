@@ -24,6 +24,23 @@ export function classifyDbProbe({ status, error }: DbProbe): DbHealth {
   return { db: "down", reason: `status-${status}${code ? `-${code}` : ""}` };
 }
 
+/**
+ * Дія з postmortem 2026-11-23 (docs/incidents/2026-11-23-staging-bad-supabase-url.md): яку змінну перевірити першою,
+ * коли база «down». Лише НАЗВА, без значення. Порожня змінна — вона сама; хибний ключ — ключ; база не відповідає за
+ * адресою (мережа, виняток) — адреса. Інші причини (пауза, 5xx Supabase) — не змінна: null.
+ */
+export function suspectEnvFor(
+  health: DbHealth,
+  env: { url: string | undefined; key: string | undefined },
+): "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" | null {
+  if (!env.url?.trim()) return "NEXT_PUBLIC_SUPABASE_URL";
+  if (!env.key?.trim()) return "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
+  if (health.db === "ok") return null;
+  if (health.reason === "invalid-api-key") return "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
+  if (health.reason === "status-0" || health.reason === "exception") return "NEXT_PUBLIC_SUPABASE_URL";
+  return null;
+}
+
 /** WS11: назва середовища з APP_ENV (на staging — «staging»; VERCEL_ENV там теж «preview»). Без змінної — null. */
 export function appEnvFrom(value: string | undefined): string | null {
   const v = value?.trim();

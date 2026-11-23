@@ -20,11 +20,16 @@
 //   - x-vercel-set-bypass-cookie НЕ надсилаємо: він потрібен браузеру для наступних запитів і відповідає
 //     редіректом із Set-Cookie, а smoke з redirect:"manual" тоді побачив би 3xx замість сторінки.
 //   - SMOKE_TARGET=deploy (ставить workflow для preview і staging) змінює лише підказки в повідомленнях про збій.
+//   - EXPECT_SUPABASE_REF (дія з postmortem 2026-11-23): ref бази, у яку має ходити це середовище; health показує інший —
+//     збій із назвою змінної NEXT_PUBLIC_SUPABASE_URL. Порожня — перевірку пропускаємо.
+import { suspectEnvHint, supabaseRefProblem } from "./lib/smoke-checks.mjs";
+
 const [rawBase = process.env.PROD_URL ?? "", expectSha = ""] = process.argv.slice(2);
 // client_payload.url від Vercel може прийти хостом без схеми — додаємо https://.
 const base = (/^https?:\/\//.test(rawBase) ? rawBase : rawBase ? `https://${rawBase}` : "").replace(/\/+$/, "");
 const bypass = (process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "").trim();
 const target = process.env.SMOKE_TARGET === "deploy" ? "deploy" : "prod";
+const expectRef = (process.env.EXPECT_SUPABASE_REF ?? "").trim();
 
 const headers = { "user-agent": "smoke/2.0 (WS11)" };
 if (bypass) headers["x-vercel-protection-bypass"] = bypass;
@@ -95,9 +100,12 @@ async function main() {
     fail.push(`"/api/health": ключ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY у Vercel не приймається — звірте змінні цього середовища і зробіть Redeploy`);
   } else if (health.db !== "ok") {
     fail.push(
-      `"/api/health": HTTP ${health.status}, db=${health.db ?? "?"}${health.reason ? ` (${health.reason})` : ""} — Supabase недоступний чи NEXT_PUBLIC_SUPABASE_URL у Vercel не той?`,
+      `"/api/health": HTTP ${health.status}, db=${health.db ?? "?"}${health.reason ? ` (${health.reason})` : ""}${suspectEnvHint(health) || " — Supabase недоступний чи NEXT_PUBLIC_SUPABASE_URL у Vercel не той?"}`,
     );
   }
+  // Дія з postmortem 2026-11-23: середовище має ходити у СВОЮ базу (staging — у staging, прод — у прод).
+  const refProblem = supabaseRefProblem(health, expectRef);
+  if (refProblem) fail.push(refProblem);
   if (expectSha && health?.sha === "local") {
     fail.push(`"/api/health": sha=local — у Vercel увімкніть Settings → Environment Variables → «Automatically expose System Environment Variables» і зробіть Redeploy`);
   } else if (expectSha && health?.sha && health.sha !== expectSha) {

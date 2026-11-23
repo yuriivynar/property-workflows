@@ -85,8 +85,8 @@
 - **Зупинили шкоду:** людина прибрала лише додане перевизначення `NEXT_PUBLIC_SUPABASE_URL` для гілки `staging`
   (`APP_ENV` і загальні змінні Preview не чіпали) → Redeploy → smoke зелений. Instant Rollback для staging недоступний
   (лише прод), а Redeploy старого деплою зібрався б з тими самими хибними змінними — це правильно відзначив агент.
-- **Виправили причину:** перевірка, яка ловить невідповідність бази до того, як шукати «чи впав Supabase», — див.
-  «Дії», дія 1.
+- **Виправили причину:** перевірка, яка ловить невідповідність бази до того, як шукати «чи впав Supabase», — #119
+  («Дії», дія 1).
 
 ## Що спрацювало, що ні, де пощастило
 
@@ -110,7 +110,7 @@
 
 | Дія | Власник | Перевірка, якою вона стала | Посилання |
 |---|---|---|---|
-| Smoke порівнює `supabaseRef` з очікуваним ref (preview і `staging` — `SUPABASE_STAGING_REF`, прод — `SUPABASE_PROD_REF`) і називає змінну `NEXT_PUBLIC_SUPABASE_URL`; `/api/health` повертає назву підозрілої змінної (без значення) | розробник | тест на перевірку smoke і health: червоніє на ref `…fjvx`, зеленіє на `…fjvz`; крок smoke у CI-workflow | PR дії з посиланням на цей postmortem |
+| Smoke порівнює `supabaseRef` з очікуваним ref (preview і `staging` — `SUPABASE_STAGING_REF`, прод — `SUPABASE_PROD_REF`) і називає змінну `NEXT_PUBLIC_SUPABASE_URL`; `/api/health` повертає назву підозрілої змінної (без значення) | розробник | `tests/smoke-checks.test.ts` (CI, job `app`): червоніє на відповіді health з дрілу (ref `…fjvx`), зеленіє на виправленій (`…fjvz`); крок smoke з `EXPECT_SUPABASE_REF` у workflow `smoke` | #119 |
 | MCP Vercel для розбору — адреса проєкту (`vercel mcp --project`) і Vercel CLI для запасного `vercel logs`; перевірити список деплоїв на початку сесії | розробник | крок «Перевірка профілю» в runbook, розділ 7 | `docs/runbook.md` |
 | Ключ моделі для асистента чергового (`ANTHROPIC_API_KEY`), щоб чернетка розбору з'являлась одразу після алерту | розробник | issue «чернетка агента, не перевірено» на наступному червоному smoke | `.github/workflows/oncall-assistant.yml` |
 | Матриця серйозності SEV1–3 для продукту — в операційних вимогах; цей postmortem має послатися на неї | PM | розбір postmortem PM у PR | репо вимог PM |
