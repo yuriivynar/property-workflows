@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LanguageModel } from "ai";
 import { proposeDocumentValues } from "@/lib/ai/draft";
+import { PRODUCT_MODELS } from "@/lib/ai/models";
 import { isTruncatedForModel } from "@/lib/ai/prompts/draft";
 import type { RoleCheck } from "@/lib/auth/require-role";
 import { isUuid } from "@/lib/runs/domain";
@@ -67,10 +68,13 @@ export async function requestValues(
   }
   // Без повторів: один слот ліміту = один виклик постачальника. Повтор після 429/503 витратив би квоту вдруге, і 40 слотів
   // на добу дали б до 80 викликів проти квоти 50 (рев'ю CodeRabbit, PR #93). Збій — той самий стан «недоступний».
-  const result = await proposeDocumentValues(input.text, deps.model, { maxRetries: 0 });
+  // WS11: рядок llm.call на кожен виклик моделі — модель, затримка, токени, стан, без тексту документа.
+  const result = await proposeDocumentValues(input.text, deps.model, {
+    maxRetries: 0,
+    log: { requestId: crypto.randomUUID(), route: "/runs/[id]", primaryModel: PRODUCT_MODELS[0] },
+  });
   if (!result.ok) {
-    // У лог — лише причина, без тексту документа (у ньому можуть бути телефони й імена).
-    console.warn(`document parsing unavailable: ${result.reason}`);
+    // Причину (код) уже записав llm.call (errorKind); текст документа в журнал не йде.
     return { status: "unavailable", text: input.text, message: DOCUMENT_MESSAGES.unavailable };
   }
 
