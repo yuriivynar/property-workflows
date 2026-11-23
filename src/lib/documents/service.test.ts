@@ -167,7 +167,7 @@ describe("requestValues — «Propose values»", () => {
   });
 
   it("AC-DOCAI-13: ліміт моделі — той самий стан «недоступний», без повторів у циклі", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const model = rateLimited();
     const result = await requestValues(
       { supabase: client({ run_manager_id: ME }).supabase, user: manager, model },
@@ -176,9 +176,11 @@ describe("requestValues — «Propose values»", () => {
     expect(result).toMatchObject({ status: "unavailable", message: DOCUMENT_MESSAGES.unavailable });
     // Рівно один виклик постачальника на слот ліміту: повтор витратив би квоту вдруге.
     expect(model.doGenerateCalls).toHaveLength(1);
-    // У лог — лише причина, без тексту документа.
-    expect(warn).toHaveBeenCalledWith("document parsing unavailable: rate_limited");
-    warn.mockRestore();
+    // У лог — лише код причини (рядок llm.call, WS11), без тексту документа.
+    const [line] = error.mock.calls.map(([value]) => String(value));
+    expect(JSON.parse(line)).toMatchObject({ event: "llm.call", state: "unavailable", errorKind: "rate_limited" });
+    expect(line).not.toContain("kitchen tap");
+    error.mockRestore();
   });
 
   it("AC-DOCAI-13: вичерпаний ліміт користувача чи застосунку — «недоступний», модель не викликано, у лог — причина", async () => {
@@ -306,5 +308,64 @@ describe("confirmValues — «Save values»", () => {
     const { supabase } = client({ run_manager_id: ME }, { message: "new row violates row-level security policy" });
     const result = await confirmValues({ supabase, user: manager }, requestValuesForm(validRequest));
     expect(result).toEqual({ status: "error", message: DOCUMENT_ERRORS.unexpected });
+  });
+});
+
+// WS11: журнал AI-функції. Назви без AC ID — технічна перевірка (рубрика WS11, трек B), а не критерій PM.
+describe("llm.call з «Propose values»", () => {
+  // Вигаданий текст документа з персональними даними: жодна його частина, як і відповідь моделі, не має потрапити в журнал.
+  const DOCUMENT = "Tenant Olena Test, apartment 12, phone 555-0101, olena.test@example.test: kitchen tap is dripping";
+  const MARKERS = ["Olena", "olena.test", "@example.test", "555-0101", "kitchen tap", "Kitchen tap", "dripping"];
+
+  it("один рядок JSON на виклик моделі — модель, стан, токени, версія промпту, без тексту документа й відповіді", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      const { supabase } = client({ run_manager_id: ME });
+      await requestValues({ supabase, user: manager, model: answering(REQUEST) }, parseForm(DOCUMENT));
+      const lines = info.mock.calls.map(([line]) => String(line)).filter((line) => line.includes('"llm.call"'));
+      expect(lines).toHaveLength(1);
+      for (const marker of MARKERS) expect(lines[0]).not.toContain(marker);
+      expect(JSON.parse(lines[0])).toMatchObject({
+        event: "llm.call",
+        route: "/runs/[id]",
+        state: "ok",
+        inputTokens: 10,
+        outputTokens: 20,
+        promptVersion: "docai-v4",
+      });
+    } finally {
+      info.mockRestore();
+    }
+  });
+
+  it("модель недоступна — рядок рівнем error зі станом unavailable і кодом причини, без тексту постачальника", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { supabase } = client({ run_manager_id: ME });
+      await requestValues({ supabase, user: manager, model: rateLimited() }, parseForm(DOCUMENT));
+      const lines = error.mock.calls.map(([line]) => String(line)).filter((line) => line.includes('"llm.call"'));
+      expect(lines).toHaveLength(1);
+      for (const marker of [...MARKERS, "Rate limit exceeded"]) expect(lines[0]).not.toContain(marker);
+      expect(JSON.parse(lines[0])).toMatchObject({ state: "unavailable", errorKind: "rate_limited", fallbackUsed: false });
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it("без перевірки ролі чи без слоту ліміту моделі не викликано — і рядка llm.call немає", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      await requestValues({ supabase: client({ run_manager_id: ME }).supabase, user: vendor, model: answering(REQUEST) }, parseForm(DOCUMENT));
+      const limited = client({ run_manager_id: ME }, null, { data: "user_limit", error: null });
+      await requestValues({ supabase: limited.supabase, user: manager, model: answering(REQUEST) }, parseForm(DOCUMENT));
+      const all = [...info.mock.calls, ...error.mock.calls].map(([line]) => String(line));
+      expect(all.filter((line) => line.includes('"llm.call"'))).toHaveLength(0);
+    } finally {
+      info.mockRestore();
+      error.mockRestore();
+      warn.mockRestore();
+    }
   });
 });
