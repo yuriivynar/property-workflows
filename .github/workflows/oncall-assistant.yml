@@ -1,5 +1,5 @@
 # БОНУС (необов'язково): асистент чергового лише на читання. Коли workflow smoke завершився червоним, агент читає
-# журнал червоного кроку й код репо і пише ЧЕРНЕТКУ розбору в issue з міткою «чернетка агента, не перевірено».
+# журнал червоного кроку й код репо і пише ЧЕРНЕТКУ розбору в issue з міткою «чернетка агента (не перевірено)».
 # Нічого не змінює: без інструментів запису, без shell, без секретів проду; issue створює не агент, а окремий job.
 # Куди: .github/workflows/oncall-assistant.yml у вашому репо (з теки bonus/ — у .github/workflows/).
 # Завдання README: бонус (+10), варіант «Асистент чергового». Промпт: R18 у docs/prompts.md#r18.
@@ -52,7 +52,7 @@ jobs:
       RUN_ID: ${{ github.event.workflow_run.id }}
       RUN_URL: ${{ github.event.workflow_run.html_url }}
       HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-      LABEL: "чернетка агента, не перевірено"
+      LABEL: "чернетка агента (не перевірено)"
     steps:
       # Код з main (а не з червоного коміту) і без збереженого токена в .git/config: агент читає файли репо.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -120,7 +120,7 @@ jobs:
       DRAFT: ${{ needs.triage.outputs.draft }}
       RUN_URL: ${{ github.event.workflow_run.html_url }}
       HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-      LABEL: "чернетка агента, не перевірено"
+      LABEL: "чернетка агента (не перевірено)"
     steps:
       - name: Issue з чернеткою
         run: |

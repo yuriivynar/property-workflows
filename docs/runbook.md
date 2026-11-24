@@ -32,7 +32,7 @@
 | Staging | <https://property-workflows-git-staging-yvynar-8355.vercel.app> (гілка `staging`; змінна лише для гілки `APP_ENV=staging`; за захистом Vercel) |
 | Здоров'я | `<адреса>/api/health` → `{ ok, sha, env, appEnv, supabaseRef, db, reason }`: прод — `"appEnv":null`, ref проду; staging — `"appEnv":"staging"`, ref staging |
 | Прогони smoke | Actions → `smoke`: job `prod` — прод (після деплою `main` і щодня ≈ 07:23 за Києвом); job `deploy` — кожен preview і `staging` за адресою саме цього деплою |
-| Чернетка розбору | Actions → `oncall-assistant` → issue з міткою «чернетка агента, не перевірено» (якщо задано ключ моделі) |
+| Чернетка розбору | Actions → `oncall-assistant` → issue з міткою «чернетка агента (не перевірено)» (якщо задано ключ моделі) |
 | Vercel | проєкт `property-workflows` → Deployments, Logs |
 | Supabase — прод | ref `lapdlcgusuahefesxfug` → Logs, Advisors; Vercel **Production**; міграції — CI, job `db-deploy` (environment `production`) |
 | Supabase — staging | ref `ukbnybazjlbicejpfjvz` (регіон `eu-west-1`) → Logs, Advisors; Vercel **Preview** (усі гілки, отже й `staging`) і локальний `.env.local`; міграції — CI, job `db-deploy-staging` (environment `staging`) **перед** `db-deploy` |
@@ -133,7 +133,7 @@ staging (`ukbnybazjlbicejpfjvz`). Пауза staging ще й зупиняє мі
 | Журнали Supabase (API, Postgres, Auth) | Supabase → Logs — **у кожному проєкті свої** | **1 день** (Free) |
 | Прогони GitHub Actions (smoke, CI, oncall-assistant) | Actions | 90 днів (Settings → Actions → General) |
 | Алерти й помилки сервера (`onRequestError`) | група Telegram команди | поки їх не видалили |
-| Чернетки розбору агента | Issues з міткою «чернетка агента, не перевірено» | постійно |
+| Чернетки розбору агента | Issues з міткою «чернетка агента (не перевірено)» | постійно |
 
 Висновок для чергового: розбираємо **одразу**, потрібні рядки журналу копіюємо в issue інциденту (без даних
 користувачів).
