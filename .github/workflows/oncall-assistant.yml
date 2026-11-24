@@ -8,7 +8,7 @@
 #   CLAUDE_CODE_OAUTH_TOKEN — токен підписки Claude з `claude setup-token`; лише для ОСОБИСТОГО використання.
 #   Безкоштовного шляху Anthropic немає. Через OpenRouter (ANTHROPIC_BASE_URL) — лише експеримент: OpenRouter не
 #   гарантує роботу Claude Code з іншими моделями, а безкоштовні моделі мають 50 запитів на добу.
-# Вартість: кожен червоний smoke = один запуск агента (до 4 ходів). Фактичну вартість і ліміти візьміть з Console
+# Вартість: кожен червоний smoke = один запуск агента (до 8 ходів; 4 замало — структурована відповідь теж хід). Фактичну вартість і ліміти візьміть з Console
 # (Usage) чи зі сторінки підписки й запишіть у файл здачі. Дублікати для того самого коміту пропускаються.
 # Джерело: anthropics/claude-code-action v1.0.269 (action.yml, docs/usage.md «Structured Outputs», docs/security.md,
 # docs/faq.md), станом на 09.11.2026.
@@ -101,7 +101,7 @@ jobs:
                перевірити людині), «Що НЕ є причиною» (що вже видно з журналу), «Перший крок за runbook» (розділ і дія).
             Не цитуй значень змінних, токенів, ключів чи персональних даних. Не вигадуй того, чого немає в даних.
           claude_args: |
-            --max-turns 4
+            --max-turns 8
             --permission-mode dontAsk
             --allowedTools "Read,Grep,Glob"
             --disallowedTools "Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch"
