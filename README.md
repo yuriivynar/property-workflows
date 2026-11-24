@@ -160,6 +160,10 @@ push, fetch, `git log` і `scripts/check-migration-order.mjs` працюють �
 
 ## Міграції в прод
 
+**WS11: спершу staging.** Job `db-deploy-staging` застосовує ті самі міграції в базу staging (секрет environment
+`staging` `SUPABASE_DB_URL` = Session pooler **проєкту staging**), і лише після нього `db-deploy` — у прод. Обидва
+звіряють ref рядка зі змінними репо `SUPABASE_STAGING_REF` / `SUPABASE_PROD_REF` ([runbook](docs/runbook.md), розділ 6).
+
 **Основний шлях.** Секрет environment `production` `SUPABASE_DB_URL` = рядок **Session pooler** з Supabase → **Connect**
 (`postgresql://postgres.<ref>:<пароль>@<pooler-host>:5432/postgres`; порт **5432**, не 6543 — у transaction mode DDL не
 застосовуємо; прямий хост на Free лише IPv6, а раннери GitHub — IPv4). Спецсимволи пароля — percent-encoded
