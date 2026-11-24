@@ -112,7 +112,7 @@
 |---|---|---|---|
 | Smoke порівнює `supabaseRef` з очікуваним ref (preview і `staging` — `SUPABASE_STAGING_REF`, прод — `SUPABASE_PROD_REF`) і називає змінну `NEXT_PUBLIC_SUPABASE_URL`; `/api/health` повертає назву підозрілої змінної (без значення) | розробник | `tests/smoke-checks.test.ts` (CI, job `app`): червоніє на відповіді health з дрілу (ref `…fjvx`), зеленіє на виправленій (`…fjvz`); крок smoke з `EXPECT_SUPABASE_REF` у workflow `smoke` | #119 |
 | MCP Vercel для розбору — адреса проєкту (`vercel mcp --project`) і Vercel CLI для запасного `vercel logs`; перевірити список деплоїв на початку сесії | розробник | крок «Перевірка профілю» в runbook, розділ 7 | `docs/runbook.md` |
-| Ключ моделі для асистента чергового (`ANTHROPIC_API_KEY`), щоб чернетка розбору з'являлась одразу після алерту | розробник | issue «чернетка агента, не перевірено» на наступному червоному smoke | `.github/workflows/oncall-assistant.yml` |
+| Ключ моделі для асистента чергового (`ANTHROPIC_API_KEY`), щоб чернетка розбору з'являлась одразу після алерту | розробник | issue «чернетка агента (не перевірено)» на наступному червоному smoke | `.github/workflows/oncall-assistant.yml` |
 | Матриця серйозності SEV1–3 для продукту — в операційних вимогах; цей postmortem має послатися на неї | PM | розбір postmortem PM у PR | репо вимог PM |
 
 ## Додатки
