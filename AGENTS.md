@@ -155,9 +155,13 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 ## Секрети
 
 - Значення лише в `.env.local`, Vercel (Production + Preview) і GitHub (секрет environment `production` —
-  `SUPABASE_DB_URL`; секрет репозиторію `SPEC_DENYLIST`); ніколи в git, логах чи чаті.
-  У Vercel — лише `NEXT_PUBLIC_SUPABASE_URL` і `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; `SUPABASE_SECRET_KEY` —
-  ніколи (лише ваш `.env.local` для скриптів).
+  `SUPABASE_DB_URL` прод-проєкту; секрет environment `staging` — `SUPABASE_DB_URL` проєкту staging (WS11, job
+  `db-deploy-staging`; обидва environments — Deployment branches лише `main`); секрети репозиторію `SPEC_DENYLIST`,
+  `VERCEL_AUTOMATION_BYPASS_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `ANTHROPIC_API_KEY`; змінні репозиторію
+  (не секрети) `PROD_URL`, `SUPABASE_PROD_REF`, `SUPABASE_STAGING_REF`); ніколи в git, логах чи чаті.
+  У Vercel — `NEXT_PUBLIC_SUPABASE_URL` і `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Production — прод-проєкт, Preview —
+  проєкт staging), `OPENROUTER_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` і `APP_ENV=staging` лише для гілки
+  `staging` (`docs/runbook.md`, розділ 6); `SUPABASE_SECRET_KEY` — ніколи (лише ваш `.env.local` для скриптів).
 - Імена: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` лише для скриптів
   (не `NEXT_PUBLIC_`, не `*_ANON_KEY`/`SERVICE_ROLE_KEY`). Шаблон — `.env.example`.
 - `.claude/settings.json` забороняє Claude Code читати `.env*` (крім `.env.example`); Cursor цих правил не читає — у Cursor не відкривай `.env*` агентом і не вставляй значень у чат. Скрипти з секретами запускай
