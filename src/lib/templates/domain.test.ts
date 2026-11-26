@@ -209,3 +209,14 @@ describe("Картка шаблону: підсумок версії (рішен
     expect(versionSummary({ sections: [{}] })).toEqual({ sections: 1, tasks: 0, required: 0 });
   });
 });
+
+describe("Картка шаблону: тексти (рішення власника 2026-11-26, ADR 0012)", () => {
+  it("«Version N · current», «Saved … by …» і без автора — лише час", () => {
+    expect(TEMPLATE_MESSAGES.version(2)).toBe("Version 2");
+    expect(TEMPLATE_MESSAGES.currentVersion(2)).toBe("Version 2 · current");
+    expect(TEMPLATE_MESSAGES.savedBy("24.11.2026 14:05", "admin@example.test")).toBe(
+      "Saved 24.11.2026 14:05 by admin@example.test",
+    );
+    expect(TEMPLATE_MESSAGES.savedBy("24.11.2026 14:05", null)).toBe("Saved 24.11.2026 14:05");
+  });
+});
