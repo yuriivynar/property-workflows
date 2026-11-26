@@ -9,7 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 // Позначка задачі виконаною (openspec/specs/run-progress). Хто може позначати і чи завершено запуск, вирішує функція
 // бази mark_task_done; відмова — код NOT_ALLOWED, текст AC-TASK-03 показує сторінка запуску (markTaskDone) або рядок
 // задачі на місці (markTaskDoneInPlace, миттєва позначка UI v3 — ADR 0012).
-async function performMark(formData: FormData): Promise<{ runPath: string; code: string | null }> {
+/** Підсумок позначки: сторінка запуску й код відмови (null — позначено). */
+type MarkOutcome = { runPath: string; code: string | null };
+
+async function performMark(formData: FormData): Promise<MarkOutcome> {
   const runId = String(formData.get("run_id") ?? "");
   const taskId = String(formData.get("task_id") ?? "");
 
@@ -62,7 +65,9 @@ export async function markTaskDone(formData: FormData) {
 }
 
 /** Та сама позначка без переадресації: відмову (дослівний текст AC) показує рядок задачі на місці. */
-export async function markTaskDoneInPlace(formData: FormData): Promise<{ error: string | null }> {
+export type InPlaceResult = { error: string | null };
+
+export async function markTaskDoneInPlace(formData: FormData): Promise<InPlaceResult> {
   const { code } = await performMark(formData);
   return { error: code ? messageForError(code) : null };
 }
