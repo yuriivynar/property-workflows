@@ -3,6 +3,7 @@
 import { createContext, useContext, useOptimistic } from "react";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Confetti, useCompletionBurst } from "@/components/ui/confetti";
 import { formatProgress, needsConfirmation } from "@/lib/runs/domain";
 
 /** Що потрібно знати про задачу, щоб рахувати прогрес і «останню обов'язкову» в браузері. */
@@ -49,36 +50,55 @@ function countShown(tasks: readonly MarkTask[]) {
   return { done: shown.filter((task) => task.status === "done").length, total: shown.length, shown };
 }
 
-/** Кільце, «N of M done» і статус запуску в картці деталей — одразу після позначки (AC-TASK-05). */
-export function LiveRunSummary({ done, total, status }: { done: number; total: number; status: string }) {
-  const marks = useRunMarks();
-  const live = marks ? countShown(liveTasks(marks)) : null;
-  const shownDone = live?.done ?? done;
-  const shownTotal = live?.total ?? total;
-  // Завершення — коли виконано всі показані обов'язкові (MODIFIED «Завершення запуску»); остаточно вирішує база.
-  const completes = live ? live.shown.some((task) => task.is_required) && live.shown.every((task) => !task.is_required || task.status === "done") : false;
+type Summary = { done: number; total: number; status: string };
+
+/** Завершення — коли виконано всі показані обов'язкові (MODIFIED «Завершення запуску»); остаточно вирішує база. */
+function allRequiredDone(shown: readonly MarkTask[]): boolean {
+  return shown.some((task) => task.is_required) && shown.every((task) => !task.is_required || task.status === "done");
+}
+
+/** Підсумок запуску з урахуванням щойно позначених; без провайдера — як порахував сервер. */
+function liveSummary(marks: RunMarks | null, server: Summary): Summary {
+  if (!marks) return server;
+  const { done, total, shown } = countShown(liveTasks(marks));
+  return { done, total, status: allRequiredDone(shown) ? "completed" : server.status };
+}
+
+/**
+ * Кільце, «N of M done» і статус запуску в картці деталей — одразу після позначки (AC-TASK-05). Коли запуск щойно став
+ * «completed» — короткий спалах конфеті (рішення власника 2026-11-26, ADR 0012). На телефоні кільце й число менші.
+ */
+export function LiveRunSummary({ done, total, status }: Summary) {
+  const summary = liveSummary(useRunMarks(), { done, total, status });
+  const bursts = useCompletionBurst(summary.status === "completed");
   return (
-    <div className="flex items-center gap-4 px-4 py-4">
-      <ProgressRing done={shownDone} total={shownTotal} />
-      <div className="flex flex-col items-start gap-1.5">
-        <span className="text-xl font-semibold tabular-nums" data-testid="run-progress">
-          {formatProgress(shownDone, shownTotal)}
+    <div className="flex items-center gap-3 px-4 py-3 sm:gap-4 sm:py-4">
+      <ProgressRing done={summary.done} total={summary.total} className="size-14 sm:size-20" />
+      <div className="flex flex-col items-start gap-1 sm:gap-1.5">
+        <span className="text-lg font-semibold tabular-nums sm:text-xl" data-testid="run-progress">
+          {formatProgress(summary.done, summary.total)}
         </span>
         <span data-testid="run-status">
-          <StatusBadge status={completes ? "completed" : status} />
+          <StatusBadge status={summary.status} />
         </span>
       </div>
+      {bursts > 0 ? <Confetti key={bursts} /> : null}
     </div>
   );
 }
 
+/** Прогрес розділу з урахуванням щойно позначених; без провайдера — як порахував сервер. */
+function sectionCount(marks: RunMarks | null, sectionId: string, server: { done: number; total: number }) {
+  if (!marks) return server;
+  return countShown(liveTasks(marks).filter((task) => task.section_id === sectionId));
+}
+
 /** «N of M done» розділу — одразу після позначки. */
 export function LiveSectionProgress({ sectionId, done, total }: { sectionId: string; done: number; total: number }) {
-  const marks = useRunMarks();
-  const live = marks ? countShown(liveTasks(marks).filter((task) => task.section_id === sectionId)) : null;
+  const live = sectionCount(useRunMarks(), sectionId, { done, total });
   return (
     <span className="text-sm tabular-nums text-muted-foreground" data-testid="section-progress">
-      {formatProgress(live?.done ?? done, live?.total ?? total)}
+      {formatProgress(live.done, live.total)}
     </span>
   );
 }

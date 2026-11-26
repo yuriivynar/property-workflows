@@ -87,7 +87,7 @@ export default async function Profile() {
             <span className="font-medium">Theme</span>
             <span className="text-muted-foreground">Remembered on this device</span>
           </span>
-          <ThemeChoice key={theme} value={theme} name="theme-profile" variant="labelled" />
+          <ThemeChoice key={theme} value={theme} name="theme-profile" variant="labelled" className="max-sm:w-full" />
         </Card>
       </section>
 

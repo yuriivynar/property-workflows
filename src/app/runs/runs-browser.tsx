@@ -60,7 +60,7 @@ export function RunsBrowser({
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <nav aria-label={LABELS.filterByStatus} className="flex gap-1 rounded-full border border-border bg-muted p-1">
+        <nav aria-label={LABELS.filterByStatus} className="flex gap-0.5 rounded-full border border-border bg-muted p-1 sm:gap-1">
           {RUN_TABS.map((option) => (
             <a
               key={option}
@@ -73,7 +73,7 @@ export function RunsBrowser({
               aria-current={option === tab ? "page" : undefined}
               data-testid={`runs-tab-${option}`}
               className={cn(
-                "flex h-11 flex-1 items-center justify-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap text-muted-foreground outline-none transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:h-9 sm:flex-none",
+                "flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium whitespace-nowrap sm:h-9 sm:gap-2 sm:px-3.5 sm:text-sm text-muted-foreground outline-none transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:flex-none",
                 option === tab && "bg-card text-foreground shadow-card",
               )}
             >
