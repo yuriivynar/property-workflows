@@ -23,6 +23,8 @@ function originOf(url: string | undefined): string | null {
 
 export function contentSecurityPolicy({ nonce, supabaseUrl, isDev = false }: CspOptions): string {
   const supabase = originOf(supabaseUrl);
+  // Supabase Realtime (живі оновлення сторінки запуску, ADR 0012) — websocket до того самого хоста: wss://<host>.
+  const realtime = supabase ? supabase.replace(/^https:/, "wss:").replace(/^http:/, "ws:") : null;
   const directives = [
     "default-src 'self'",
     // 'strict-dynamic': скрипти, які довірений скрипт підвантажує сам (чанки Next.js), дозволені без переліку адрес.
@@ -33,7 +35,7 @@ export function contentSecurityPolicy({ nonce, supabaseUrl, isDev = false }: Csp
     "img-src 'self' blob: data:",
     // next/font/google самохостить шрифти: завантаження — з нашого origin.
     "font-src 'self'",
-    ["connect-src 'self'", supabase, isDev ? "ws: wss:" : null].filter(Boolean).join(" "),
+    ["connect-src 'self'", supabase, realtime, isDev ? "ws: wss:" : null].filter(Boolean).join(" "),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

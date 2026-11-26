@@ -23,6 +23,7 @@ export type Database = {
           full_name: string | null;
           role: string;
           created_at: string;
+          avatar_url: string | null;
         };
         Insert: {
           id: string;
@@ -30,6 +31,7 @@ export type Database = {
           full_name?: string | null;
           role?: string;
           created_at?: string;
+          avatar_url?: string | null;
         };
         Update: {
           id?: string;
@@ -37,6 +39,7 @@ export type Database = {
           full_name?: string | null;
           role?: string;
           created_at?: string;
+          avatar_url?: string | null;
         };
         Relationships: [];
       };
@@ -274,6 +277,39 @@ export type Database = {
           show_when_field_id?: string | null;
           show_when_value?: string | null;
           is_shown?: boolean;
+        };
+        Relationships: [];
+      };
+      run_events: {
+        Row: {
+          id: number;
+          run_id: string;
+          actor_id: string | null;
+          kind: string;
+          task_id: string | null;
+          field_id: string | null;
+          answer: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          run_id: string;
+          actor_id?: string | null;
+          kind: string;
+          task_id?: string | null;
+          field_id?: string | null;
+          answer?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          run_id?: string;
+          actor_id?: string | null;
+          kind?: string;
+          task_id?: string | null;
+          field_id?: string | null;
+          answer?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
