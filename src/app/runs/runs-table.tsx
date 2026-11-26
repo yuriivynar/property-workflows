@@ -51,6 +51,10 @@ function RunRowDetail({ digest, emails }: { digest: RunDigest | undefined; email
   );
 }
 
+/** Порожні значення з run_overview (security_invoker view — усі колонки nullable). */
+const text = (value: string | null) => value ?? "";
+const count = (value: number | null) => value ?? 0;
+
 /**
  * Рядок списку запусків менеджера й адміністратора: назва випадку (з шаблоном під нею на телефоні), шаблон, статус,
  * прогрес «N of M done» (AC-TASK-09, AC-TASK-13, AC-TASK-14); розгортається (рішення власника 2026-11-26). Таблицю з
@@ -67,7 +71,7 @@ export function RunTableRow({
 }) {
   return (
     <ExpandableRunRow
-      caseName={run.case_name ?? ""}
+      caseName={text(run.case_name)}
       columns={4}
       rowClassName={`${ROW_STACK} relative cursor-pointer`}
       caseCellClassName={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}
@@ -85,12 +89,12 @@ export function RunTableRow({
             {run.template_name}
           </TableCell>
           <TableCell className={CELL_STACK}>
-            <StatusBadge status={run.status ?? ""} />
+            <StatusBadge status={text(run.status)} />
           </TableCell>
           <TableCell className={`${CELL_STACK} tabular-nums max-sm:col-span-2`} data-testid="run-progress">
             <span className="flex items-center gap-3">
-              <ProgressBar done={run.done_count ?? 0} total={run.total_count ?? 0} className="max-sm:w-auto max-sm:flex-1" />
-              <span className="font-medium">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</span>
+              <ProgressBar done={count(run.done_count)} total={count(run.total_count)} className="max-sm:w-auto max-sm:flex-1" />
+              <span className="font-medium">{formatProgress(count(run.done_count), count(run.total_count))}</span>
             </span>
           </TableCell>
         </>

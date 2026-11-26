@@ -1,18 +1,18 @@
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { requiredLabel } from "@/lib/runs/domain";
-import { moveItem, moveTaskToSection, removeTask, renameSection, renameTask, setTaskRequired } from "../../actions";
+import { moveItem, renameSection, renameTask, setTaskRequired } from "../../actions";
 import { AddTaskForm } from "./add-task-form";
 import { AutosaveInput } from "./autosave-input";
 import { RemoveSectionButton } from "./remove-section-button";
+import { TaskActionsMenu } from "./task-actions-menu";
 
 // Частини редактора шаблону (рішення власника 2026-11-26, ADR 0012): розділ — картка з графітовим номером і рядком
-// дій у шапці; задача — рядок «позначка required/optional · назва · дії», вирівняний сіткою; дії рядка — іконки з тими
-// самими доступними назвами («Move up», «Move down», «Remove»), підказка — title. Головна дія екрана лишається одна —
+// дій у шапці; задача — рядок «назва · перемикач Required · ↑ ↓ · меню ⋯» (Move to section, Remove task); стрілки —
+// іконки з доступними назвами «Move up», «Move down», підказка — title. Головна дія екрана лишається одна —
 // «Save» у рядку збереження (DESIGN.md, розділ 5).
 
 export interface EditorSectionData {
@@ -28,7 +28,6 @@ export interface EditorTaskData {
 
 // Іконка-кнопка рядка: ≥ 44 px на телефоні, 32 px від sm.
 const ICON_BUTTON = "size-11 text-muted-foreground hover:text-foreground sm:size-8";
-const REMOVE_BUTTON = "size-11 text-muted-foreground hover:bg-destructive-surface hover:text-destructive sm:size-8";
 
 function MoveButtons({
   templateId,
@@ -58,16 +57,48 @@ function MoveButtons({
   );
 }
 
-/** Позначка задачі: «required» — суцільна крапка кольору прогресу, «optional» — пунктирне кільце (як у UrgencyMenu). */
-function RequiredMark({ required }: { required: boolean }) {
+/**
+ * Перемикач «Required» (замість кнопки «Make optional / Make required»): одна кнопка з aria-pressed; увімкнено —
+ * суцільна крапка кольору прогресу на тлі secondary, вимкнено — пунктирне кільце й пунктирна рамка (як в Urgency).
+ * Слово на екрані завжди «Required» — воно ж доступна назва; стан — aria-pressed і вигляд.
+ */
+// Вигляд перемикача за станом: увімкнено — крапка fill-progress на тлі secondary; вимкнено — пунктирні кільце й рамка.
+const REQUIRED_LOOK = {
+  on: {
+    next: "false",
+    title: "Required — click to make optional",
+    button: "border-transparent bg-secondary text-foreground hover:bg-accent",
+    dot: "bg-fill-progress",
+  },
+  off: {
+    next: "true",
+    title: "Optional — click to make required",
+    button: "border-dashed border-input text-muted-foreground hover:border-muted-foreground hover:text-foreground",
+    dot: "border border-dashed border-muted-foreground",
+  },
+} as const;
+
+function RequiredToggle({ templateId, task }: { templateId: string; task: EditorTaskData }) {
+  const look = REQUIRED_LOOK[task.is_required ? "on" : "off"];
   return (
-    <span
-      aria-hidden="true"
-      className="inline-flex w-24 shrink-0 items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground"
-    >
-      <span className={cn("size-2 rounded-full", required ? "bg-fill-progress" : "border border-dashed border-muted-foreground")} />
-      {requiredLabel(required)}
-    </span>
+    <form action={setTaskRequired} className="shrink-0">
+      <input type="hidden" name="template_id" value={templateId} />
+      <input type="hidden" name="task_id" value={task.id} />
+      <input type="hidden" name="is_required" value={look.next} />
+      <button
+        type="submit"
+        aria-pressed={task.is_required}
+        title={look.title}
+        data-testid="required-toggle"
+        className={cn(
+          "inline-flex h-11 w-28 items-center gap-2 rounded-full border px-3 text-xs font-medium outline-none transition-colors duration-(--duration-fast) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-8",
+          look.button
+        )}
+      >
+        <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", look.dot)} />
+        Required
+      </button>
+    </form>
   );
 }
 
@@ -84,56 +115,23 @@ function EditorTask({
   last: boolean;
   sections: readonly EditorSectionData[];
 }) {
-  const hidden = <input type="hidden" name="template_id" value={templateId} />;
   return (
     <li data-testid="editor-task" className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:gap-3">
-      <RequiredMark required={task.is_required} />
       <form action={renameTask} noValidate className="flex min-w-0 flex-1 items-center gap-2">
-        {hidden}
+        <input type="hidden" name="template_id" value={templateId} />
         <input type="hidden" name="task_id" value={task.id} />
-        {/* Доступна назва поля — як раніше: «Task (required)» / «Task (optional)»; на екрані стан видно позначкою. */}
+        {/* Доступна назва поля — як раніше: «Task (required)» / «Task (optional)»; на екрані стан видно перемикачем. */}
         <Label htmlFor={`task-${task.id}`} className="sr-only">
           Task ({requiredLabel(task.is_required)})
         </Label>
         {/* Зберігається, щойно поле втратило фокус (кнопки «Rename» немає; ADR 0012, доповнення). */}
         <AutosaveInput id={`task-${task.id}`} name="name" defaultValue={task.name} className="min-w-0 flex-1" />
       </form>
-      <div className="flex flex-wrap items-center gap-1">
-        <form action={setTaskRequired}>
-          {hidden}
-          <input type="hidden" name="task_id" value={task.id} />
-          <input type="hidden" name="is_required" value={task.is_required ? "false" : "true"} />
-          <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            {task.is_required ? "Make optional" : "Make required"}
-          </Button>
-        </form>
+      {/* Часті дії — на виду (Required, ↑ ↓), рідші — у меню «⋯» (Move to section, Remove task). */}
+      <div className="flex items-center gap-1">
+        <RequiredToggle templateId={templateId} task={task} />
         <MoveButtons templateId={templateId} kind="task" itemId={task.id} first={first} last={last} />
-        {sections.length > 1 ? (
-          <form action={moveTaskToSection} className="flex items-center gap-1">
-            {hidden}
-            <input type="hidden" name="task_id" value={task.id} />
-            <Label htmlFor={`move-${task.id}`} className="sr-only">
-              Section
-            </Label>
-            <NativeSelect id={`move-${task.id}`} name="section_id" defaultValue={task.section_id} size="sm">
-              {sections.map((target) => (
-                <NativeSelectOption key={target.id} value={target.id}>
-                  {target.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <Button type="submit" variant="ghost" size="sm">
-              Move
-            </Button>
-          </form>
-        ) : null}
-        <form action={removeTask}>
-          {hidden}
-          <input type="hidden" name="task_id" value={task.id} />
-          <Button type="submit" variant="ghost" size="icon" aria-label="Remove" title="Remove task" className={REMOVE_BUTTON}>
-            <Trash2 aria-hidden="true" className="size-4" />
-          </Button>
-        </form>
+        <TaskActionsMenu templateId={templateId} taskId={task.id} taskName={task.name} sectionId={task.section_id} sections={sections} />
       </div>
     </li>
   );

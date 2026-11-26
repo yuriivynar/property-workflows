@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Geist_Mono, IBM_Plex_Sans } from "next/font/google";
-import { cookies } from "next/headers";
 import { PageShell } from "@/components/ui/page-shell";
 import { getViewer } from "@/lib/auth/viewer";
 import { avatarSrc } from "@/lib/profile/avatar";
-import { parseTheme, THEME_COOKIE, themeAttribute } from "@/lib/theme";
-import { parseSidebar, parseSidebarWidth, SIDEBAR_COOKIE, SIDEBAR_WIDTH_COOKIE } from "@/lib/sidebar";
+import { themeAttribute } from "@/lib/theme";
+import { shellPrefs } from "@/lib/shell-prefs";
 import { signOut } from "./login/actions";
 import { searchIndex } from "./search/actions";
 import "./globals.css";
@@ -34,11 +33,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const viewer = await getViewer();
   // Пункти навігації — за роллю (navItems): вендору лише «Runs» і «Profile» (AC-VENDOR-13; solomchaak/property-workflows-spec#44).
   // Обрана тема — з cookie ще до першого малювання; без вибору — за пристроєм (ADR 0004; AC-DSYS-05, AC-DSYS-06).
-  const store = await cookies();
-  const theme = parseTheme(store.get(THEME_COOKIE)?.value);
-  // Бічна панель — розгорнута чи згорнута, і її ширина (рішення власника 2026-11-26, ADR 0012): теж із cookie, без стрибка.
-  const sidebar = parseSidebar(store.get(SIDEBAR_COOKIE)?.value);
-  const sidebarWidth = parseSidebarWidth(store.get(SIDEBAR_WIDTH_COOKIE)?.value);
+  // Тема, стан і ширина бічної панелі — з cookie ще до першого малювання (ADR 0004; ADR 0012, доповнення).
+  const { theme, sidebar, sidebarWidth } = await shellPrefs();
 
   return (
     <html

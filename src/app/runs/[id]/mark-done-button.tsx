@@ -16,6 +16,7 @@ export function MarkDoneButton({
   taskName,
   confirm,
   action = markTaskDone,
+  startConfirming = false,
 }: {
   runId: string;
   taskId: string;
@@ -23,8 +24,10 @@ export function MarkDoneButton({
   confirm: boolean;
   /** Дія форми: типово markTaskDone (переадресація); TaskItem передає миттєву позначку з відкатом на місці. */
   action?: (formData: FormData) => void | Promise<void>;
+  /** Одразу показати підтвердження (база відповіла, що задача остання обов'язкова). */
+  startConfirming?: boolean;
 }) {
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(startConfirming);
 
   if (!confirm) {
     return (
