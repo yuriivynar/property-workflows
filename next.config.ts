@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "3mb",
     },
+    // Щойно відкриті сторінки (Runs, Templates, Profile, запуск) браузер тримає 30 с: повернення до них — миттєве, без
+    // нового рендеру на сервері (ADR 0012, доповнення). Кожна дія (revalidatePath) і живі оновлення (router.refresh)
+    // цей кеш скидають, тож власні зміни видно одразу; чужі — щонайпізніше через 30 с або одразу на сторінці запуску.
+    staleTimes: { dynamic: 30 },
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

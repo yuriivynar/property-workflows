@@ -61,7 +61,7 @@ function ThemeChoice({
             title={variant === "icons" ? themeOptionName(option) : undefined}
             className={cn(
               "relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-medium text-muted-foreground transition-colors duration-(--duration-fast) has-[:checked]:bg-card has-[:checked]:text-foreground has-[:checked]:shadow-card has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring sm:h-9",
-              variant === "icons" ? "w-11 sm:w-9" : "px-3.5"
+              variant === "icons" ? "w-11 sm:w-9" : "min-w-0 flex-1 px-2 text-xs sm:flex-none sm:px-3.5 sm:text-sm"
             )}
           >
             <input

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TEMPLATE_MESSAGES } from "@/lib/templates/domain";
 import { removeSection } from "../../actions";
@@ -22,7 +23,14 @@ export function RemoveSectionButton({
 
   if (!confirming) {
     return (
-      <Button type="button" variant="ghost" size="sm" onClick={() => setConfirming(true)}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => setConfirming(true)}
+        className="text-muted-foreground hover:bg-destructive-surface hover:text-destructive"
+      >
+        <Trash2 aria-hidden="true" />
         {TEMPLATE_MESSAGES.removeSection}
       </Button>
     );

@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from 
 import { ThemeChoice, THEME_ICONS, themeOptionName, useThemeChoice } from "@/components/ui/theme-choice"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { THEMES, type Theme } from "@/lib/theme"
+import { useSidebar } from "@/components/ui/sidebar-frame"
 
 /** Ініціали власного email для аватара: «manager.a@example.test» → «MA». Чужих фото й ініціалів не показуємо. */
 function initialsOf(email: string | null | undefined): string {
@@ -58,18 +59,20 @@ function UserMenu({
   signOut: () => Promise<void>
 }) {
   const [current, choose] = useThemeChoice(theme)
+  const collapsed = useSidebar().state === "collapsed"
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         data-testid="user-menu"
-        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm outline-none transition-colors duration-(--duration-fast) hover:bg-hero-hover focus-visible:outline-2 focus-visible:outline-hero-foreground data-popup-open:bg-hero-hover"
+        title={collapsed ? email ?? undefined : undefined}
+        className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm outline-none transition-colors duration-(--duration-fast) hover:bg-hero-hover focus-visible:outline-2 focus-visible:outline-hero-foreground data-popup-open:bg-hero-hover lg:group-data-[state=collapsed]/sidebar:justify-center lg:group-data-[state=collapsed]/sidebar:px-0"
       >
         <OwnAvatar email={email} src={avatarSrc} />
-        <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex min-w-0 flex-1 flex-col lg:group-data-[state=collapsed]/sidebar:sr-only">
           <span className="truncate text-hero-foreground">{email}</span>
           {role ? <span className="text-hero-muted">{role}</span> : null}
         </span>
-        <ChevronsUpDown aria-hidden="true" className="size-4 shrink-0 text-hero-muted" />
+        <ChevronsUpDown aria-hidden="true" className="size-4 shrink-0 text-hero-muted lg:group-data-[state=collapsed]/sidebar:hidden" />
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-(--anchor-width) min-w-60">
         <DropdownMenuRadioGroup
@@ -78,7 +81,7 @@ function UserMenu({
           className="flex items-center justify-between gap-2 px-1.5 py-1"
         >
           <DropdownMenuLabel className="px-0 text-sm font-medium text-foreground">Theme</DropdownMenuLabel>
-          <span className="flex gap-1 rounded-full bg-muted p-1">
+          <span className="flex gap-0.5 rounded-full bg-muted p-0.5">
             {THEMES.map((option) => {
               const Icon = THEME_ICONS[option]
               return (
@@ -89,11 +92,11 @@ function UserMenu({
                         value={option}
                         closeOnClick={false}
                         aria-label={themeOptionName(option)}
-                        className="size-9 justify-center rounded-full px-0! py-0! text-muted-foreground data-checked:bg-card data-checked:text-foreground data-checked:shadow-card [&_[data-slot=dropdown-menu-radio-item-indicator]]:hidden"
+                        className="size-7 justify-center rounded-full px-0! py-0! text-muted-foreground data-checked:bg-card data-checked:text-foreground data-checked:shadow-card [&_[data-slot=dropdown-menu-radio-item-indicator]]:hidden"
                       />
                     }
                   >
-                    <Icon aria-hidden="true" className="size-4" />
+                    <Icon aria-hidden="true" className="size-3.5" />
                   </TooltipTrigger>
                   <TooltipContent>{themeOptionName(option)}</TooltipContent>
                 </Tooltip>

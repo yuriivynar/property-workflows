@@ -20,6 +20,7 @@ import { MarkDoneButton } from "./mark-done-button";
 import { fieldOptions, RunDetailsCard, RunSection, type RunField } from "./run-parts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { BackLink } from "@/components/ui/back-link";
+import { RunMarksProvider } from "./run-marks";
 import { RunDocuments } from "./_document/run-documents";
 import { ActivityCard } from "./activity-card";
 import { RunLive } from "./run-live";
@@ -83,7 +84,17 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         </div>
         <RunLive runId={runId} />
       </div>
-      {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка деталей праворуч (ADR 0008, ADR 0012). */}
+      {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка деталей праворуч (ADR 0008, ADR 0012).
+          RunMarksProvider — миттєві позначки на рівні запуску: прогрес і «остання обов'язкова» одразу (ADR 0012). */}
+      <RunMarksProvider
+        tasks={allTasks.map((task) => ({
+          id: task.id,
+          section_id: task.section_id,
+          is_required: task.is_required,
+          status: task.status,
+          is_shown: task.is_shown,
+        }))}
+      >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <RunDetailsCard
           {...detailsOf(run, versionNumber)}
@@ -105,6 +116,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
             <RunSection
               key={section.id}
               runId={runId}
+              sectionId={section.id}
               name={section.name}
               tasks={allTasks.filter((task) => task.section_id === section.id)}
               allTasks={allTasks}
@@ -132,6 +144,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           />
         </div>
       </div>
+      </RunMarksProvider>
     </main>
   );
 }

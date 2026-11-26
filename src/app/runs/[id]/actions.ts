@@ -12,21 +12,28 @@ import { createClient } from "@/lib/supabase/server";
 /** Підсумок позначки: сторінка запуску й код відмови (null — позначено). */
 type MarkOutcome = { runPath: string; code: string | null };
 
-async function performMark(formData: FormData): Promise<MarkOutcome> {
+/**
+ * Спільний початок дій сторінки запуску: вхід (не увійшов — /login) і роль через currentUser() до будь-якого запиту,
+ * що пише (AGENTS.md); id запуску з форми — лише UUID (інше — /runs, до запиту до бази).
+ */
+async function runActionStart(formData: FormData) {
   const runId = String(formData.get("run_id") ?? "");
-  const taskId = String(formData.get("task_id") ?? "");
-
   const supabase = await createClient();
   const user = await currentUser(supabase);
   if (!user.ok && user.reason === "NOT_SIGNED_IN") {
     redirect("/login");
   }
-
-  // Ідентифікатори з форми — лише UUID: інше відкидаємо до запиту до бази.
   if (!isUuid(runId)) {
     redirect("/runs");
   }
-  const runPath = `/runs/${runId}`;
+  return { supabase, user, runId, runPath: `/runs/${runId}` };
+}
+
+type RunActionStart = Awaited<ReturnType<typeof runActionStart>>;
+
+async function performMark(formData: FormData, start: RunActionStart): Promise<MarkOutcome> {
+  const taskId = String(formData.get("task_id") ?? "");
+  const { supabase, user, runId, runPath } = start;
   // Без профілю з відомою роллю нічого не позначаємо; хто саме може позначити задачу, вирішує mark_task_done.
   if (!user.ok || !isUuid(taskId)) {
     return { runPath, code: "NOT_ALLOWED" };
@@ -60,35 +67,28 @@ async function performMark(formData: FormData): Promise<MarkOutcome> {
 }
 
 export async function markTaskDone(formData: FormData) {
-  const { runPath, code } = await performMark(formData);
+  const { runPath, code } = await performMark(formData, await runActionStart(formData));
   redirect(code ? `${runPath}?error=${encodeURIComponent(code)}` : runPath);
 }
 
-/** Та сама позначка без переадресації: відмову (дослівний текст AC) показує рядок задачі на місці. */
-export type InPlaceResult = { error: string | null };
+/**
+ * Та сама позначка без переадресації: відмову (дослівний текст AC) показує рядок задачі на місці. code — щоб рядок
+ * відрізнив «потрібне підтвердження» (NEEDS_CONFIRMATION — показати підтвердження, а не помилку) від інших відмов.
+ */
+export type InPlaceResult = { error: string | null; code: string | null };
 
 export async function markTaskDoneInPlace(formData: FormData): Promise<InPlaceResult> {
-  const { code } = await performMark(formData);
-  return { error: code ? messageForError(code) : null };
+  const { code } = await performMark(formData, await runActionStart(formData));
+  return { error: code ? messageForError(code) : null, code };
 }
 
 // Відповідь на поле запуску (openspec/specs/conditional-tasks). Роль перевіряємо до запису (AGENTS.md): лише менеджер
 // запуску або адміністратор (AC-LOGIC-05); атомарно відповідь, залежні задачі «to do» і статус запуску змінює функція бази
 // set_run_field_answer (AC-LOGIC-02, AC-LOGIC-04).
 export async function setRunFieldAnswer(formData: FormData) {
-  const runId = String(formData.get("run_id") ?? "");
   const fieldId = String(formData.get("field_id") ?? "");
   const answer = String(formData.get("answer") ?? "");
-
-  const supabase = await createClient();
-  const user = await currentUser(supabase);
-  if (!user.ok && user.reason === "NOT_SIGNED_IN") {
-    redirect("/login");
-  }
-  if (!isUuid(runId)) {
-    redirect("/runs");
-  }
-  const runPath = `/runs/${runId}`;
+  const { supabase, user, runId, runPath } = await runActionStart(formData);
   if (!user.ok || !isUuid(fieldId)) {
     redirect(`${runPath}?error=ANSWER_NOT_ALLOWED`);
   }

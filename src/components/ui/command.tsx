@@ -61,7 +61,8 @@ function CommandDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children}
+        {/* Обгортка <Command> обов'язкова: без неї CommandInput/List/Item не мають сховища cmdk і сторінка падає. */}
+        <Command>{children}</Command>
       </DialogContent>
     </Dialog>
   )

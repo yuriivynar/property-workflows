@@ -2,15 +2,13 @@ import { redirect } from "next/navigation";
 import { FormAlert } from "@/components/ui/form-alert";
 import { AutosaveStatus } from "./autosave-status";
 import { RenameForm } from "./rename-form";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { History, Plus } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { TextLink } from "@/components/ui/text-link";
 import { currentUser } from "@/lib/auth/require-role";
-import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 import { unpublishedTemplateIds } from "@/lib/templates/queries";
 import {
@@ -20,20 +18,11 @@ import {
   TEMPLATE_MESSAGES,
   templatePageAccess,
 } from "@/lib/templates/domain";
-import {
-  addSection,
-  moveItem,
-  moveTaskToSection,
-  removeTask,
-  renameSection,
-  renameTask,
-  saveVersion,
-  setTaskRequired,
-} from "../../actions";
-import { AddTaskForm } from "./add-task-form";
-import { RemoveSectionButton } from "./remove-section-button";
+import { addSection, saveVersion } from "../../actions";
+import { EditorSection } from "./editor-parts";
 import { NotEnoughRights } from "@/components/not-enough-rights";
 import { Notice } from "@/components/ui/notice";
+import { BackLink } from "@/components/ui/back-link";
 
 // Редактор шаблону — лише адміністратор. Менеджер бачить «Not enough rights» і «Back to templates» у тому самому
 // макеті, без жодних даних редактора: дані для нього навіть не запитуються (AC-DSYS-02). Кожна зміна — окрема дія,
@@ -95,6 +84,8 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      {/* Кнопка «назад» угорі (рішення власника 2026-11-26, ADR 0012). */}
+      <BackLink href="/templates">{TEMPLATE_MESSAGES.backToTemplates}</BackLink>
       {/* Рядок збереження липне до верху: «Save» і «Unpublished changes» видно, поки прокручуєш довгий шаблон. */}
       <div className="static z-10 -mx-4 [@media(min-height:40rem)]:sticky [@media(min-height:40rem)]:top-0 flex flex-wrap items-start justify-between gap-4 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
         <div className="flex flex-col gap-1">
@@ -105,13 +96,19 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
             <AutosaveStatus failed={place === "autosave"} />
           </p>
         </div>
-        <form action={saveVersion}>
-          {hidden}
-          {/* «Save» без незбережених змін неактивна (робоче рішення до solomchaak/property-workflows-spec#22). */}
-          <Button type="submit" size="lg" disabled={!hasUnpublishedChanges}>
-            Save
-          </Button>
-        </form>
+        <div className="flex items-center gap-2">
+          <Link href={`/templates/${template.id}/versions`} className={buttonVariants({ variant: "outline", size: "lg" })}>
+            <History aria-hidden="true" />
+            Versions
+          </Link>
+          <form action={saveVersion}>
+            {hidden}
+            {/* «Save» без незбережених змін неактивна (робоче рішення до solomchaak/property-workflows-spec#22). */}
+            <Button type="submit" size="lg" disabled={!hasUnpublishedChanges}>
+              Save
+            </Button>
+          </form>
+        </div>
       </div>
 
       {formError ? (
@@ -129,146 +126,22 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
       ) : null}
 
       {(sections ?? []).map((section, index, all) => (
-        <section key={section.id} className="flex flex-col gap-2">
-          <Card className="gap-4 px-4">
-            <div className="flex flex-wrap items-end gap-2">
-              <form action={renameSection} noValidate className="rename-scope flex flex-wrap items-end gap-2">
-                {hidden}
-                <input type="hidden" name="section_id" value={section.id} />
-                <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
-                  <Label htmlFor={`section-${section.id}`}>Section</Label>
-                  <Input
-                    id={`section-${section.id}`}
-                    name="name"
-                    defaultValue={section.name}
-                    className="w-full sm:w-64"
-                  />
-                </div>
-                <Button type="submit" variant="outline" className="rename-btn">
-                  Rename
-                </Button>
-              </form>
-              <MoveButtons templateId={template.id} kind="section" itemId={section.id} first={index === 0} last={index === all.length - 1} />
-              <RemoveSectionButton templateId={template.id} sectionId={section.id} sectionName={section.name} />
-            </div>
-
-            <ul className="flex flex-col divide-y divide-border">
-              {(tasks ?? [])
-                .filter((task) => task.section_id === section.id)
-                .map((task, taskIndex, sectionTasks) => (
-                  <li key={task.id} data-testid="editor-task" className="flex flex-wrap items-end gap-2 py-3 text-sm">
-                    <form action={renameTask} noValidate className="rename-scope flex flex-wrap items-end gap-2 max-sm:w-full">
-                      {hidden}
-                      <input type="hidden" name="task_id" value={task.id} />
-                      <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
-                        <Label htmlFor={`task-${task.id}`} className="font-normal">
-                          Task <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
-                        </Label>
-                        <Input
-                          id={`task-${task.id}`}
-                          name="name"
-                          defaultValue={task.name}
-                          className="w-full sm:w-64"
-                        />
-                      </div>
-                      <Button type="submit" variant="outline" className="rename-btn">
-                        Rename
-                      </Button>
-                    </form>
-                    <form action={setTaskRequired}>
-                      {hidden}
-                      <input type="hidden" name="task_id" value={task.id} />
-                      <input type="hidden" name="is_required" value={task.is_required ? "false" : "true"} />
-                      <Button type="submit" variant="ghost" size="sm">
-                        {task.is_required ? "Make optional" : "Make required"}
-                      </Button>
-                    </form>
-                    <MoveButtons
-                      templateId={template.id}
-                      kind="task"
-                      itemId={task.id}
-                      first={taskIndex === 0}
-                      last={taskIndex === sectionTasks.length - 1}
-                    />
-                    {(sections ?? []).length > 1 ? (
-                      <form action={moveTaskToSection} className="flex flex-wrap items-end gap-2">
-                        {hidden}
-                        <input type="hidden" name="task_id" value={task.id} />
-                        <div className="flex flex-col gap-2">
-                          <Label htmlFor={`move-${task.id}`} className="font-normal">
-                            Section
-                          </Label>
-                          <NativeSelect id={`move-${task.id}`} name="section_id" defaultValue={section.id}>
-                            {(sections ?? []).map((target) => (
-                              <NativeSelectOption key={target.id} value={target.id}>
-                                {target.name}
-                              </NativeSelectOption>
-                            ))}
-                          </NativeSelect>
-                        </div>
-                        <Button type="submit" variant="ghost" size="sm">
-                          Move
-                        </Button>
-                      </form>
-                    ) : null}
-                    <form action={removeTask}>
-                      {hidden}
-                      <input type="hidden" name="task_id" value={task.id} />
-                      <Button type="submit" variant="ghost" size="sm">
-                        Remove
-                      </Button>
-                    </form>
-                  </li>
-                ))}
-            </ul>
-
-            <AddTaskForm templateId={template.id} sectionId={section.id} />
-          </Card>
-        </section>
+        <EditorSection key={section.id} templateId={template.id} section={section} index={index} sections={all} tasks={tasks ?? []} />
       ))}
 
-      <form action={addSection} className="flex flex-wrap items-end gap-2">
+      {/* Новий розділ — пунктирна картка під розділами (рішення власника 2026-11-26, ADR 0012). */}
+      <form action={addSection} className="flex flex-col gap-2 rounded-xl border border-dashed border-input p-4 sm:flex-row sm:items-end">
         {hidden}
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           <Label htmlFor="new-section">New section</Label>
-          <Input id="new-section" name="name" required className="w-64" />
+          <Input id="new-section" name="name" required className="w-full sm:max-w-sm" />
         </div>
         <Button type="submit" variant="outline">
+          <Plus aria-hidden="true" />
           Add section
         </Button>
       </form>
-
-      <p className="flex gap-4 text-sm">
-        <TextLink href={`/templates/${template.id}/versions`}>Versions</TextLink>
-      </p>
     </main>
   );
 }
 
-function MoveButtons({
-  templateId,
-  kind,
-  itemId,
-  first,
-  last,
-}: {
-  templateId: string;
-  kind: "section" | "task";
-  itemId: string;
-  first: boolean;
-  last: boolean;
-}) {
-  return (
-    <form action={moveItem} className="flex gap-1">
-      <input type="hidden" name="template_id" value={templateId} />
-      <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="item_id" value={itemId} />
-      <Button type="submit" name="direction" value="up" variant="ghost" size="sm" disabled={first}>
-        Move up
-      </Button>
-      <Button type="submit" name="direction" value="down" variant="ghost" size="sm" disabled={last}>
-        Move down
-      </Button>
-    </form>
-  );
-}

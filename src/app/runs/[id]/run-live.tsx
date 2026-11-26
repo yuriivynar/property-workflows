@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const TABLES = ["run_events", "run_tasks", "run_fields"] as const;
+/** Що означає «Live»: підказка при наведенні й текст для читачів екрана. */
+const LIVE_HINT = "This page updates by itself when someone changes this run.";
 
 /**
  * Живі оновлення сторінки запуску (UI v3, рішення власника 2026-11-26, ADR 0012): підписка Supabase Realtime
@@ -41,10 +43,12 @@ export function RunLive({ runId }: { runId: string }) {
     <p
       aria-live="polite"
       data-testid="run-live"
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-sm text-muted-foreground"
+      title={LIVE_HINT}
+      className="inline-flex cursor-help items-center gap-2 rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted-foreground sm:px-3 sm:py-1 sm:text-sm"
     >
       <span aria-hidden="true" className={cn("size-2 rounded-full bg-muted-foreground", updated && "animate-pulse")} />
       {updated ? "Live · updated just now" : "Live"}
+      <span className="sr-only">. {LIVE_HINT}</span>
     </p>
   );
 }

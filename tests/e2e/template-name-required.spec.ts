@@ -8,11 +8,14 @@ test.use({ storageState: "playwright/.auth/admin.json" });
 const ADMIN_A = "admin@example.test";
 const MESSAGE = "Enter a template name";
 
-const templateRows = (page: Page) => page.getByRole("main").getByRole("table").getByRole("row");
+// Шаблони — картки (UI v3), не рядки таблиці.
+const templateRows = (page: Page) => page.getByTestId("template-row");
 
+// Створення — у вікні за кнопкою «New template» (рішення власника 2026-11-26, ADR 0012).
 async function createWithName(page: Page, name: string) {
-  await page.getByLabel("Template name").fill(name);
-  await page.getByRole("button", { name: "Create a template" }).click();
+  if (!(await page.getByRole("dialog").isVisible())) await page.getByRole("button", { name: "New template" }).click();
+  await page.getByRole("dialog").getByLabel("Template name").fill(name);
+  await page.getByRole("dialog").getByRole("button", { name: "Create a template" }).click();
   await page.waitForURL((url) => url.searchParams.has("error"));
 }
 
@@ -40,11 +43,11 @@ test(
       page,
       {
         clause: "no template is created, and A sees the message \"Enter a template name\".",
-        visible: ["повідомлення про помилку «Enter a template name» над списком шаблонів"],
-        hidden: ["шаблон не створено: у таблиці шаблонів стільки ж рядків, скільки до спроби"],
+        visible: ["повідомлення про помилку «Enter a template name» під полем «Template name» у вікні «New template»"],
+        hidden: ["шаблон не створено: у списку шаблонів стільки ж карток, скільки до спроби"],
       },
       async () => {
-        await expect(page.getByRole("main").getByRole("alert")).toHaveText(MESSAGE);
+        await expect(page.getByRole("dialog").getByRole("alert")).toHaveText(MESSAGE);
         await expect(templateRows(page)).toHaveCount(rowsBefore);
       },
     );
@@ -58,14 +61,14 @@ test(
       page,
       {
         clause: "no template is created, and A sees the message \"Enter a template name\".",
-        visible: ["повідомлення про помилку «Enter a template name» над списком шаблонів"],
+        visible: ["повідомлення про помилку «Enter a template name» під полем «Template name» у вікні «New template»"],
         hidden: [
           "назва з самих пробілів рахується порожньою",
-          "шаблон не створено: у таблиці шаблонів стільки ж рядків, скільки до спроби",
+          "шаблон не створено: у списку шаблонів стільки ж карток, скільки до спроби",
         ],
       },
       async () => {
-        await expect(page.getByRole("main").getByRole("alert")).toHaveText(MESSAGE);
+        await expect(page.getByRole("dialog").getByRole("alert")).toHaveText(MESSAGE);
         await expect(templateRows(page)).toHaveCount(rowsBefore);
       },
     );

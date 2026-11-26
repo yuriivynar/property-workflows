@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -48,22 +49,22 @@ export function AddTaskForm({ templateId, sectionId }: { templateId: string; sec
           <AlertDescription>{state.message}</AlertDescription>
         </Alert>
       ) : null}
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
         <input type="hidden" name="template_id" value={templateId} />
         <input type="hidden" name="section_id" value={sectionId} />
-        <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           <Label htmlFor={`new-task-${sectionId}`}>New task</Label>
           <Input
             id={`new-task-${sectionId}`}
             name="name"
             value={state.name}
             onChange={(e) => setState((current) => ({ ...current, name: e.target.value }))}
-            className="w-full sm:w-64"
+            className="w-full bg-card"
             aria-invalid={state.message ? true : undefined}
             aria-describedby={state.message ? errorId : undefined}
           />
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex h-11 items-center gap-2 text-sm sm:h-10">
           <Checkbox
             id={`new-task-required-${sectionId}`}
             name="is_required"
@@ -85,6 +86,7 @@ function AddButton() {
   // Під час відправлення кнопка неактивна, текст дії не змінюємо (DESIGN.md, розділ 6).
   return (
     <Button type="submit" variant="outline" disabled={pending}>
+      <Plus aria-hidden="true" />
       Add task
     </Button>
   );

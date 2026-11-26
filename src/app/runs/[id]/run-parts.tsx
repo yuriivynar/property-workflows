@@ -1,10 +1,9 @@
 import { Fragment } from "react";
 import { GitBranch } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ProgressRing } from "@/components/ui/progress-ring";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { LABELS } from "@/lib/runs/messages";
-import { answerLabel, canMarkTask, formatProgress, needsConfirmation, requiredLabel } from "@/lib/runs/domain";
+import { answerLabel, canMarkTask, needsConfirmation, requiredLabel } from "@/lib/runs/domain";
+import { LiveRunSummary, LiveSectionProgress } from "./run-marks";
 import { TaskItem } from "./task-item";
 import { AnswerDot, UrgencyMenu, type FieldOption } from "./urgency-menu";
 
@@ -71,17 +70,8 @@ export function RunDetailsCard(props: {
 }) {
   return (
     <Card className="gap-0 py-0 lg:sticky lg:top-6 lg:order-2" aria-label={LABELS.runDetails}>
-      <div className="flex items-center gap-4 px-4 py-4">
-        <ProgressRing done={props.done} total={props.total} />
-        <div className="flex flex-col items-start gap-1.5">
-          <span className="text-xl font-semibold tabular-nums" data-testid="run-progress">
-            {formatProgress(props.done, props.total)}
-          </span>
-          <span data-testid="run-status">
-            <StatusBadge status={props.status} />
-          </span>
-        </div>
-      </div>
+      {/* Кільце, «N of M done» і статус — одразу після позначки (RunMarksProvider; ADR 0012, доповнення). */}
+      <LiveRunSummary done={props.done} total={props.total} status={props.status} />
       <dl className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-3 border-t border-border px-4 py-4 text-sm">
         <dt className="text-muted-foreground">{LABELS.runManager}</dt>
         <dd className="font-medium break-all" data-testid="run-manager">
@@ -163,6 +153,7 @@ function HiddenTaskRow({ runId, task, field, options }: { runId: string; task: R
 /** Розділ: назва, прогрес розділу за показаними задачами, задачі й (для того, хто відповідає) рядки-«привиди». */
 export function RunSection(props: {
   runId: string;
+  sectionId: string;
   name: string;
   tasks: readonly RunTask[];
   allTasks: readonly RunTask[];
@@ -181,9 +172,7 @@ export function RunSection(props: {
     <section className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-base font-semibold">{props.name}</h2>
-        <span className="text-sm tabular-nums text-muted-foreground" data-testid="section-progress">
-          {formatProgress(shown.filter((task) => task.status === "done").length, shown.length)}
-        </span>
+        <LiveSectionProgress sectionId={props.sectionId} done={shown.filter((task) => task.status === "done").length} total={shown.length} />
       </div>
       <Card className="gap-0 py-0">
         <ul className="flex flex-col divide-y divide-border">

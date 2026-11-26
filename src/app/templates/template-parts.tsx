@@ -1,13 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
-import { formatVersionDate, messageForTemplateError, TEMPLATE_MESSAGES, versionSummary } from "@/lib/templates/domain";
-import { createTemplate } from "./actions";
+import { formatVersionDate, TEMPLATE_MESSAGES, versionSummary } from "@/lib/templates/domain";
 
-// Частини списку шаблонів (UI v3, рішення власника 2026-11-26, ADR 0012): картка шаблону й форма створення в шапці.
+// Частини списку шаблонів (UI v3, рішення власника 2026-11-26, ADR 0012): картка шаблону (створення — create-template-dialog.tsx).
 
 export interface SavedVersion {
   template_id: string;
@@ -15,37 +10,6 @@ export interface SavedVersion {
   content: unknown;
   created_by: string | null;
   created_at: string;
-}
-
-/**
- * Форма створення шаблону (лише admin). noValidate: порожню назву перевіряє дія й показує «Enter a template name»
- * (AC-EDITOR-19) під полем, а не підказка браузера; помилка зникає, щойно поле змінили (FieldError).
- */
-export function CreateTemplateForm({ error }: { error: string | undefined }) {
-  return (
-    <form action={createTemplate} noValidate className="flex flex-wrap items-start gap-3">
-      <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
-        <Label htmlFor="new-template-name">Template name</Label>
-        <Input
-          id="new-template-name"
-          name="name"
-          required
-          autoFocus={Boolean(error) || undefined}
-          className="w-full sm:w-64"
-          aria-invalid={Boolean(error) || undefined}
-          aria-describedby={error ? "template-error" : undefined}
-        />
-        {error ? (
-          <FieldError id="template-error" fieldId="new-template-name">
-            {messageForTemplateError(error)}
-          </FieldError>
-        ) : null}
-      </div>
-      <Button type="submit" size="lg" className="sm:mt-7">
-        Create a template
-      </Button>
-    </form>
-  );
 }
 
 function VersionDetails({ version, emails }: { version: SavedVersion | undefined; emails: Map<string, string | null> }) {

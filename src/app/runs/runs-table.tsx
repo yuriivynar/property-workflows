@@ -1,6 +1,6 @@
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
 import { TextLink } from "@/components/ui/text-link";
 import { formatProgress, type RunDigest } from "@/lib/runs/domain";
 import { LABELS } from "@/lib/runs/messages";
@@ -51,66 +51,55 @@ function RunRowDetail({ digest, emails }: { digest: RunDigest | undefined; email
   );
 }
 
+/** Порожні значення з run_overview (security_invoker view — усі колонки nullable). */
+const text = (value: string | null) => value ?? "";
+const count = (value: number | null) => value ?? 0;
+
 /**
- * Таблиця запусків менеджера й адміністратора: назва випадку (з шаблоном під нею на телефоні), шаблон, статус, прогрес
- * «N of M done» (AC-TASK-09, AC-TASK-13, AC-TASK-14); кожен рядок розгортається (рішення власника 2026-11-26).
+ * Рядок списку запусків менеджера й адміністратора: назва випадку (з шаблоном під нею на телефоні), шаблон, статус,
+ * прогрес «N of M done» (AC-TASK-09, AC-TASK-13, AC-TASK-14); розгортається (рішення власника 2026-11-26). Таблицю з
+ * вкладками й фільтром малює RunsBrowser.
  */
-export function RunsTable({
-  rows,
-  digests,
+export function RunTableRow({
+  run,
+  digest,
   emails,
 }: {
-  rows: readonly RunRow[];
-  digests: Map<string, RunDigest>;
+  run: RunRow;
+  digest: RunDigest | undefined;
   emails: Map<string, string | null>;
 }) {
   return (
-    <Table>
-      <TableHeader className="max-sm:sr-only">
-        <TableRow>
-          <TableHead>{LABELS.columnCase}</TableHead>
-          <TableHead className="hidden sm:table-cell">{LABELS.columnTemplate}</TableHead>
-          <TableHead>{LABELS.columnStatus}</TableHead>
-          <TableHead>{LABELS.columnProgress}</TableHead>
-        </TableRow>
-      </TableHeader>
-      {/* На телефоні рядок — картка: назва (з шаблоном під нею) і статус зверху, прогрес на всю ширину нижче. */}
-      <TableBody>
-        {rows.map((run) => (
-          <ExpandableRunRow
-            key={run.id}
-            caseName={run.case_name ?? ""}
-            columns={4}
-            rowClassName={`${ROW_STACK} relative cursor-pointer`}
-            caseCellClassName={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}
-            caseCell={
-              <>
-                <TextLink href={`/runs/${run.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">
-                  {run.case_name}
-                </TextLink>
-                <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
-              </>
-            }
-            cells={
-              <>
-                <TableCell className="hidden py-2.5 whitespace-normal [overflow-wrap:anywhere] text-muted-foreground sm:table-cell">
-                  {run.template_name}
-                </TableCell>
-                <TableCell className={CELL_STACK}>
-                  <StatusBadge status={run.status ?? ""} />
-                </TableCell>
-                <TableCell className={`${CELL_STACK} tabular-nums max-sm:col-span-2`} data-testid="run-progress">
-                  <span className="flex items-center gap-3">
-                    <ProgressBar done={run.done_count ?? 0} total={run.total_count ?? 0} className="max-sm:w-auto max-sm:flex-1" />
-                    <span className="font-medium">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</span>
-                  </span>
-                </TableCell>
-              </>
-            }
-            detail={<RunRowDetail digest={run.id ? digests.get(run.id) : undefined} emails={emails} />}
-          />
-        ))}
-      </TableBody>
-    </Table>
+    <ExpandableRunRow
+      caseName={text(run.case_name)}
+      columns={4}
+      rowClassName={`${ROW_STACK} relative cursor-pointer`}
+      caseCellClassName={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}
+      caseCell={
+        <>
+          <TextLink href={`/runs/${run.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">
+            {run.case_name}
+          </TextLink>
+          <span className="block text-muted-foreground sm:hidden">{run.template_name}</span>
+        </>
+      }
+      cells={
+        <>
+          <TableCell className="hidden py-2.5 whitespace-normal [overflow-wrap:anywhere] text-muted-foreground sm:table-cell">
+            {run.template_name}
+          </TableCell>
+          <TableCell className={CELL_STACK}>
+            <StatusBadge status={text(run.status)} />
+          </TableCell>
+          <TableCell className={`${CELL_STACK} tabular-nums max-sm:col-span-2`} data-testid="run-progress">
+            <span className="flex items-center gap-3">
+              <ProgressBar done={count(run.done_count)} total={count(run.total_count)} className="max-sm:w-auto max-sm:flex-1" />
+              <span className="font-medium">{formatProgress(count(run.done_count), count(run.total_count))}</span>
+            </span>
+          </TableCell>
+        </>
+      }
+      detail={<RunRowDetail digest={digest} emails={emails} />}
+    />
   );
 }
