@@ -31,6 +31,12 @@ export const TEMPLATE_MESSAGES = {
   noVersions: "No versions yet. Save the template to create version 1.", // робоче рішення до solomchaak/property-workflows-spec#27
   versionSaved: (n: number) => `Version ${n} saved`, // «Вигляд і тон»: приклад повідомлення про успіх
   version: (n: number) => `Version ${n}`,
+  // Картка шаблону (рішення власника 2026-11-26, тексти — з полотна UI v3).
+  currentVersion: (n: number) => `Version ${n} · current`,
+  noVersionsYet: "No versions yet",
+  templatesSubtitle: "Blueprints of processes. Managers launch only saved versions.",
+  saveToLaunch: "Save the template to launch it",
+  savedBy: (when: string, email: string | null) => (email ? `Saved ${when} by ${email}` : `Saved ${when}`),
 } as const;
 
 /** Коди помилок функцій бази й дій → текст для людини. Невідомий код — загальна помилка без деталей. */
@@ -188,4 +194,16 @@ export function addTaskFormState(state: AddTaskFormState, event: AddTaskEvent): 
 /** Сесія скінчилась — форма веде на сторінку входу, а не показує «not kept» (AC-EDITOR-09, AC-EDITOR-26). */
 export function addTaskNeedsSignIn(event: AddTaskEvent): boolean {
   return event.type === "rejected" && event.code === "NOT_SIGNED_IN";
+}
+
+/**
+ * Підсумок збереженої версії для картки шаблону (UI v3, рішення власника 2026-11-26): розділи, задачі й обов'язкові
+ * задачі зі знімка версії (ADR 0002). Незбережені зміни адміністратора сюди не входять — картка показує збережене.
+ */
+export function versionSummary(content: unknown): { sections: number; tasks: number; required: number } {
+  const sections = Array.isArray((content as { sections?: unknown })?.sections)
+    ? ((content as { sections: { tasks?: { is_required?: boolean }[] }[] }).sections)
+    : [];
+  const tasks = sections.flatMap((section) => (Array.isArray(section.tasks) ? section.tasks : []));
+  return { sections: sections.length, tasks: tasks.length, required: tasks.filter((task) => task.is_required === true).length };
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { requiredLabel } from "@/lib/runs/domain";
 import {
+  versionSummary,
   addTaskFormState,
   addTaskNeedsSignIn,
   cleanName,
@@ -192,5 +193,19 @@ describe("Шаблони: правила екранів", () => {
     expect(addTaskNeedsSignIn({ type: "rejected", code: "NOT_SIGNED_IN" })).toBe(true);
     expect(addTaskNeedsSignIn({ type: "rejected", code: "NOT_ALLOWED" })).toBe(false);
     expect(addTaskNeedsSignIn({ type: "unreachable" })).toBe(false);
+  });
+});
+
+describe("Картка шаблону: підсумок версії (рішення власника 2026-11-26, ADR 0012)", () => {
+  it("рахує розділи, задачі й обов'язкові зі знімка; зламаний знімок — нулі", () => {
+    const content = {
+      sections: [
+        { tasks: [{ is_required: true }, { is_required: false }] },
+        { tasks: [{ is_required: true }] },
+      ],
+    };
+    expect(versionSummary(content)).toEqual({ sections: 2, tasks: 3, required: 2 });
+    expect(versionSummary(null)).toEqual({ sections: 0, tasks: 0, required: 0 });
+    expect(versionSummary({ sections: [{}] })).toEqual({ sections: 1, tasks: 0, required: 0 });
   });
 });
