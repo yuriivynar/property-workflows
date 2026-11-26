@@ -3,6 +3,7 @@ import { Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { PageShell } from "@/components/ui/page-shell";
 import { getViewer } from "@/lib/auth/viewer";
+import { avatarSrc } from "@/lib/profile/avatar";
 import { parseTheme, THEME_COOKIE, themeAttribute } from "@/lib/theme";
 import { signOut } from "./login/actions";
 import "./globals.css";
@@ -40,7 +41,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PageShell signedIn={Boolean(viewer)} role={viewer?.role} email={viewer?.email} theme={theme} signOut={signOut}>{children}</PageShell>
+        <PageShell signedIn={Boolean(viewer)} role={viewer?.role} email={viewer?.email} theme={theme} signOut={signOut} avatarSrc={avatarSrc(viewer?.avatarPath)}>{children}</PageShell>
       </body>
     </html>
   );

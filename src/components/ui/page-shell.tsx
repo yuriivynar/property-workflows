@@ -20,6 +20,7 @@ function PageShell({
   email,
   theme,
   signOut,
+  avatarSrc,
   children,
   className,
 }: {
@@ -29,6 +30,8 @@ function PageShell({
   /** Email того, хто увійшов (власний профіль), — унизу бічної панелі. */
   email?: string | null
   theme: Theme
+  /** Власне фото для аватара (/api/avatar), якщо є. */
+  avatarSrc?: string | null
   /** Server Action виходу — для меню користувача й Sheet телефону. */
   signOut: () => Promise<void>
   children: React.ReactNode
@@ -55,12 +58,12 @@ function PageShell({
         <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2">
           <Brand tone="hero" href="/runs" />
           <div className="lg:hidden">
-            <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} />
+            <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
           </div>
         </div>
         <MainNav items={navItems(role)} />
         <div className="mt-auto hidden border-t border-hero-border pt-3 lg:block">
-          <UserMenu key={theme} email={email} role={role} theme={theme} signOut={signOut} />
+          <UserMenu key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col max-lg:pb-20">

@@ -8,6 +8,8 @@ export interface Viewer {
   email: string | null;
   /** Роль із profiles (ніколи з user_metadata); null — профілю немає. */
   role: string | null;
+  /** Шлях власного фото в бакеті avatars (ADR 0012); null — фото немає. */
+  avatarPath: string | null;
 }
 
 /**
@@ -20,7 +22,12 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   if (!claims?.sub) return null;
-  const { data: profile } = await supabase.from("profiles").select("email, role").eq("id", claims.sub).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("email, role, avatar_url").eq("id", claims.sub).maybeSingle();
   const jwtEmail = typeof claims.email === "string" ? claims.email : null;
-  return { userId: claims.sub, email: profile?.email ?? jwtEmail, role: profile?.role ?? null };
+  return {
+    userId: claims.sub,
+    email: profile?.email ?? jwtEmail,
+    role: profile?.role ?? null,
+    avatarPath: profile?.avatar_url ?? null,
+  };
 });
