@@ -109,7 +109,10 @@ export async function setRunFieldAnswer(formData: FormData) {
     redirect(`${runPath}?error=ANSWER_NOT_ALLOWED`);
   }
 
-  const { error } = await supabase.rpc("set_run_field_answer", { p_field_id: fieldId, p_answer: answer || null });
+  // Порожня відповідь — null («без відповіді»): функція бази це приймає, а згенеровані типи параметрів функцій Postgres
+  // завжди не-null (у параметрів немає позначки nullable), тож тип звужуємо явно.
+  const p_answer = (answer || null) as string;
+  const { error } = await supabase.rpc("set_run_field_answer", { p_field_id: fieldId, p_answer });
   if (error) {
     redirect(`${runPath}?error=${encodeURIComponent(errorCodeFrom(error.message) ?? "UNEXPECTED")}`);
   }
