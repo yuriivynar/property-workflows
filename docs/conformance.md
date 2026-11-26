@@ -135,3 +135,8 @@
 | AC-DOCAI-14 | вендор — виконавець задач 3 і 4 — не бачить блоку «Parse a document» | `src/lib/documents/form.ts` (canUseDocumentBlock), `src/app/runs/[id]/_document/run-documents.tsx` | `src/lib/documents/form.test.ts` | реалізовано |
 | AC-DOCAI-15 | менеджер B — виконавець задачі в чужому запуску — не бачить блоку | `src/lib/documents/form.ts` (canUseDocumentBlock), `src/app/runs/[id]/_document/run-documents.tsx` | `src/lib/documents/form.test.ts` | реалізовано |
 | AC-DOCAI-16 | прямий запит вендора чи не-менеджера запуску: жодних значень, жодного запису, «Not enough rights» | `src/lib/documents/service.ts`, `supabase/migrations/20261116092131_run_document_values.sql`, `supabase/migrations/20261117092135_ai_requests_limits_and_profile_email_sync.sql` | `src/lib/documents/service.test.ts`, `tests/db/document-values.test.ts`, `tests/db/ai-requests.test.ts`, `tests/db/rule-parity.test.ts` | реалізовано |
+| AC-LOGIC-01 | запуск «Repair» показує поле «Urgency» без відповіді і 3 задачі, прогрес «0 of 3 done» | — | — | відкладено (чекає реалізації) |
+| AC-LOGIC-02 | відповідь «urgent» показує «Send an emergency plumber» зі статусом «to do», прогрес «0 of 4 done» | — | — | відкладено (чекає реалізації) |
+| AC-LOGIC-03 | прихована обов'язкова задача не блокує завершення: третя показана задача «done» — запуск «completed» | — | — | відкладено (чекає реалізації) |
+| AC-LOGIC-04 | «not urgent», потім знову «urgent» — залежна задача «to do», а не «done» | — | — | відкладено (чекає реалізації) |
+| AC-LOGIC-05 | виконавець, не менеджер запуску, змінює відповідь — відповідь та сама, «Only the run manager or an administrator can change the answers» | — | — | відкладено (чекає реалізації) |
