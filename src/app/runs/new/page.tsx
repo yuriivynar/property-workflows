@@ -8,7 +8,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { NotEnoughRights } from "@/components/not-enough-rights";
-import { signedInViewer } from "@/lib/auth/require-role";
+import { getViewer } from "@/lib/auth/viewer";
 import { createClient } from "@/lib/supabase/server";
 import { launchOptions } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
@@ -24,7 +24,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const message = typeof error === "string" ? messageForError(error) : undefined;
 
   const supabase = await createClient();
-  const viewer = await signedInViewer(supabase);
+  const viewer = await getViewer();
   if (!viewer) {
     redirect("/login");
   }

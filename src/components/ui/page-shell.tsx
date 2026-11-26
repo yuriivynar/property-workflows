@@ -2,13 +2,15 @@ import Link from "next/link"
 import { cn } from "cn"
 import { BrandMark } from "@/components/ui/brand-mark"
 import { MainNav } from "@/components/ui/main-nav"
+import { PageTransition } from "@/components/ui/page-transition"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
+import { UserMenu, UserSheet } from "@/components/ui/user-menu"
 import { navItems } from "@/lib/auth/nav"
 import type { Theme } from "@/lib/theme"
 
-// Спільний макет усіх сторінок (ADR 0008). Увійшов: від lg — графітова бічна панель (логотип, навігація, email і
-// роль), на телефоні — графітова смуга з логотипом і вибором «Theme» та нижні вкладки навігації; вибір «Theme» на
-// десктопі — у правому верхньому куті над вмістом. Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
+// Спільний макет усіх сторінок (ADR 0008, ADR 0012). Увійшов: від lg — графітова бічна панель (логотип, навігація,
+// внизу меню користувача з вибором «Theme», Profile і Sign out), на телефоні — графітова смуга з логотипом і аватаром
+// (Sheet з «Theme» і Sign out) та нижні вкладки навігації. Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
 // в одному рядку на тлі сторінки. Відмова («Not enough rights»), «не знайдено» й вхід — у тому самому макеті
 // (DESIGN.md, «Стани»; AC-DSYS-02, AC-DSYS-03). Вибір «Theme» — на кожній сторінці (ADR 0004; AC-DSYS-05, AC-DSYS-06);
 // key: якщо сервер віддав іншу тему (cookie змінили в іншій вкладці), перемикач відтворюється з нею.
@@ -17,6 +19,7 @@ function PageShell({
   role,
   email,
   theme,
+  signOut,
   children,
   className,
 }: {
@@ -26,6 +29,8 @@ function PageShell({
   /** Email того, хто увійшов (власний профіль), — унизу бічної панелі. */
   email?: string | null
   theme: Theme
+  /** Server Action виходу — для меню користувача й Sheet телефону. */
+  signOut: () => Promise<void>
   children: React.ReactNode
   className?: string
 }) {
@@ -50,22 +55,16 @@ function PageShell({
         <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2">
           <Brand tone="hero" href="/runs" />
           <div className="lg:hidden">
-            <ThemeSwitch key={theme} value={theme} tone="hero" name="theme-mobile" />
+            <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} />
           </div>
         </div>
         <MainNav items={navItems(role)} />
-        {email ? (
-          <div className="mt-auto hidden flex-col gap-0.5 border-t border-hero-border px-2 pt-4 text-sm lg:flex">
-            <span className="truncate text-hero-foreground">{email}</span>
-            {role ? <span className="text-hero-muted">{role}</span> : null}
-          </div>
-        ) : null}
+        <div className="mt-auto hidden border-t border-hero-border pt-3 lg:block">
+          <UserMenu key={theme} email={email} role={role} theme={theme} signOut={signOut} />
+        </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col max-lg:pb-20">
-        <div className="hidden justify-end px-6 pt-4 lg:flex">
-          <ThemeSwitch key={theme} value={theme} />
-        </div>
-        {children}
+        <PageTransition>{children}</PageTransition>
       </div>
     </div>
   )

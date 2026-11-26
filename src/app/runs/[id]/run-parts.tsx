@@ -5,7 +5,7 @@ import { ProgressRing } from "@/components/ui/progress-ring";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { LABELS } from "@/lib/runs/messages";
 import { answerLabel, canMarkTask, formatProgress, needsConfirmation, requiredLabel } from "@/lib/runs/domain";
-import { MarkDoneButton } from "./mark-done-button";
+import { TaskItem } from "./task-item";
 import { AnswerDot, UrgencyMenu, type FieldOption } from "./urgency-menu";
 
 // Частини сторінки запуску (UI v3, ADR 0012): картка деталей і розділ із задачами. Дані готує page.tsx.
@@ -120,35 +120,17 @@ function TaskRow(props: {
     status: task.status,
   });
   return (
-    <li
-      data-testid="run-task"
-      className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors duration-(--duration-fast) hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
-    >
-      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-        <span className="min-w-0 [overflow-wrap:anywhere]">
-          {task.name} <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
-          {field && task.show_when_value ? (
-            <span className="block text-muted-foreground">
-              {LABELS.becauseAnswer(field.name, answerLabel(task.show_when_value))}
-            </span>
-          ) : null}
-        </span>
-        <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-foreground">
-          <span>{props.assignee}</span>
-          <span data-testid="task-status">
-            <StatusBadge status={task.status} />
-          </span>
-        </span>
-      </div>
-      {canMark ? (
-        <MarkDoneButton
-          runId={props.runId}
-          taskId={task.id}
-          taskName={task.name}
-          confirm={needsConfirmation([...props.allTasks], task.id)}
-        />
-      ) : null}
-    </li>
+    <TaskItem
+      runId={props.runId}
+      taskId={task.id}
+      name={task.name}
+      requiredText={requiredLabel(task.is_required)}
+      conditionText={field && task.show_when_value ? LABELS.becauseAnswer(field.name, answerLabel(task.show_when_value)) : undefined}
+      assignee={props.assignee}
+      status={task.status}
+      canMark={canMark}
+      confirm={needsConfirmation([...props.allTasks], task.id)}
+    />
   );
 }
 

@@ -10,7 +10,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { listRuns } from "@/lib/runs/queries";
-import { signedInViewer } from "@/lib/auth/require-role";
+import { getViewer } from "@/lib/auth/viewer";
 import { createClient } from "@/lib/supabase/server";
 
 // Рядок таблиці на телефоні стає карткою (сітка з двох колонок), а клітинки — її частинами (ADR 0007).
@@ -26,7 +26,7 @@ const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal max-sm:[overflow-
 // Вендор бачить окремий список (VendorRuns): лише запуски зі своїми задачами (AC-VENDOR-03, AC-VENDOR-10).
 export default async function RunsPage() {
   const supabase = await createClient();
-  const viewer = await signedInViewer(supabase);
+  const viewer = await getViewer();
   if (!viewer) {
     redirect("/login");
   }
