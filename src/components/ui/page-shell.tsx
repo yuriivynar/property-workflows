@@ -3,6 +3,8 @@ import { cn } from "cn"
 import { BrandMark } from "@/components/ui/brand-mark"
 import { MainNav } from "@/components/ui/main-nav"
 import { PageTransition } from "@/components/ui/page-transition"
+import { CommandPalette } from "@/components/ui/command-palette"
+import type { SearchItem } from "@/app/search/actions"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
 import { UserMenu, UserSheet } from "@/components/ui/user-menu"
 import { navItems } from "@/lib/auth/nav"
@@ -21,6 +23,7 @@ function PageShell({
   theme,
   signOut,
   avatarSrc,
+  search,
   children,
   className,
 }: {
@@ -30,6 +33,8 @@ function PageShell({
   /** Email того, хто увійшов (власний профіль), — унизу бічної панелі. */
   email?: string | null
   theme: Theme
+  /** Дані палітри ⌘K (Server Action searchIndex) — лише після входу. */
+  search: () => Promise<SearchItem[]>
   /** Власне фото для аватара (/api/avatar), якщо є. */
   avatarSrc?: string | null
   /** Server Action виходу — для меню користувача й Sheet телефону. */
@@ -57,9 +62,13 @@ function PageShell({
       >
         <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2">
           <Brand tone="hero" href="/runs" />
-          <div className="lg:hidden">
+          <div className="flex items-center gap-1 lg:hidden">
+            <CommandPalette load={search} tone="bar" />
             <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
           </div>
+        </div>
+        <div className="hidden px-0 lg:block">
+          <CommandPalette load={search} />
         </div>
         <MainNav items={navItems(role)} />
         <div className="mt-auto hidden border-t border-hero-border pt-3 lg:block">

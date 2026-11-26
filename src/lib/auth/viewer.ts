@@ -1,16 +1,9 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { toViewer, type Viewer } from "./viewer-data";
 
-export interface Viewer {
-  userId: string;
-  /** Email з профілю (власний), інакше з JWT. */
-  email: string | null;
-  /** Роль із profiles (ніколи з user_metadata); null — профілю немає. */
-  role: string | null;
-  /** Шлях власного фото в бакеті avatars (ADR 0012); null — фото немає. */
-  avatarPath: string | null;
-}
+export type { Viewer } from "./viewer-data";
 
 /**
  * Хто відкрив сторінку — один раз на рендер (React `cache()`): макет і сторінка беруть той самий результат, тож
@@ -23,11 +16,5 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const claims = data?.claims;
   if (!claims?.sub) return null;
   const { data: profile } = await supabase.from("profiles").select("email, role, avatar_url").eq("id", claims.sub).maybeSingle();
-  const jwtEmail = typeof claims.email === "string" ? claims.email : null;
-  return {
-    userId: claims.sub,
-    email: profile?.email ?? jwtEmail,
-    role: profile?.role ?? null,
-    avatarPath: profile?.avatar_url ?? null,
-  };
+  return toViewer(claims, profile);
 });

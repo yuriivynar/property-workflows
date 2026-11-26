@@ -156,6 +156,13 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | Властивість поля запуску (`UrgencyMenu`) | — | поле #51 у картці деталей: кнопка-меню з крапкою (без відповіді — пунктирне кільце, «Urgent» — `destructive`, «Not urgent» — `fill-progress`), слово поруч, під кожною відповіддю — рядок ефекту; прихована задача — пунктирний рядок-«привид» з «Set Urgency»; лише менеджеру запуску й адміністратору (AC-LOGIC-02, AC-LOGIC-05; ADR 0012) |
 | `ProgressBar` | — | смужка поряд із текстом «N of M done» (текст лишається); синя, поки йде, зелена, коли все виконано; для читачів екрана прихована |
 | `FieldError` | — | помилка поля під полем (ADR 0012): після відправлення, іконка, `role="alert"`; поле — `aria-invalid` + `aria-describedby`; щойно поле змінили — помилка зникає й `aria-invalid` знімається; текст — дослівно з AC |
+| `FormAlert` | — | помилка форми (ADR 0012): `Alert` з коротким заголовком («Version 3 was not saved», «Run not launched») і дослівним текстом AC; фокус переходить на нього |
+| Статус автозбереження (`AutosaveStatus`) | — | в одному фіксованому місці — у рядку збереження редактора: «All changes kept» або `role="alert"` «Your last change was not kept. Try again.» (AC-EDITOR-25) |
+| Рядок, що розгортається (`ExpandableRunRow`) | — | список запусків: кнопка-стрілка (`aria-expanded`, над посиланням рядка) відкриває прогрес розділів і «Next: задача · email»; щільна таблиця лишається |
+| `CommandPalette` | — | ⌘K / Ctrl+K і кнопка «Search everything» у бічній панелі: запуски, шаблони, дії за роллю (shadcn `Command`); дані — Server Action при відкритті |
+| Activity + `RunLive` | — | стрічка подій запуску (хто — «You» або email, що, коли) і «Live · updated just now» (Supabase Realtime, діє RLS); крапка нейтральна, не статусна |
+| Фото профілю (`AvatarUpload`) | — | Profile: перетягнути чи обрати PNG/JPG до 2 МБ, попередній перегляд, «Remove photo»; власне фото — через `/api/avatar`; **чужих фото ніколи** — лише email |
+| `CountUp` | — | лічильники «Your work»: 20 кроків по 30 мс від 0, лише при показі; `prefers-reduced-motion` — одразу число |
 | Миттєва позначка (`TaskItem`) | — | «done» видно одразу (`useOptimistic`), сервер підтверджує у фоні; відмова повертає рядок на місці — «to do» і дослівний текст AC у цьому ж рядку (ADR 0012) |
 | Підтвердження на місці | — | незворотна дія підтверджується в тому самому рядку, без спливаючого вікна: назва задачі чи розділу + «This cannot be undone», кнопка `destructive` і «Cancel» (`mark-done-button.tsx`, `remove-section-button.tsx`) |
 | `Alert` | `default`, `destructive` | помилка над формою на тлі `destructive-surface`; текст — дослівно з AC; введене лишається у формі |

@@ -6,6 +6,7 @@ import { getViewer } from "@/lib/auth/viewer";
 import { avatarSrc } from "@/lib/profile/avatar";
 import { parseTheme, THEME_COOKIE, themeAttribute } from "@/lib/theme";
 import { signOut } from "./login/actions";
+import { searchIndex } from "./search/actions";
 import "./globals.css";
 
 // IBM Plex Sans — шрифт інтерфейсу (ADR 0007): ділове, чітке накреслення з цифрами однакової ширини.
@@ -41,7 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <PageShell signedIn={Boolean(viewer)} role={viewer?.role} email={viewer?.email} theme={theme} signOut={signOut} avatarSrc={avatarSrc(viewer?.avatarPath)}>{children}</PageShell>
+        <PageShell signedIn={Boolean(viewer)} role={viewer?.role} email={viewer?.email} theme={theme} signOut={signOut} avatarSrc={avatarSrc(viewer?.avatarPath)} search={searchIndex}>{children}</PageShell>
       </body>
     </html>
   );

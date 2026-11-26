@@ -15,27 +15,35 @@ function weekAgoIso(): string {
   return new Date(Date.now() - WEEK_MS).toISOString();
 }
 
-/** Назви запусків і чи потребує задача підтвердження: вендору — з його функцій бази, іншим — з RLS-читань. */
-async function runContext(supabase: Client, viewer: Viewer, runIds: string[]) {
-  const names = new Map<string, string>();
-  const confirm = new Map<string, boolean>();
-  if (runIds.length === 0) return { names, confirm };
-  if (viewer.role === "vendor") {
-    const { data: runs } = await supabase.rpc("vendor_runs");
-    for (const run of runs ?? []) names.set(run.id, run.case_name);
-    const lists = await Promise.all(runIds.map((id) => supabase.rpc("vendor_run_tasks", { p_run_id: id })));
-    for (const { data } of lists) for (const task of data ?? []) confirm.set(task.id, task.needs_confirmation);
-    return { names, confirm };
-  }
+type RunContext = { names: Map<string, string>; confirm: Map<string, boolean> };
+
+/** Вендор: назви — з vendor_runs, підтвердження — з vendor_run_tasks (рядків runs йому RLS не віддає). */
+async function vendorContext(supabase: Client, runIds: string[]): Promise<RunContext> {
+  const [{ data: runs }, ...lists] = await Promise.all([
+    supabase.rpc("vendor_runs"),
+    ...runIds.map((id) => supabase.rpc("vendor_run_tasks", { p_run_id: id })),
+  ]);
+  const names = new Map((runs ?? []).map((run) => [run.id, run.case_name]));
+  const confirm = new Map(lists.flatMap(({ data }) => (data ?? []).map((task) => [task.id, task.needs_confirmation] as const)));
+  return { names, confirm };
+}
+
+/** Менеджер і адміністратор: назви й задачі запусків — під RLS; підтвердження — needsConfirmation за задачами запуску. */
+async function staffContext(supabase: Client, runIds: string[]): Promise<RunContext> {
   const [{ data: runs }, { data: tasks }] = await Promise.all([
     supabase.from("run_overview").select("id, case_name").in("id", runIds),
     supabase.from("run_tasks").select("id, run_id, is_required, status, is_shown").in("run_id", runIds),
   ]);
-  for (const run of runs ?? []) if (run.id) names.set(run.id, run.case_name ?? "");
-  for (const task of tasks ?? []) {
-    confirm.set(task.id, needsConfirmation((tasks ?? []).filter((other) => other.run_id === task.run_id), task.id));
-  }
+  const all = tasks ?? [];
+  const names = new Map((runs ?? []).map((run) => [run.id ?? "", run.case_name ?? ""]));
+  const confirm = new Map(all.map((task) => [task.id, needsConfirmation(all.filter((other) => other.run_id === task.run_id), task.id)] as const));
   return { names, confirm };
+}
+
+/** Назви запусків і чи потребує задача підтвердження (останню обов'язкову підтверджують, AC-TASK-04, AC-TASK-16). */
+function runContext(supabase: Client, viewer: Viewer, runIds: string[]): Promise<RunContext> {
+  if (runIds.length === 0) return Promise.resolve({ names: new Map(), confirm: new Map() });
+  return viewer.role === "vendor" ? vendorContext(supabase, runIds) : staffContext(supabase, runIds);
 }
 
 /**
