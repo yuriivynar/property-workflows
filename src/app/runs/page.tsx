@@ -8,15 +8,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   caseQueryParam,
-  filterRuns,
   formatYourTasks,
   runsListState,
   runDigest,
   runTabParam,
   type RunDigest,
 } from "@/lib/runs/domain";
-import { RunsToolbar } from "./runs-toolbar";
-import { CELL_STACK, ROW_STACK, RunsTable, type RunRow } from "./runs-table";
+import { RunsBrowser } from "./runs-browser";
+import { CELL_STACK, ROW_STACK, RunTableRow, type RunRow } from "./runs-table";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { listRunContents, listRuns } from "@/lib/runs/queries";
 import { getViewer } from "@/lib/auth/viewer";
@@ -41,8 +40,8 @@ export default async function RunsPage({ searchParams }: PageProps<"/runs">) {
   if (viewer.role === "vendor") return <VendorRuns />;
 
   const { data: runs, error: loadError } = await listRuns(supabase);
-  const { rows, counts } = filterRuns(runs ?? [], tab, query);
-  const { digests, emails } = await loadDigests(supabase, rows);
+  // Усі запуски одним разом: вкладки й фільтр — у браузері, без нового запиту до сервера (рішення власника 2026-11-26).
+  const { digests, emails } = await loadDigests(supabase, runs ?? []);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -57,17 +56,22 @@ export default async function RunsPage({ searchParams }: PageProps<"/runs">) {
           <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
         </Alert>
       ) : runsListState(runs) === "table" ? (
-        <>
-        <RunsToolbar tab={tab} query={query} counts={counts} />
-        {rows.length === 0 ? (
-          <div className="flex flex-col gap-1 rounded-xl border border-dashed border-border px-4 py-6 text-sm" data-testid="runs-no-match">
-            <p className="font-medium">{LABELS.noRunsMatch(query)}</p>
-            <p className="text-muted-foreground">{LABELS.tryAnotherCaseName}</p>
-          </div>
-        ) : (
-        <RunsTable rows={rows} digests={digests} emails={emails} />
-        )}
-        </>
+        <RunsBrowser
+          initialTab={tab}
+          initialQuery={query}
+          items={(runs ?? []).flatMap((run) =>
+            run.id
+              ? [
+                  {
+                    id: run.id,
+                    case_name: run.case_name,
+                    status: run.status,
+                    row: <RunTableRow run={run} digest={digests.get(run.id)} emails={emails} />,
+                  },
+                ]
+              : [],
+          )}
+        />
       ) : (
         <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
       )}

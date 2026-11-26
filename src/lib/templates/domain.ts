@@ -38,6 +38,12 @@ export const TEMPLATE_MESSAGES = {
   templatesSubtitle: "Blueprints of processes. Managers launch only saved versions.",
   saveToLaunch: "Save the template to launch it",
   savedBy: (when: string, email: string | null) => (email ? `Saved ${when} by ${email}` : `Saved ${when}`),
+  // Створення — у вікні за кнопкою «New template», пошук — окремим полем (рішення власника 2026-11-26, ADR 0012).
+  newTemplate: "New template",
+  newTemplateHint: "Give the template a name. You add sections and tasks in the editor.",
+  searchTemplates: "Search templates",
+  noTemplatesMatch: (query: string) => `No templates match “${query}”`,
+  tryAnotherName: "Try another name or clear the search.",
 } as const;
 
 /** Коди помилок функцій бази й дій → текст для людини. Невідомий код — загальна помилка без деталей. */

@@ -7,12 +7,15 @@ import { CommandPalette } from "@/components/ui/command-palette"
 import type { SearchItem } from "@/app/search/actions"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
 import { UserMenu, UserSheet } from "@/components/ui/user-menu"
+import { SidebarControls, SidebarFrame } from "@/components/ui/sidebar-frame"
+import type { SidebarState } from "@/lib/sidebar"
 import { navItems } from "@/lib/auth/nav"
 import type { Theme } from "@/lib/theme"
 
 // Спільний макет усіх сторінок (ADR 0008, ADR 0012). Увійшов: від lg — графітова бічна панель (логотип, навігація,
 // внизу меню користувача з вибором «Theme», Profile і Sign out), на телефоні — графітова смуга з логотипом і аватаром
-// (Sheet з «Theme» і Sign out) та нижні вкладки навігації. Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
+// (Sheet з «Theme» і Sign out) та нижні вкладки навігації. Від lg панель розгорнута, згорнута чи прихована (SidebarFrame,
+// cookie «sidebar»; ADR 0012, доповнення). Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
 // в одному рядку на тлі сторінки. Відмова («Not enough rights»), «не знайдено» й вхід — у тому самому макеті
 // (DESIGN.md, «Стани»; AC-DSYS-02, AC-DSYS-03). Вибір «Theme» — на кожній сторінці (ADR 0004; AC-DSYS-05, AC-DSYS-06);
 // key: якщо сервер віддав іншу тему (cookie змінили в іншій вкладці), перемикач відтворюється з нею.
@@ -21,6 +24,7 @@ function PageShell({
   role,
   email,
   theme,
+  sidebar = "expanded",
   signOut,
   avatarSrc,
   search,
@@ -33,6 +37,8 @@ function PageShell({
   /** Email того, хто увійшов (власний профіль), — унизу бічної панелі. */
   email?: string | null
   theme: Theme
+  /** Стан бічної панелі від lg (cookie «sidebar»): розгорнута, згорнута чи прихована. */
+  sidebar?: SidebarState
   /** Дані палітри ⌘K (Server Action searchIndex) — лише після входу. */
   search: () => Promise<SearchItem[]>
   /** Власне фото для аватара (/api/avatar), якщо є. */
@@ -55,30 +61,30 @@ function PageShell({
   }
 
   return (
-    <div data-slot="page-shell" className={cn("flex min-h-full flex-1 flex-col lg:flex-row", className)}>
-      <aside
-        data-slot="app-sidebar"
-        className="bg-hero text-hero-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:shrink-0 lg:flex-col lg:gap-8 lg:px-3 lg:py-5"
-      >
-        <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2">
-          <Brand tone="hero" href="/runs" />
-          <div className="flex items-center gap-1 lg:hidden">
-            <CommandPalette load={search} tone="bar" />
-            <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
+    <SidebarFrame
+      initial={sidebar}
+      sidebar={
+        <>
+          <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2 lg:group-data-[state=collapsed]/sidebar:flex-col lg:group-data-[state=collapsed]/sidebar:px-0">
+            <Brand tone="hero" href="/runs" />
+            <SidebarControls />
+            <div className="flex items-center gap-1 lg:hidden">
+              <CommandPalette load={search} tone="bar" />
+              <UserSheet key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
+            </div>
           </div>
-        </div>
-        <div className="hidden px-0 lg:block">
-          <CommandPalette load={search} />
-        </div>
-        <MainNav items={navItems(role)} />
-        <div className="mt-auto hidden border-t border-hero-border pt-3 lg:block">
-          <UserMenu key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col max-lg:pb-20">
-        <PageTransition>{children}</PageTransition>
-      </div>
-    </div>
+          <div className="hidden px-0 lg:block">
+            <CommandPalette load={search} />
+          </div>
+          <MainNav items={navItems(role)} />
+          <div className="mt-auto hidden border-t border-hero-border pt-3 lg:block">
+            <UserMenu key={theme} email={email} role={role} theme={theme} signOut={signOut} avatarSrc={avatarSrc} />
+          </div>
+        </>
+      }
+    >
+      <PageTransition>{children}</PageTransition>
+    </SidebarFrame>
   )
 }
 
@@ -100,7 +106,7 @@ function Brand({ tone, href }: { tone: "page" | "hero"; href: string }) {
           <span className="text-muted-foreground">workflows</span>
         </span>
       ) : (
-        <span className="text-[15px] font-semibold whitespace-nowrap">Property workflows</span>
+        <span className="text-[15px] font-semibold whitespace-nowrap lg:group-data-[state=collapsed]/sidebar:sr-only">Property workflows</span>
       )}
     </Link>
   )

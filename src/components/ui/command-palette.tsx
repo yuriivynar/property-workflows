@@ -14,6 +14,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command"
 import type { SearchItem } from "@/app/search/actions"
+import { useSidebar } from "@/components/ui/sidebar-frame"
 
 const GROUPS = ["Runs", "Templates", "Actions"] as const
 
@@ -27,6 +28,7 @@ function CommandPalette({ load, tone = "hero" }: { load: () => Promise<SearchIte
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<SearchItem[] | null>(null)
   const [, startTransition] = useTransition()
+  const collapsed = useSidebar().state === "collapsed"
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -61,18 +63,19 @@ function CommandPalette({ load, tone = "hero" }: { load: () => Promise<SearchIte
         type="button"
         onClick={() => setOpen(true)}
         aria-label={tone === "bar" ? "Search everything" : undefined}
+        title={collapsed && tone === "hero" ? "Search everything (Ctrl+K)" : undefined}
         className={cn(
           "flex items-center gap-2 rounded-lg text-sm outline-none transition-colors duration-(--duration-fast) focus-visible:outline-2 focus-visible:outline-hero-foreground",
           tone === "hero"
-            ? "h-10 w-full border border-hero-border px-3 text-hero-muted hover:bg-hero-hover hover:text-hero-foreground"
+            ? "h-10 w-full border border-hero-border px-3 text-hero-muted hover:bg-hero-hover hover:text-hero-foreground lg:group-data-[state=collapsed]/sidebar:justify-center lg:group-data-[state=collapsed]/sidebar:px-0"
             : "size-11 justify-center text-hero-foreground hover:bg-hero-hover"
         )}
       >
         <Search aria-hidden="true" className="size-4 shrink-0" />
         {tone === "hero" ? (
           <>
-            <span className="flex-1 text-left">Search everything</span>
-            <kbd className="rounded border border-hero-border px-1.5 text-xs">⌘K</kbd>
+            <span className="flex-1 text-left lg:group-data-[state=collapsed]/sidebar:sr-only">Search everything</span>
+            <kbd className="rounded border border-hero-border px-1.5 text-xs lg:group-data-[state=collapsed]/sidebar:hidden">⌘K</kbd>
           </>
         ) : null}
       </button>

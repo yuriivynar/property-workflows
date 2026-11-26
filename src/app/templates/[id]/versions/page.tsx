@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatVersionDate, newestFirst, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
 import { NotEnoughRights } from "@/components/not-enough-rights";
 import { Notice } from "@/components/ui/notice";
+import { BackLink } from "@/components/ui/back-link";
 
 // Список версій — лише адміністратор: номер, дата й час збереження за Києвом (DD.MM.YYYY HH:MM), email автора,
 // найновіша перша (AC-EDITOR-05). Менеджер бачить «Not enough rights» і жодної версії; версії для нього не
@@ -42,6 +43,8 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+      {/* Кнопка «назад» угорі (рішення власника 2026-11-26, ADR 0012). */}
+      <BackLink href="/templates">{TEMPLATE_MESSAGES.backToTemplates}</BackLink>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">Versions</h1>
         <p className="text-sm text-muted-foreground">{template.name}</p>

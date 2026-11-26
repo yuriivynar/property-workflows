@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { LayoutTemplate, ListChecks, UserRound, type LucideIcon } from "lucide-react"
 import { cn } from "cn"
 import type { NavItem } from "@/lib/auth/nav"
+import { useSidebar } from "@/components/ui/sidebar-frame"
 
 const ICONS: Record<string, LucideIcon> = { "/templates": LayoutTemplate, "/runs": ListChecks, "/": UserRound }
 
@@ -14,6 +15,7 @@ const ICONS: Record<string, LucideIcon> = { "/templates": LayoutTemplate, "/runs
 // із ним точний; решта — за початком шляху. Пункти — за роллю (navItems, AC-VENDOR-13).
 function MainNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
+  const collapsed = useSidebar().state === "collapsed"
   return (
     <nav
       aria-label="Main"
@@ -27,15 +29,16 @@ function MainNav({ items }: { items: NavItem[] }) {
             key={item.href}
             href={item.href}
             aria-current={current ? "page" : undefined}
+            title={collapsed ? item.label : undefined}
             className={cn(
               "flex items-center rounded-lg font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
               "max-lg:h-14 max-lg:flex-col max-lg:justify-center max-lg:gap-1 max-lg:text-xs max-lg:text-muted-foreground max-lg:focus-visible:outline-ring",
-              "lg:h-10 lg:gap-3 lg:px-3 lg:text-sm lg:text-hero-muted lg:hover:bg-hero-hover lg:hover:text-hero-foreground lg:focus-visible:outline-hero-foreground",
+              "lg:h-10 lg:gap-3 lg:px-3 lg:group-data-[state=collapsed]/sidebar:justify-center lg:group-data-[state=collapsed]/sidebar:px-0 lg:text-sm lg:text-hero-muted lg:hover:bg-hero-hover lg:hover:text-hero-foreground lg:focus-visible:outline-hero-foreground",
               current && "max-lg:bg-muted max-lg:text-foreground lg:bg-hero-hover lg:text-hero-foreground"
             )}
           >
             {Icon ? <Icon aria-hidden="true" className="size-5 shrink-0 lg:size-[18px]" /> : null}
-            {item.label}
+            <span className="lg:group-data-[state=collapsed]/sidebar:sr-only">{item.label}</span>
           </Link>
         )
       })}
