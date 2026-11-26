@@ -180,3 +180,36 @@ export function taskBelongsToRun(task: { run_id: string } | null | undefined, ru
 export function runsListState(runs: readonly unknown[] | null | undefined): "empty" | "table" {
   return runs && runs.length > 0 ? "table" : "empty";
 }
+
+/** Вкладки списку запусків (UI v3, рішення власника 2026-11-26): усі, лише «in progress», лише «completed». */
+export const RUN_TABS = ["all", "in_progress", "completed"] as const;
+export type RunTab = (typeof RUN_TABS)[number];
+
+/** Вкладка з адреси (?status=…): невідоме значення — «all». */
+export function runTabParam(value: string | string[] | undefined): RunTab {
+  return typeof value === "string" && (RUN_TABS as readonly string[]).includes(value) ? (value as RunTab) : "all";
+}
+
+/** Фільтр за назвою випадку з адреси (?q=…): без пробілів на краях, до 100 символів, як і сама назва. */
+export function caseQueryParam(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value.trim().slice(0, CASE_NAME_MAX_LENGTH) : "";
+}
+
+/**
+ * Запуски за вкладкою й фільтром (без урахування регістру); лічильники вкладок — з урахуванням фільтра за назвою, щоб
+ * числа збігалися з тим, що видно після перемикання вкладки.
+ */
+export function filterRuns<T extends { case_name: string | null; status: string | null }>(
+  runs: readonly T[],
+  tab: RunTab,
+  query: string,
+): { rows: T[]; counts: Record<RunTab, number> } {
+  const needle = query.toLowerCase();
+  const matching = needle ? runs.filter((run) => (run.case_name ?? "").toLowerCase().includes(needle)) : [...runs];
+  const counts: Record<RunTab, number> = {
+    all: matching.length,
+    in_progress: matching.filter((run) => run.status === "in_progress").length,
+    completed: matching.filter((run) => run.status === "completed").length,
+  };
+  return { rows: tab === "all" ? matching : matching.filter((run) => run.status === tab), counts };
+}

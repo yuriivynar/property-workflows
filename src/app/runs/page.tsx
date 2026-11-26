@@ -7,7 +7,15 @@ import { TextLink } from "@/components/ui/text-link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { formatProgress, formatYourTasks, runsListState } from "@/lib/runs/domain";
+import {
+  caseQueryParam,
+  filterRuns,
+  formatProgress,
+  formatYourTasks,
+  runsListState,
+  runTabParam,
+} from "@/lib/runs/domain";
+import { RunsToolbar } from "./runs-toolbar";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { listRuns } from "@/lib/runs/queries";
 import { getViewer } from "@/lib/auth/viewer";
@@ -24,7 +32,10 @@ const CELL_STACK = "py-2.5 max-sm:p-0 max-sm:whitespace-normal max-sm:[overflow-
 // найновіші вгорі (робочі рішення до solomchaak/property-workflows-spec#10 і коментаря в ньому, #12).
 // Таблиця щільна; на вузькому екрані колонка шаблону переходить під назву випадку (DESIGN.md, розділ 4).
 // Вендор бачить окремий список (VendorRuns): лише запуски зі своїми задачами (AC-VENDOR-03, AC-VENDOR-10).
-export default async function RunsPage() {
+export default async function RunsPage({ searchParams }: PageProps<"/runs">) {
+  const params = await searchParams;
+  const tab = runTabParam(params.status);
+  const query = caseQueryParam(params.q);
   const supabase = await createClient();
   const viewer = await getViewer();
   if (!viewer) {
@@ -34,6 +45,7 @@ export default async function RunsPage() {
   if (viewer.role === "vendor") return <VendorRuns />;
 
   const { data: runs, error: loadError } = await listRuns(supabase);
+  const { rows, counts } = filterRuns(runs ?? [], tab, query);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -47,7 +59,15 @@ export default async function RunsPage() {
         <Alert variant="destructive">
           <AlertDescription>{MESSAGES.unexpected}</AlertDescription>
         </Alert>
-      ) : runsListState(runs) === "table" && runs ? (
+      ) : runsListState(runs) === "table" ? (
+        <>
+        <RunsToolbar tab={tab} query={query} counts={counts} />
+        {rows.length === 0 ? (
+          <div className="flex flex-col gap-1 rounded-xl border border-dashed border-border px-4 py-6 text-sm" data-testid="runs-no-match">
+            <p className="font-medium">{LABELS.noRunsMatch(query)}</p>
+            <p className="text-muted-foreground">{LABELS.tryAnotherCaseName}</p>
+          </div>
+        ) : (
         <Table>
           <TableHeader className="max-sm:sr-only">
             <TableRow>
@@ -59,7 +79,7 @@ export default async function RunsPage() {
           </TableHeader>
           {/* На телефоні рядок — картка: назва (з шаблоном під нею) і статус зверху, прогрес на всю ширину нижче. */}
           <TableBody>
-            {runs.map((run) => (
+            {rows.map((run) => (
               <TableRow key={run.id} data-testid="run-row" className={`${ROW_STACK} relative cursor-pointer`}>
                 <TableCell className={`${CELL_STACK} whitespace-normal [overflow-wrap:anywhere]`}>
                   <TextLink href={`/runs/${run.id}`} className="font-medium no-underline after:absolute after:inset-0 hover:underline">
@@ -85,6 +105,8 @@ export default async function RunsPage() {
             ))}
           </TableBody>
         </Table>
+        )}
+        </>
       ) : (
         <EmptyState message={LABELS.noRuns} actionHref="/runs/new" actionLabel={LABELS.launchTemplate} />
       )}

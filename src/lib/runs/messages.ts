@@ -35,6 +35,15 @@ export const REQUIRED_LABELS = {
 /** Інші написи екранів зрізу (/runs, /runs/new, /runs/[id]) — теж тут, щоб мову змінювати в одному файлі. */
 export const LABELS = {
   runsTitle: "Runs",
+  // Вкладки й фільтр списку (рішення власника 2026-11-26, тексти — з полотна UI v3).
+  tabAll: "All",
+  tabInProgress: "In progress",
+  tabCompleted: "Completed",
+  filterByStatus: "Filter by run status",
+  filterByCaseName: "Filter by case name",
+  applyFilter: "Filter",
+  noRunsMatch: (query: string) => `No runs match "${query}"`,
+  tryAnotherCaseName: "Try another case name or show all runs.",
   launchTemplate: "Launch a template",
   noRuns: "No runs yet. Launch a template to start one.", // AC-DSYS-04, дослівно
   backToProfile: "Back to profile",
