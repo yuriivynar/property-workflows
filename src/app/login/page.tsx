@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PendingButton } from "@/components/ui/pending-button";
+import { redirect } from "next/navigation";
+import { safeNextPath } from "@/lib/auth/access";
+import { landingPath } from "@/lib/auth/landing";
+import { createClient } from "@/lib/supabase/server";
 import { login } from "./actions";
 
 // Інтерфейс англійською (вимоги PM, «Припущення»); вигляд — лише компоненти @/components/ui і токени DESIGN.md.
@@ -14,6 +18,13 @@ const ERRORS: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error, next } = await searchParams;
+  // Уже увійшов — форма входу не потрібна: туди, куди вело посилання, або на свою першу сторінку. Інакше форма
+  // показувалась би всередині макета з навігацією того, хто вже увійшов.
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (userId) redirect(await landingPath(supabase, userId, safeNextPath(next)));
+
   const message = typeof error === "string" ? ERRORS[error] : undefined;
 
   return (
