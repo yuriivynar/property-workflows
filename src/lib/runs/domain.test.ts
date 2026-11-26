@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import {
   answerLabel,
+  runDigest,
   caseQueryParam,
   filterRuns,
   runTabParam,
@@ -305,5 +306,36 @@ describe("Список запусків: вкладки й фільтр (ріш�
     expect(runTabParam("completed")).toBe("completed");
     expect(caseQueryParam("  leak ")).toBe("leak");
     expect(caseQueryParam(undefined)).toBe("");
+  });
+});
+
+describe("Рядок списку, що розгортається: підсумок запуску (рішення власника 2026-11-26, ADR 0012)", () => {
+  const sections = [
+    { id: "s2", name: "Move-in day", position: 2 },
+    { id: "s1", name: "Before move-in", position: 1 },
+    { id: "s3", name: "Empty", position: 3 },
+  ];
+  const task = (section_id: string, name: string, position: number, status: string, extra: Partial<{ is_required: boolean; is_shown: boolean }> = {}) => ({
+    section_id, name, position, status, is_required: extra.is_required ?? true, is_shown: extra.is_shown ?? true, assignee_id: `a-${name}`,
+  });
+
+  it("розділи за порядком, лише показані задачі; наступна — перша «to do»", () => {
+    const digest = runDigest(sections, [
+      task("s1", "Sign the lease", 1, "done"),
+      task("s1", "Collect the deposit", 2, "done"),
+      task("s2", "Hidden", 1, "to_do", { is_shown: false }),
+      task("s2", "Record meter readings", 3, "to_do", { is_required: false }),
+      task("s2", "Hand over the keys", 2, "done"),
+      task("s3", "Only hidden", 1, "to_do", { is_shown: false }),
+    ]);
+    expect(digest.sections).toEqual([
+      { name: "Before move-in", done: 2, total: 2 },
+      { name: "Move-in day", done: 1, total: 2 },
+    ]);
+    expect(digest.next).toEqual({ name: "Record meter readings", isRequired: false, assigneeId: "a-Record meter readings" });
+  });
+
+  it("усе виконано — наступної задачі немає", () => {
+    expect(runDigest(sections, [task("s1", "Sign the lease", 1, "done")]).next).toBeNull();
   });
 });

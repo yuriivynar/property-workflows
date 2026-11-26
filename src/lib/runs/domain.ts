@@ -213,3 +213,29 @@ export function filterRuns<T extends { case_name: string | null; status: string 
   };
   return { rows: tab === "all" ? matching : matching.filter((run) => run.status === tab), counts };
 }
+
+/** Підсумок запуску для рядка, що розгортається (UI v3, рішення власника 2026-11-26): розділи й наступна задача. */
+export interface RunDigest {
+  sections: { name: string; done: number; total: number }[];
+  next: { name: string; isRequired: boolean; assigneeId: string } | null;
+}
+
+/**
+ * Прогрес кожного розділу й наступна задача — перша показана задача «to do» в порядку розділів і задач. Приховані
+ * умовою задачі не рахуються (AC-LOGIC-01, MODIFIED «Прогрес запуску»); розділ без показаних задач не показуємо.
+ */
+export function runDigest(
+  sections: readonly { id: string; name: string; position: number }[],
+  tasks: readonly { section_id: string; name: string; position: number; is_required: boolean; status: string; is_shown: boolean; assignee_id: string }[],
+): RunDigest {
+  const ordered = [...sections].sort((a, b) => a.position - b.position);
+  const digest: RunDigest = { sections: [], next: null };
+  for (const section of ordered) {
+    const shown = tasks.filter((task) => task.section_id === section.id && task.is_shown).sort((a, b) => a.position - b.position);
+    if (shown.length === 0) continue;
+    digest.sections.push({ name: section.name, done: shown.filter((task) => task.status === "done").length, total: shown.length });
+    const next = shown.find((task) => task.status !== "done");
+    if (next && !digest.next) digest.next = { name: next.name, isRequired: next.is_required, assigneeId: next.assignee_id };
+  }
+  return digest;
+}

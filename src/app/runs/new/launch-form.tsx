@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormAlert } from "@/components/ui/form-alert";
 import { Card } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -85,9 +85,9 @@ export function LaunchForm({
       ))}
 
       {message && !caseNameError ? (
-        <Alert variant="destructive" id="launch-error">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
+        <FormAlert id="launch-error" title={LABELS.runNotLaunched}>
+          {message}
+        </FormAlert>
       ) : null}
       <div>
         <SubmitButton label={LABELS.launch} pendingLabel={LABELS.launching} />

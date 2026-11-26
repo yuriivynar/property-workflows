@@ -18,3 +18,17 @@ export function listRuns(supabase: Client) {
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
 }
+
+/**
+ * Розділи й задачі видимих запусків — для рядків списку, що розгортаються (UI v3). Які рядки видно, вирішує RLS тим
+ * самим правилом, що й для сторінки запуску (can_see_run, can_see_run_section, can_see_run_task).
+ */
+export function listRunContents(supabase: Client, runIds: string[]) {
+  return Promise.all([
+    supabase.from("run_sections").select("id, run_id, name, position").in("run_id", runIds),
+    supabase
+      .from("run_tasks")
+      .select("run_id, section_id, name, position, is_required, status, is_shown, assignee_id")
+      .in("run_id", runIds),
+  ]);
+}
