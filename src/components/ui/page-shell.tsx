@@ -14,8 +14,8 @@ import type { Theme } from "@/lib/theme"
 
 // Спільний макет усіх сторінок (ADR 0008, ADR 0012). Увійшов: від lg — графітова бічна панель (логотип, навігація,
 // внизу меню користувача з вибором «Theme», Profile і Sign out), на телефоні — графітова смуга з логотипом і аватаром
-// (Sheet з «Theme» і Sign out) та нижні вкладки навігації. Від lg панель розгорнута, згорнута чи прихована (SidebarFrame,
-// cookie «sidebar»; ADR 0012, доповнення). Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
+// (Sheet з «Theme» і Sign out) та нижні вкладки навігації. Від lg панель розгорнута (ширина — за край) чи згорнута
+// (SidebarFrame, cookie «sidebar» і «sidebar-width»; ADR 0012, доповнення). Не увійшов (вхід): без кольорової смуги — великий логотип і «Theme»
 // в одному рядку на тлі сторінки. Відмова («Not enough rights»), «не знайдено» й вхід — у тому самому макеті
 // (DESIGN.md, «Стани»; AC-DSYS-02, AC-DSYS-03). Вибір «Theme» — на кожній сторінці (ADR 0004; AC-DSYS-05, AC-DSYS-06);
 // key: якщо сервер віддав іншу тему (cookie змінили в іншій вкладці), перемикач відтворюється з нею.
@@ -25,6 +25,7 @@ function PageShell({
   email,
   theme,
   sidebar = "expanded",
+  sidebarWidth,
   signOut,
   avatarSrc,
   search,
@@ -37,8 +38,10 @@ function PageShell({
   /** Email того, хто увійшов (власний профіль), — унизу бічної панелі. */
   email?: string | null
   theme: Theme
-  /** Стан бічної панелі від lg (cookie «sidebar»): розгорнута, згорнута чи прихована. */
+  /** Стан бічної панелі від lg (cookie «sidebar»): розгорнута чи згорнута. */
   sidebar?: SidebarState
+  /** Ширина розгорнутої панелі в px (cookie «sidebar-width», 200…360). */
+  sidebarWidth?: number
   /** Дані палітри ⌘K (Server Action searchIndex) — лише після входу. */
   search: () => Promise<SearchItem[]>
   /** Власне фото для аватара (/api/avatar), якщо є. */
@@ -63,6 +66,7 @@ function PageShell({
   return (
     <SidebarFrame
       initial={sidebar}
+      initialWidth={sidebarWidth}
       sidebar={
         <>
           <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-auto lg:px-2 lg:group-data-[state=collapsed]/sidebar:flex-col lg:group-data-[state=collapsed]/sidebar:px-0">
@@ -95,18 +99,18 @@ function Brand({ tone, href }: { tone: "page" | "hero"; href: string }) {
     <Link
       href={href}
       className={cn(
-        "brand-link flex items-center gap-2.5 rounded-lg outline-none focus-visible:outline-2 focus-visible:outline-offset-4",
+        "brand-link flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:outline-2 focus-visible:outline-offset-4",
         large ? "text-foreground focus-visible:outline-ring" : "text-hero-foreground focus-visible:outline-hero-foreground"
       )}
     >
-      <BrandMark tone={tone} className={large ? "size-12" : "size-8"} />
+      <BrandMark tone={tone} className={large ? "size-12 shrink-0" : "size-8 shrink-0"} />
       {large ? (
         <span className="flex flex-col text-[22px] leading-[1.05] tracking-tight">
           <span className="font-semibold">Property</span>
           <span className="text-muted-foreground">workflows</span>
         </span>
       ) : (
-        <span className="text-[15px] font-semibold whitespace-nowrap lg:group-data-[state=collapsed]/sidebar:sr-only">Property workflows</span>
+        <span className="truncate text-[15px] font-semibold whitespace-nowrap lg:group-data-[state=collapsed]/sidebar:sr-only">Property workflows</span>
       )}
     </Link>
   )

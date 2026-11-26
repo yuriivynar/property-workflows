@@ -1,13 +1,13 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 import { requiredLabel } from "@/lib/runs/domain";
 import { moveItem, moveTaskToSection, removeTask, renameSection, renameTask, setTaskRequired } from "../../actions";
 import { AddTaskForm } from "./add-task-form";
+import { AutosaveInput } from "./autosave-input";
 import { RemoveSectionButton } from "./remove-section-button";
 
 // Частини редактора шаблону (рішення власника 2026-11-26, ADR 0012): розділ — картка з графітовим номером і рядком
@@ -88,17 +88,15 @@ function EditorTask({
   return (
     <li data-testid="editor-task" className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:gap-3">
       <RequiredMark required={task.is_required} />
-      <form action={renameTask} noValidate className="rename-scope flex min-w-0 flex-1 items-center gap-2">
+      <form action={renameTask} noValidate className="flex min-w-0 flex-1 items-center gap-2">
         {hidden}
         <input type="hidden" name="task_id" value={task.id} />
         {/* Доступна назва поля — як раніше: «Task (required)» / «Task (optional)»; на екрані стан видно позначкою. */}
         <Label htmlFor={`task-${task.id}`} className="sr-only">
           Task ({requiredLabel(task.is_required)})
         </Label>
-        <Input id={`task-${task.id}`} name="name" defaultValue={task.name} className="min-w-0 flex-1" />
-        <Button type="submit" variant="outline" className="rename-btn">
-          Rename
-        </Button>
+        {/* Зберігається, щойно поле втратило фокус (кнопки «Rename» немає; ADR 0012, доповнення). */}
+        <AutosaveInput id={`task-${task.id}`} name="name" defaultValue={task.name} className="min-w-0 flex-1" />
       </form>
       <div className="flex flex-wrap items-center gap-1">
         <form action={setTaskRequired}>
@@ -166,21 +164,18 @@ export function EditorSection({
           >
             {index + 1}
           </span>
-          <form action={renameSection} noValidate className="rename-scope flex min-w-0 flex-1 items-center gap-2">
+          <form action={renameSection} noValidate className="flex min-w-0 flex-1 items-center gap-2">
             <input type="hidden" name="template_id" value={templateId} />
             <input type="hidden" name="section_id" value={section.id} />
             <Label htmlFor={`section-${section.id}`} className="sr-only">
               Section
             </Label>
-            <Input
+            <AutosaveInput
               id={`section-${section.id}`}
               name="name"
               defaultValue={section.name}
               className="min-w-0 flex-1 bg-card font-semibold sm:max-w-sm"
             />
-            <Button type="submit" variant="outline" className="rename-btn">
-              Rename
-            </Button>
           </form>
           <div className="flex flex-wrap items-center gap-1">
             <span className="mr-1 text-xs tabular-nums text-muted-foreground">

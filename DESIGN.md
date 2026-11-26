@@ -167,7 +167,7 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | Підтвердження на місці | — | незворотна дія підтверджується в тому самому рядку, без спливаючого вікна: назва задачі чи розділу + «This cannot be undone», кнопка `destructive` і «Cancel» (`mark-done-button.tsx`, `remove-section-button.tsx`) |
 | `Alert` | `default`, `destructive` | помилка над формою на тлі `destructive-surface`; текст — дослівно з AC; введене лишається у формі |
 | `PageShell` + `MainNav` | — | спільний макет у `src/app/layout.tsx` (ADR 0008): увійшов — від `lg` графітова бічна панель (логотип, навігація Templates · Runs · Profile з іконкою й словом, поточний — фон і `aria-current`, внизу меню користувача), на телефоні — графітова смуга з логотипом і аватаром (Sheet) та нижні вкладки; вміст сторінки — у `PageTransition` (React `<ViewTransition>`, ADR 0012); один `<nav aria-label="Main">`, пункти за роллю (`navItems`, AC-VENDOR-13). Вхід — той самий макет без навігації: великий логотип і «Theme» на тлі сторінки (AC-DSYS-02, AC-DSYS-03) |
-| Бічна панель (`SidebarFrame`, `SidebarControls`) | `expanded`, `collapsed`, `hidden` | від `lg`: «Collapse sidebar» / «Expand sidebar», «Hide sidebar», у прихованої — «Show sidebar» у куті; Ctrl+B / ⌘B; згорнута смуга `w-16` — лише іконки (слова `sr-only`, підказка `title`); стан — cookie `sidebar` (ADR 0012, доповнення) |
+| Бічна панель (`SidebarFrame`, `SidebarControls`) | `expanded`, `collapsed` | від `lg`: «Collapse sidebar» / «Expand sidebar» і Ctrl+B / ⌘B; ширину розгорнутої змінюють, потягнувши правий край (ручка `separator` «Resize sidebar»: 200…360 px, ← → по 16 px, Home / End, подвійний клік — 240 px); згорнута смуга `w-16` — лише іконки (слова `sr-only`, підказка `title`); стан і ширина — cookie `sidebar`, `sidebar-width` (ADR 0012, доповнення) |
 | Пошук у списку (`TemplatesBrowser`, `RunsBrowser`) | — | поле `type="search"` з іконкою; фільтр у браузері під час набору, затримка 200 мс (`useDebouncedValue`); вкладки запусків — одразу; адреса `?status=…&q=…` оновлюється без переходу; нічого не знайдено — пунктирна рамка з текстом, без порожньої таблиці |
 | Створення шаблону (`CreateTemplateDialog`) | — | головна дія сторінки Templates — «New template» → вікно з «Template name», «Cancel» і «Create a template»; помилка назви — під полем у вікні (AC-EDITOR-19, AC-EDITOR-23) |
 | Редактор шаблону (`EditorSection`) | — | розділ — картка: шапка `bg-muted` з графітовим номером, назвою, кількістю задач і діями; задача — «позначка required/optional · назва · дії»; дії рядка — іконки з доступними назвами «Move up», «Move down», «Remove» (видалення — `destructive` при наведенні); «New task» — на `bg-glow`; «New section» — пунктирна картка; «Versions» — контур поруч із «Save» |
@@ -195,7 +195,7 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | Завантаження (відправлення) | `PendingButton`: кнопка `disabled`, `aria-busy`, іконка, що обертається, перед незмінним текстом дії | — |
 | Довга дія з моделлю (розбір документа) | замість майбутньої форми — `Skeleton` у її формі й `role="status"` `text-sm text-muted-foreground` з текстом стану з AC | «Reading the document…» (AC-DOCAI-03) |
 | Завантаження (сторінка) | `loading.tsx` із `Skeleton` для запусків, форми запуску й шаблонів, `aria-busy`, без видимих слів | — |
-| Зміна назви | кнопка «Rename» з'являється, лише поки поле у фокусі; Enter теж зберігає | — |
+| Зміна назви | назва зберігається, щойно поле втратило фокус; Enter теж зберігає, Esc повертає збережену; кнопки «Rename» немає (ADR 0012, доповнення) | — |
 
 ## 7. Доступність — мінімум
 
