@@ -13,7 +13,9 @@ export type RunErrorCode =
   | "TEMPLATE_VERSION_CHANGED"
   | "INVALID_ASSIGNEE"
   | "NOT_ALLOWED"
-  | "CONFIRMATION_REQUIRED";
+  | "CONFIRMATION_REQUIRED"
+  | "ANSWER_NOT_ALLOWED"
+  | "INVALID_ANSWER";
 
 export type CaseNameCheck = { ok: true; caseName: string } | { ok: false; code: RunErrorCode };
 
@@ -38,6 +40,8 @@ const MESSAGE_BY_CODE: Record<RunErrorCode, string> = {
   INVALID_ASSIGNEE: MESSAGES.invalidAssignee,
   NOT_ALLOWED: MESSAGES.markNotAllowed,
   CONFIRMATION_REQUIRED: MESSAGES.confirmationRequired,
+  ANSWER_NOT_ALLOWED: MESSAGES.answerNotAllowed,
+  INVALID_ANSWER: MESSAGES.unexpected,
 };
 
 // Object.hasOwn, а не `in`: інакше `?error=__proto__` чи `constructor` з URL пройшли б як «код» (ключі прототипу).
@@ -134,12 +138,30 @@ export function staffLabel(person: { email: string | null }): string {
  * (AC-TASK-01, AC-TASK-02, AC-TASK-07).
  */
 export function needsConfirmation(
-  tasks: { id: string; is_required: boolean; status: string }[],
+  tasks: { id: string; is_required: boolean; status: string; is_shown?: boolean }[],
   taskId: string,
 ): boolean {
-  const task = tasks.find((t) => t.id === taskId);
+  // Прихована умовою задача не рахується й не блокує завершення (AC-LOGIC-03; MODIFIED «Завершення запуску»).
+  const shown = tasks.filter((t) => t.is_shown !== false);
+  const task = shown.find((t) => t.id === taskId);
   if (!task || !task.is_required || task.status === "done") return false;
-  return tasks.every((t) => t.id === taskId || !t.is_required || t.status === "done");
+  return shown.every((t) => t.id === taskId || !t.is_required || t.status === "done");
+}
+
+/**
+ * Хто змінює відповідь на поле запуску: менеджер запуску (роль manager) або адміністратор (AC-LOGIC-02, AC-LOGIC-05).
+ * Правило те саме, що в private.set_run_field_answer; остаточно вирішує база.
+ */
+export function canChangeAnswer(input: { userId: string; role: string | null | undefined; runManagerId: string }): boolean {
+  return input.role === "admin" || (input.role === "manager" && input.userId === input.runManagerId);
+}
+
+/**
+ * Підпис відповіді в інтерфейсі — з великої літери («Urgent», «Not urgent»); зберігається й порівнюється відповідь як у
+ * тексті PM — `urgent` / `not urgent` (рішення власника 2026-11-26, ADR 0012).
+ */
+export function answerLabel(answer: string): string {
+  return answer.charAt(0).toUpperCase() + answer.slice(1);
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
