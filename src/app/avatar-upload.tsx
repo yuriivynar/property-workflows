@@ -13,7 +13,7 @@ function zoneTitle(dragging: boolean, hasPhoto: boolean): string {
 }
 
 /** Зона: перетягнути файл або обрати його (нативний <input type="file"> — працює з клавіатури). */
-function DropZone({ hasPhoto, preview, busy, onFile }: { hasPhoto: boolean; preview: string | null; busy: boolean; onFile: (file: File | undefined) => void }) {
+function DropZone({ hasPhoto, busy, onFile }: { hasPhoto: boolean; busy: boolean; onFile: (file: File | undefined) => void }) {
   const [dragging, setDragging] = useState(false);
   return (
     <label
@@ -32,13 +32,7 @@ function DropZone({ hasPhoto, preview, busy, onFile }: { hasPhoto: boolean; prev
         dragging && "border-foreground bg-accent",
       )}
     >
-      {preview ? (
-        // Попередній перегляд — blob: (img-src CSP); alt порожній, бо поруч є підпис.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="" className="size-10 rounded-full object-cover" />
-      ) : (
-        <ImageUp aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
-      )}
+      <ImageUp aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
       <span className="flex flex-col">
         <span className="font-medium">{zoneTitle(dragging, hasPhoto)}</span>
         <span className="text-muted-foreground">PNG or JPG, up to 2 MB. Only you see your photo.</span>
@@ -67,12 +61,12 @@ function ResultLine({ result }: { result: AvatarResult | null }) {
 }
 
 /**
- * Фото профілю (UI v3, рішення власника 2026-11-26, ADR 0012): перетягнути або обрати файл, попередній перегляд,
+ * Фото профілю (UI v3, рішення власника 2026-11-26, ADR 0012): перетягнути або обрати файл (збережене фото одразу
+ * видно в аватарі — через /api/avatar, без blob-URL файлу користувача),
  * PNG/JPG до 2 МБ, «Remove photo». Фото бачить лише сам користувач; іншим людям — лише email.
  * Перевірка у браузері — та сама, що в дії (checkAvatarFile); остаточно — дія й бакет.
  */
 export function AvatarUpload({ hasPhoto }: { hasPhoto: boolean }) {
-  const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<AvatarResult | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -82,7 +76,6 @@ export function AvatarUpload({ hasPhoto }: { hasPhoto: boolean }) {
       setResult({ ok: false, message: check.ok ? AVATAR_MESSAGES.wrongType : check.message });
       return;
     }
-    setPreview(URL.createObjectURL(file));
     const data = new FormData();
     data.set("photo", file);
     startTransition(async () => setResult(await uploadAvatar(data)));
@@ -90,14 +83,13 @@ export function AvatarUpload({ hasPhoto }: { hasPhoto: boolean }) {
 
   function remove() {
     startTransition(async () => {
-      setPreview(null);
       setResult(await removeAvatar());
     });
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <DropZone hasPhoto={hasPhoto} preview={preview} busy={pending} onFile={send} />
+      <DropZone hasPhoto={hasPhoto} busy={pending} onFile={send} />
       <div className="flex flex-wrap items-center gap-3 text-sm" aria-live="polite">
         <ResultLine result={result} />
         {hasPhoto ? (
