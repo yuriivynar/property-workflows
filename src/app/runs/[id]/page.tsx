@@ -1,17 +1,14 @@
 import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { ProgressBar } from "@/components/ui/progress-bar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import {
-  canMarkTask,
+  canChangeAnswer,
   errorParam,
-  formatProgress,
   formatYourTasks,
   groupBySection,
   messageForError,
-  needsConfirmation,
   requiredLabel,
   staffLabel,
   vendorRunNotice,
@@ -20,6 +17,7 @@ import { signedInViewer } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
+import { fieldOptions, RunDetailsCard, RunSection, type RunField } from "./run-parts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { BackLink } from "@/components/ui/back-link";
 import { RunDocuments } from "./_document/run-documents";
@@ -61,18 +59,12 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const runId = run.id;
   const runManagerId = run.run_manager_id;
 
-  // Номер версії — у runs (копія на момент запуску), а не у view run_overview (AC-EDITOR-06).
-  const [{ data: sections }, { data: tasks }, { data: staff }, { data: version }] = await Promise.all([
-    supabase.from("run_sections").select("id, name, position").eq("run_id", runId).order("position"),
-    supabase
-      .from("run_tasks")
-      .select("id, section_id, name, is_required, position, assignee_id, status")
-      .eq("run_id", runId)
-      .order("position"),
-    supabase.rpc("staff_directory"),
-    supabase.from("runs").select("template_version").eq("id", runId).maybeSingle(),
-  ]);
-  const names = new Map((staff ?? []).map((person) => [person.id, staffLabel(person)]));
+  const { sections, tasks: allTasks, fields, names, versionNumber } = await loadRun(supabase, runId);
+  const fieldById = new Map(fields.map((field) => [field.id, field]));
+  const sectionName = new Map(sections.map((section) => [section.id, section.name]));
+  const optionsOf = (field: RunField) => fieldOptions(field, allTasks, sectionName);
+  // Відповідь змінюють лише менеджер запуску й адміністратор (AC-LOGIC-05); лише їм — меню й рядки-«привиди».
+  const canAnswer = canChangeAnswer({ userId: viewer.userId, role: viewer.role, runManagerId });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -83,95 +75,83 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         </h1>
         <p className="text-sm text-muted-foreground">
           {run.template_name}
-          {version?.template_version ? (
-            <span data-testid="template-version"> · {templateVersionLabel(version.template_version)}</span>
-          ) : null}
+          {versionNumber ? <span data-testid="template-version"> · {templateVersionLabel(versionNumber)}</span> : null}
         </p>
       </div>
-      {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка прогресу праворуч (ADR 0008). */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-      <Card className="gap-0 py-0 lg:sticky lg:top-6 lg:order-2">
-        <dl className="grid divide-y divide-border text-sm max-lg:sm:grid-cols-3 max-lg:sm:divide-x max-lg:sm:divide-y-0">
-          <div className="flex flex-col gap-1.5 px-4 py-3.5">
-            <dt className="text-muted-foreground">{LABELS.runManager}</dt>
-            <dd className="font-medium break-all" data-testid="run-manager">
-              {names.get(runManagerId) ?? "—"}
-            </dd>
-          </div>
-          <div className="flex flex-col gap-1.5 px-4 py-3.5">
-            <dt className="text-muted-foreground">{LABELS.status}</dt>
-            <dd data-testid="run-status">
-              <StatusBadge status={run.status ?? ""} />
-            </dd>
-          </div>
-          <div className="flex flex-col gap-1.5 px-4 py-3.5">
-            <dt className="text-muted-foreground">{LABELS.progress}</dt>
-            <dd className="flex items-center gap-3 tabular-nums" data-testid="run-progress">
-              <ProgressBar done={run.done_count ?? 0} total={run.total_count ?? 0} />
-              <span className="font-medium">{formatProgress(run.done_count ?? 0, run.total_count ?? 0)}</span>
-            </dd>
-          </div>
-        </dl>
-      </Card>
+      {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка деталей праворуч (ADR 0008, ADR 0012). */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <RunDetailsCard
+          {...detailsOf(run, versionNumber)}
+          runId={runId}
+          manager={names.get(runManagerId) ?? "—"}
+          fields={fields}
+          canAnswer={canAnswer}
+          optionsOf={optionsOf}
+        />
 
-      <div className="flex min-w-0 flex-col gap-6 lg:order-1">
-      {message ? (
-        <Alert variant="destructive">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      ) : null}
+        <div className="flex min-w-0 flex-col gap-6 lg:order-1">
+          {message ? (
+            <Alert variant="destructive">
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          ) : null}
 
-      {(sections ?? []).map((section) => (
-        <section key={section.id} className="flex flex-col gap-2">
-          <h2 className="text-base font-semibold">{section.name}</h2>
-          <Card className="gap-0 py-0">
-            <ul className="flex flex-col divide-y divide-border">
-            {(tasks ?? [])
-              .filter((task) => task.section_id === section.id)
-              .map((task) => (
-                <li
-                  key={task.id}
-                  data-testid="run-task"
-                  className="flex flex-col gap-2.5 px-4 py-3.5 text-sm transition-colors hover:bg-glow max-sm:[&_[data-slot=button]]:w-full max-sm:[&_form]:w-full"
-                >
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="min-w-0 [overflow-wrap:anywhere]">
-                      {task.name}{" "}
-                      <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
-                    </span>
-                    <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-muted-foreground">
-                      <span>{names.get(task.assignee_id) ?? "—"}</span>
-                      <span data-testid="task-status">
-                        <StatusBadge status={task.status} />
-                      </span>
-                    </span>
-                  </div>
-                  {canMarkTask({
-                    userId: viewer.userId,
-                    role: viewer.role,
-                    runManagerId,
-                    assigneeId: task.assignee_id,
-                    status: task.status,
-                  }) ? (
-                    <MarkDoneButton
-                      runId={runId}
-                      taskId={task.id}
-                      taskName={task.name}
-                      confirm={needsConfirmation(tasks ?? [], task.id)}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </section>
-      ))}
+          {sections.map((section) => (
+            <RunSection
+              key={section.id}
+              runId={runId}
+              name={section.name}
+              tasks={allTasks.filter((task) => task.section_id === section.id)}
+              allTasks={allTasks}
+              fieldById={fieldById}
+              names={names}
+              viewer={viewer}
+              runManagerId={runManagerId}
+              canAnswer={canAnswer}
+              optionsOf={optionsOf}
+            />
+          ))}
 
-      <RunDocuments supabase={supabase} runId={runId} viewer={viewer} runManagerId={runManagerId} names={names} />
-      </div>
+          <RunDocuments supabase={supabase} runId={runId} viewer={viewer} runManagerId={runManagerId} names={names} />
+        </div>
       </div>
     </main>
   );
+}
+
+// Номер версії — у runs (копія на момент запуску), а не у view run_overview (AC-EDITOR-06).
+async function loadRun(supabase: Awaited<ReturnType<typeof createClient>>, runId: string) {
+  const [{ data: sections }, { data: tasks }, { data: fields }, { data: staff }, { data: version }] = await Promise.all([
+    supabase.from("run_sections").select("id, name, position").eq("run_id", runId).order("position"),
+    supabase
+      .from("run_tasks")
+      .select("id, section_id, name, is_required, position, assignee_id, status, is_shown, show_when_field_id, show_when_value")
+      .eq("run_id", runId)
+      .order("position"),
+    supabase.from("run_fields").select("id, name, options, position, answer").eq("run_id", runId).order("position"),
+    supabase.rpc("staff_directory"),
+    supabase.from("runs").select("template_version").eq("id", runId).maybeSingle(),
+  ]);
+  return {
+    sections: sections ?? [],
+    tasks: tasks ?? [],
+    fields: fields ?? [],
+    names: new Map((staff ?? []).map((person) => [person.id, staffLabel(person)])),
+    versionNumber: version?.template_version ?? null,
+  };
+}
+
+/** Прогрес, статус і «шаблон · vN» для картки деталей. */
+function detailsOf(
+  run: { done_count: number | null; total_count: number | null; status: string | null; template_name: string | null },
+  versionNumber: number | null,
+) {
+  return {
+    done: run.done_count ?? 0,
+    total: run.total_count ?? 0,
+    status: run.status ?? "",
+    template: `${run.template_name ?? ""}${versionNumber ? ` · v${versionNumber}` : ""}`,
+  };
 }
 
 function RunNotFound({ message }: { message?: string }) {

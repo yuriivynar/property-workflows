@@ -2,6 +2,8 @@
 // Те саме правило в базі — tests/db/run-launch.test.ts.
 import { describe, expect, it } from "vitest";
 import {
+  answerLabel,
+  canChangeAnswer,
   canMarkTask,
   errorCodeFrom,
   formatProgress,
@@ -251,5 +253,31 @@ describe("Вендор: список і сторінка запуску", () => 
     expect(runsListState([])).toBe("empty");
     expect(runsListState(null)).toBe("empty");
     expect(MESSAGES.noVendorTasks).toBe("No tasks assigned to you yet.");
+  });
+});
+
+describe("Задачі лише для певної відповіді (openspec/specs/conditional-tasks)", () => {
+  it("AC-LOGIC-03: прихована обов'язкова задача не блокує — третя показана обов'язкова просить підтвердження", () => {
+    const run = [
+      { id: "a", is_required: true, status: "done", is_shown: true },
+      { id: "b", is_required: true, status: "done", is_shown: true },
+      { id: "c", is_required: true, status: "to_do", is_shown: true },
+      { id: "plumber", is_required: true, status: "to_do", is_shown: false },
+    ];
+    expect(needsConfirmation(run, "c")).toBe(true);
+    expect(needsConfirmation(run, "plumber")).toBe(false);
+  });
+
+  it("AC-LOGIC-05: відповідь змінюють лише менеджер запуску й адміністратор; текст відмови — дослівно з AC", () => {
+    expect(canChangeAnswer({ userId: "a", role: "manager", runManagerId: "a" })).toBe(true);
+    expect(canChangeAnswer({ userId: "x", role: "admin", runManagerId: "a" })).toBe(true);
+    expect(canChangeAnswer({ userId: "b", role: "manager", runManagerId: "a" })).toBe(false);
+    expect(canChangeAnswer({ userId: "a", role: "vendor", runManagerId: "a" })).toBe(false);
+    expect(messageForError("ANSWER_NOT_ALLOWED")).toBe("Only the run manager or an administrator can change the answers");
+  });
+
+  it("відповідь показано з великої літери: «Urgent», «Not urgent»", () => {
+    expect(answerLabel("urgent")).toBe("Urgent");
+    expect(answerLabel("not urgent")).toBe("Not urgent");
   });
 });

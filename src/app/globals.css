@@ -20,6 +20,11 @@
 }
 
 @theme inline {
+  /* Рух (ADR 0012, DESIGN.md розділ 2.1): 120 мс — наведення й натискання, 200 мс — зміна стану, 280 мс — зміна сторінки. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 280ms;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-heading: var(--font-sans);

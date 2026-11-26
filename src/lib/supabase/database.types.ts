@@ -245,6 +245,9 @@ export type Database = {
           position: number;
           assignee_id: string;
           status: string;
+          show_when_field_id: string | null;
+          show_when_value: string | null;
+          is_shown: boolean;
         };
         Insert: {
           id?: string;
@@ -255,6 +258,9 @@ export type Database = {
           position: number;
           assignee_id: string;
           status?: string;
+          show_when_field_id?: string | null;
+          show_when_value?: string | null;
+          is_shown?: boolean;
         };
         Update: {
           id?: string;
@@ -265,6 +271,36 @@ export type Database = {
           position?: number;
           assignee_id?: string;
           status?: string;
+          show_when_field_id?: string | null;
+          show_when_value?: string | null;
+          is_shown?: boolean;
+        };
+        Relationships: [];
+      };
+      run_fields: {
+        Row: {
+          id: string;
+          run_id: string;
+          name: string;
+          options: string[];
+          position: number;
+          answer: string | null;
+        };
+        Insert: {
+          id?: string;
+          run_id: string;
+          name: string;
+          options: string[];
+          position: number;
+          answer?: string | null;
+        };
+        Update: {
+          id?: string;
+          run_id?: string;
+          name?: string;
+          options?: string[];
+          position?: number;
+          answer?: string | null;
         };
         Relationships: [];
       };
@@ -288,6 +324,13 @@ export type Database = {
       take_ai_request: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      set_run_field_answer: {
+        Args: {
+          p_field_id: string;
+          p_answer: string | null;
+        };
+        Returns: undefined;
       };
       mark_task_done: {
         Args: {

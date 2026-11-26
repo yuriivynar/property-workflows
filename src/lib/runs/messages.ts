@@ -14,6 +14,7 @@ export const MESSAGES = {
   // Робоче рішення (рев'ю PR #17): версію шаблону змінили, поки заповнювали форму запуску.
   templateVersionChanged: "The template has a new version. Review the tasks and launch again.",
   templateNotLoaded: "The template could not be loaded. Try again.",
+  answerNotAllowed: "Only the run manager or an administrator can change the answers", // AC-LOGIC-05, дослівно
 } as const;
 
 export const RUN_STATUS_LABELS = {
@@ -53,6 +54,13 @@ export const LABELS = {
   launch: "Launch",
   launching: "Launching…",
   runManager: "Run manager",
+  runDetails: "Run details",
+  noAnswer: "No answer",
+  noExtraTasks: "No extra tasks",
+  addsTaskTo: (taskName: string, sectionName: string) => `Adds "${taskName}" to ${sectionName}`,
+  becauseAnswer: (fieldName: string, answer: string) => `because ${fieldName} is ${answer}`,
+  appearsOnlyWhen: (fieldName: string, answer: string) =>
+    `Appears only when ${fieldName} is ${answer} · not counted in progress`,
   status: "Status",
   progress: "Progress",
   markAsDone: "Mark as done",

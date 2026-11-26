@@ -139,6 +139,9 @@ describe("База: версії шаблону", () => {
   });
 
   it("AC-EDITOR-04: новий шаблон «Repair» без обов'язкових задач не зберігається — версії немає, 1 розділ і 3 задачі лишаються", async () => {
+    // «Repair» з початкових даних AC-LOGIC-01 (20261126083814_conditional_tasks.sql) — інший шаблон з тією самою назвою:
+    // прибираємо його, щоб «новий шаблон «Repair»» з AC-EDITOR-04 створювався дослівно.
+    await t.asService("delete from public.templates where name = 'Repair'");
     // Як дії редактора: адміністратор створює шаблон, розділ і 3 необов'язкові задачі (id генерує база).
     const [{ id: template }] = await t.asUser<{ id: string }>(
       ADMIN,

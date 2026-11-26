@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth/require-role";
-import { errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
+import { canChangeAnswer, errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
 // Позначка задачі виконаною (openspec/specs/run-progress). Хто може позначати і чи завершено запуск, вирішує функція
@@ -49,6 +49,53 @@ export async function markTaskDone(formData: FormData) {
   // (AC-TASK-04, AC-TASK-16).
   const confirmed = formData.get("confirmed") === "true";
   const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId, p_confirmed: confirmed });
+  if (error) {
+    redirect(`${runPath}?error=${encodeURIComponent(errorCodeFrom(error.message) ?? "UNEXPECTED")}`);
+  }
+
+  revalidatePath("/runs");
+  revalidatePath(runPath);
+  redirect(runPath);
+}
+
+// Відповідь на поле запуску (openspec/specs/conditional-tasks). Роль перевіряємо до запису (AGENTS.md): лише менеджер
+// запуску або адміністратор (AC-LOGIC-05); атомарно відповідь, залежні задачі «to do» і статус запуску змінює функція бази
+// set_run_field_answer (AC-LOGIC-02, AC-LOGIC-04).
+export async function setRunFieldAnswer(formData: FormData) {
+  const runId = String(formData.get("run_id") ?? "");
+  const fieldId = String(formData.get("field_id") ?? "");
+  const answer = String(formData.get("answer") ?? "");
+
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user.ok && user.reason === "NOT_SIGNED_IN") {
+    redirect("/login");
+  }
+  if (!isUuid(runId)) {
+    redirect("/runs");
+  }
+  const runPath = `/runs/${runId}`;
+  if (!user.ok || !isUuid(fieldId)) {
+    redirect(`${runPath}?error=ANSWER_NOT_ALLOWED`);
+  }
+
+  // Поле має належати запуску з форми; менеджер запуску — з runs (RLS: вендор не бачить ні поля, ні запуску).
+  const [{ data: field, error: fieldError }, { data: run, error: runError }] = await Promise.all([
+    supabase.from("run_fields").select("run_id").eq("id", fieldId).maybeSingle(),
+    supabase.from("runs").select("run_manager_id").eq("id", runId).maybeSingle(),
+  ]);
+  if (fieldError || runError) {
+    redirect(`${runPath}?error=UNEXPECTED`);
+  }
+  if (
+    !run ||
+    !taskBelongsToRun(field, runId) ||
+    !canChangeAnswer({ userId: user.userId, role: user.role, runManagerId: run.run_manager_id })
+  ) {
+    redirect(`${runPath}?error=ANSWER_NOT_ALLOWED`);
+  }
+
+  const { error } = await supabase.rpc("set_run_field_answer", { p_field_id: fieldId, p_answer: answer || null });
   if (error) {
     redirect(`${runPath}?error=${encodeURIComponent(errorCodeFrom(error.message) ?? "UNEXPECTED")}`);
   }
