@@ -17,6 +17,8 @@ const state = vi.hoisted(() => ({
   // Аргументи rpc(...) і параметри upsert(..., options): що саме дія просить у бази.
   rpcArgs: [] as unknown[],
   upsertOptions: [] as unknown[],
+  // Помилка single() після insert (наприклад, назва зайнята — AC-EDITOR-23).
+  singleError: null as { message: string; code?: string } | null,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -44,7 +46,7 @@ vi.mock("@/lib/supabase/server", () => ({
         order: () => chain,
         limit: () => chain,
         in: () => chain,
-        single: async () => ({ data: { id: TEMPLATE }, error: null }),
+        single: async () => (state.singleError ? { data: null, error: state.singleError } : { data: { id: TEMPLATE }, error: null }),
         maybeSingle: async () => ({ data: table === "profiles" ? { role: state.role } : null, error: null }),
         insert: (values: unknown) => {
           state.payloads.push(values);
@@ -95,6 +97,7 @@ beforeEach(() => {
   state.filters = [];
   state.rpcArgs = [];
   state.upsertOptions = [];
+  state.singleError = null;
 });
 
 describe("Дії редактора шаблону", () => {
@@ -279,3 +282,14 @@ describe("Дії редактора шаблону", () => {
   );
 });
 
+
+describe("Створення шаблону: введена назва лишається", () => {
+  it("AC-EDITOR-23: назва зайнята — помилка під полем і введена назва повертається у вікно (?name=…)", async () => {
+    state.role = "admin";
+    state.singleError = { message: "NAME_TAKEN", code: "P0001" };
+
+    expect(await redirectOf(actions.createTemplate(form({ name: " tenant MOVE-IN " })))).toBe(
+      "REDIRECT:/templates?error=NAME_TAKEN&name=tenant%20MOVE-IN",
+    );
+  });
+});

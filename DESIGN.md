@@ -189,6 +189,8 @@ Light) і обрана Dark. Статуси в обох темах мають т
 | Помилка дії | `Alert variant="destructive"` над формою; введене лишається | «Enter a case name» (AC-RUN-03), «A template needs at least one required task» (AC-EDITOR-04) |
 | Відмова в доступі | той самий макет сторінки, повідомлення й `BackLink` назад, без даних | «Not enough rights» + «Back to templates» (AC-DSYS-02, AC-EDITOR-07) |
 | Не знайдено | той самий макет, без даних | «Run not found» (AC-TASK-10) |
+| Невідома адреса | `not-found.tsx`: той самий макет, `Notice` і «Back to runs» | «Page not found» |
+| Несподівана помилка | `error.tsx`: той самий макет, заголовок і пояснення без деталей помилки, «Try again» (`retry`) і «Back to runs»; збій самого макета — `global-error.tsx` | «Something went wrong» |
 | Не увійшов | сторінка входу в тому самому макеті | (AC-DSYS-03, AC-EDITOR-09) |
 | Незбережені зміни | `StatusBadge` «Unpublished changes» (теплий жовтий); у редакторі рядок із «Save» липне до верху | «Unpublished changes» (AC-EDITOR-01) |
 | Успіх | короткий текст біля дії, без спливаючих вікон | «Version 2 saved» |

@@ -2,7 +2,7 @@
 // ходить не в свою базу, і називає змінну. Дані — справжні відповіді /api/health з дрілу (публічні, без секретів).
 // Назви тестів без AC ID — технічна перевірка, а не критерій PM.
 import { describe, expect, it } from "vitest";
-import { suspectEnvHint, supabaseRefProblem } from "../scripts/lib/smoke-checks.mjs";
+import { bypassAllowedFor, suspectEnvHint, supabaseRefProblem } from "../scripts/lib/smoke-checks.mjs";
 import { suspectEnvFor } from "@/lib/health";
 
 const STAGING = "ukbnybazjlbicejpfjvz";
@@ -66,5 +66,20 @@ describe("/api/health: suspectEnv — яку змінну перевірити �
     const name = suspectEnvFor({ db: "down", reason: "status-0" }, env);
     expect(name).not.toContain(STAGING);
     expect(name).not.toContain("publishable-key-for-test");
+  });
+});
+
+describe("smoke: секрет обходу Vercel — лише на хости Vercel чи проду", () => {
+  it("preview, staging і прод на *.vercel.app — так", () => {
+    expect(bypassAllowedFor("https://property-workflows-git-staging-yvynar-8355.vercel.app")).toBe(true);
+    expect(bypassAllowedFor("https://property-workflows-eta.vercel.app", "property-workflows-eta.vercel.app")).toBe(true);
+  });
+
+  it("власний домен проду з PROD_URL — так; чужий хост, http, схожий домен чи не адреса — ні", () => {
+    expect(bypassAllowedFor("https://app.example.test", "https://app.example.test")).toBe(true);
+    expect(bypassAllowedFor("https://example.invalid", "https://property-workflows-eta.vercel.app")).toBe(false);
+    expect(bypassAllowedFor("http://x.vercel.app")).toBe(false);
+    expect(bypassAllowedFor("https://vercel.app.evil.test")).toBe(false);
+    expect(bypassAllowedFor("not a url")).toBe(false);
   });
 });

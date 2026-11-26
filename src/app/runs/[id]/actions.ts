@@ -73,7 +73,7 @@ export async function markTaskDone(formData: FormData) {
 
 /**
  * Та сама позначка без переадресації: відмову (дослівний текст AC) показує рядок задачі на місці. code — щоб рядок
- * відрізнив «потрібне підтвердження» (NEEDS_CONFIRMATION — показати підтвердження, а не помилку) від інших відмов.
+ * відрізнив «потрібне підтвердження» (CONFIRMATION_REQUIRED — показати підтвердження, а не помилку) від інших відмов.
  */
 export type InPlaceResult = { error: string | null; code: string | null };
 

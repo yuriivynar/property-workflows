@@ -44,6 +44,9 @@ export const LABELS = {
   applyFilter: "Filter",
   noRunsMatch: (query: string) => `No runs match "${query}"`,
   tryAnotherCaseName: "Try another case name or show all runs.",
+  // Порожня вкладка без фільтра (рев'ю 2026-11-26): замість «No runs match ""».
+  noRunsInProgress: "No runs in progress.",
+  noCompletedRuns: "No completed runs yet.",
   showSectionsOf: (caseName: string) => `Show sections of ${caseName}`,
   hideSectionsOf: (caseName: string) => `Hide sections of ${caseName}`,
   next: "Next",

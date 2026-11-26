@@ -18,7 +18,7 @@ import { NotEnoughRights } from "@/components/not-enough-rights";
 // Список шаблонів. Що видно, вирішує RLS: admin — усі шаблони з позначкою «Unpublished changes»; manager — лише
 // збережені, без позначки (AC-EDITOR-01, AC-EDITOR-02). Створює шаблон лише admin (дія createTemplate).
 export default async function TemplatesPage({ searchParams }: PageProps<"/templates">) {
-  const { error, new: openNew } = await searchParams;
+  const { error, new: openNew, name: typedName } = await searchParams;
   const supabase = await createClient();
   const user = await currentUser(supabase);
   if (!user.ok) redirect("/login");
@@ -51,7 +51,7 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
   );
   // Створення — вікно за кнопкою «New template» (рішення власника 2026-11-26, ADR 0012); з помилкою назви чи ?new=1
   // вікно відкрите одразу, а помилка — під полем (AC-EDITOR-19, AC-EDITOR-23).
-  const action = isAdmin ? <CreateTemplateDialog key={`${String(error)}-${String(openNew)}`} error={nameError ? String(error) : undefined} open={nameError || openNew === "1"} /> : null;
+  const action = isAdmin ? <CreateTemplateDialog key={`${String(error)}-${String(openNew)}`} error={nameError ? String(error) : undefined} name={typeof typedName === "string" ? typedName : ""} open={nameError || openNew === "1"} /> : null;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">

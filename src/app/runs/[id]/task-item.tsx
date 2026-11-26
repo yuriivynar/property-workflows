@@ -5,26 +5,20 @@ import { CircleAlert } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { markTaskDoneInPlace } from "./actions";
 import { MarkDoneButton } from "./mark-done-button";
-import type { InPlaceResult } from "./actions";
+import { outcomeOf } from "./mark-outcome";
 import { useNeedsConfirmation, useRunMarks } from "./run-marks";
 
 /**
  * Рядок задачі запуску з миттєвою позначкою (ADR 0012, полотно UI v3 «Instant feedback»): «done» видно одразу, сервер
  * підтверджує у фоні. На сторінці запуску позначка йде через RunMarksProvider — тож одразу оновлюються прогрес і те,
  * яка задача тепер остання обов'язкова: вона просить підтвердження ще до запиту (AC-TASK-04, AC-TASK-16). Якщо база
- * все ж відповіла, що задача остання (NEEDS_CONFIRMATION — дані сторінки встигли застаріти), рядок показує
+ * все ж відповіла, що задача остання (CONFIRMATION_REQUIRED — дані сторінки встигли застаріти), рядок показує
  * підтвердження, а не помилку. Інша відмова повертає рядок на місці — «to do» і дослівний текст AC (AC-TASK-03).
  * Хто може позначити, вирішує сторінка (canMarkTask) і остаточно — база.
  */
 /** Статус на екрані: позначка запуску (RunMarksProvider) або власна миттєва позначка рядка. */
 function shownStatusOf(marked: boolean | undefined, localStatus: string): string {
   return marked ? "done" : localStatus;
-}
-
-/** Відповідь сервера → що показати: NEEDS_CONFIRMATION — підтвердження, інша відмова — текст AC у рядку. */
-function outcomeOf(result: InPlaceResult): { ask: boolean; error: string | null } {
-  const ask = result.code === "NEEDS_CONFIRMATION";
-  return { ask, error: ask ? null : result.error };
 }
 
 /** Стан позначки рядка: миттєвий статус, чи просити підтвердження, текст відмови й дія форми. */

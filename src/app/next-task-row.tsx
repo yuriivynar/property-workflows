@@ -6,11 +6,12 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { markTaskDoneInPlace } from "./runs/[id]/actions";
 import { MarkDoneButton } from "./runs/[id]/mark-done-button";
+import { outcomeOf } from "./runs/[id]/mark-outcome";
 
 /**
  * Наступна задача на Profile («Your next tasks», рішення власника 2026-11-26, ADR 0012): назва веде на запуск, позначка —
  * на місці (useOptimistic), відмова — дослівний текст AC у рядку; останню обов'язкову підтверджують, як на сторінці
- * запуску (AC-TASK-04, AC-TASK-16).
+ * запуску (AC-TASK-04, AC-TASK-16), — і тоді, коли про це сказала база (дані сторінки застаріли).
  */
 export function NextTaskRow({
   runId,
@@ -27,12 +28,14 @@ export function NextTaskRow({
 }) {
   const [status, setStatus] = useOptimistic("to_do");
   const [error, setError] = useState<string | null>(null);
+  const [askConfirm, setAskConfirm] = useState(false);
 
   async function mark(formData: FormData) {
     setError(null);
     setStatus("done");
-    const result = await markTaskDoneInPlace(formData);
-    if (result.error) setError(result.error);
+    const outcome = outcomeOf(await markTaskDoneInPlace(formData));
+    setAskConfirm(outcome.ask);
+    setError(outcome.error);
   }
 
   return (
@@ -52,7 +55,17 @@ export function NextTaskRow({
           {error}
         </p>
       ) : null}
-      {status !== "done" ? <MarkDoneButton runId={runId} taskId={taskId} taskName={name} confirm={confirm} action={mark} /> : null}
+      {status !== "done" ? (
+        <MarkDoneButton
+          key={String(askConfirm)}
+          runId={runId}
+          taskId={taskId}
+          taskName={name}
+          confirm={confirm || askConfirm}
+          startConfirming={askConfirm}
+          action={mark}
+        />
+      ) : null}
     </li>
   );
 }

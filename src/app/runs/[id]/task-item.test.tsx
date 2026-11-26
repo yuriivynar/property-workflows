@@ -59,7 +59,7 @@ describe("TaskItem: остання обов'язкова задача", () => {
   it("AC-TASK-04: база відповіла, що задача остання (дані сторінки застаріли), — підтвердження з назвою, без помилки", async () => {
     markTaskDoneInPlace.mockResolvedValue({
       error: "This is the last required task: confirm to mark it as done. This cannot be undone.",
-      code: "NEEDS_CONFIRMATION",
+      code: "CONFIRMATION_REQUIRED",
     });
     render(item());
 

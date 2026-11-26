@@ -22,12 +22,15 @@
 //   - SMOKE_TARGET=deploy (ставить workflow для preview і staging) змінює лише підказки в повідомленнях про збій.
 //   - EXPECT_SUPABASE_REF (дія з postmortem 2026-11-23): ref бази, у яку має ходити це середовище; health показує інший —
 //     збій із назвою змінної NEXT_PUBLIC_SUPABASE_URL. Порожня — перевірку пропускаємо.
-import { suspectEnvHint, supabaseRefProblem } from "./lib/smoke-checks.mjs";
+import { bypassAllowedFor, suspectEnvHint, supabaseRefProblem } from "./lib/smoke-checks.mjs";
 
 const [rawBase = process.env.PROD_URL ?? "", expectSha = ""] = process.argv.slice(2);
 // client_payload.url від Vercel може прийти хостом без схеми — додаємо https://.
 const base = (/^https?:\/\//.test(rawBase) ? rawBase : rawBase ? `https://${rawBase}` : "").replace(/\/+$/, "");
-const bypass = (process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "").trim();
+const bypassSecret = (process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "").trim();
+// Секрет обходу — лише на хости Vercel чи проду (bypassAllowedFor; рев'ю 2026-11-26), інакше без заголовка.
+const bypass = bypassSecret && bypassAllowedFor(base, process.env.PROD_URL ?? "") ? bypassSecret : "";
+if (bypassSecret && !bypass) console.log("::warning::адреса не *.vercel.app і не PROD_URL — секрет обходу захисту Vercel не надсилаємо");
 const target = process.env.SMOKE_TARGET === "deploy" ? "deploy" : "prod";
 const expectRef = (process.env.EXPECT_SUPABASE_REF ?? "").trim();
 

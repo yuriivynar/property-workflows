@@ -49,4 +49,19 @@ describe("Палітра ⌘K", () => {
     expect(await screen.findByText("Repair")).toBeTruthy();
     expect(screen.queryByText("Apartment 12, move-in")).toBeNull();
   });
+
+  it("дві палітри на сторінці (бічна панель і смуга телефону) — Ctrl+K відкриває одне вікно", async () => {
+    const load = vi.fn(async () => ITEMS);
+    render(
+      <>
+        <CommandPalette load={load} />
+        <CommandPalette load={load} tone="bar" />
+      </>,
+    );
+    fireEvent.keyDown(window, { key: "k", ctrlKey: true });
+
+    await screen.findByText("Repair");
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
 });

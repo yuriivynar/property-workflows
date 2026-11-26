@@ -34,7 +34,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-const { markTaskDone } = await import("./actions");
+const { markTaskDone, markTaskDoneInPlace } = await import("./actions");
 
 function form(runId: string, taskId: string) {
   const data = new FormData();
@@ -89,5 +89,27 @@ describe("markTaskDone", () => {
 
     expect(await redirectOf(markTaskDone(form(RUN, TASK)))).toBe(`REDIRECT:/runs/${RUN}`);
     expect(state.rpc).toHaveBeenCalledWith("mark_task_done", { p_task_id: TASK, p_confirmed: false });
+  });
+});
+
+describe("markTaskDoneInPlace", () => {
+  beforeEach(() => {
+    state.task = { run_id: RUN };
+    state.selectError = null;
+    state.profile = { role: "manager" };
+    state.rpc.mockClear();
+  });
+
+  it("AC-TASK-04: база вимагає підтвердження останньої обов'язкової — код CONFIRMATION_REQUIRED (рядок покаже підтвердження)", async () => {
+    state.rpc.mockResolvedValueOnce({ error: { message: "CONFIRMATION_REQUIRED" } } as never);
+
+    const result = await markTaskDoneInPlace(form(RUN, TASK));
+
+    expect(result.code).toBe("CONFIRMATION_REQUIRED");
+    expect(state.rpc).toHaveBeenCalledWith("mark_task_done", { p_task_id: TASK, p_confirmed: false });
+  });
+
+  it("AC-TASK-01: позначено — без коду й без тексту помилки", async () => {
+    expect(await markTaskDoneInPlace(form(RUN, TASK))).toEqual({ error: null, code: null });
   });
 });

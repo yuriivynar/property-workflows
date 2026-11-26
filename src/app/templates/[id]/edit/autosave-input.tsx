@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
  */
 export function AutosaveInput(props: Omit<React.ComponentProps<typeof Input>, "onBlur" | "onKeyDown">) {
   // Останнє надіслане значення: Enter, а потім втрата фокусу до відповіді сервера не надсилають те саме вдруге.
+  // Скидається, щойно людина повернулась у поле, — тож після невдачі («Try again») те саме значення можна надіслати знову.
   const sent = useRef<string | null>(null);
 
   function save(input: HTMLInputElement) {
@@ -24,6 +25,9 @@ export function AutosaveInput(props: Omit<React.ComponentProps<typeof Input>, "o
     <Input
       {...props}
       enterKeyHint="done"
+      onFocus={() => {
+        sent.current = null;
+      }}
       onBlur={(event) => save(event.currentTarget)}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
