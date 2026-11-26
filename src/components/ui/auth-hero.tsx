@@ -9,7 +9,9 @@ import { cn } from "cn"
 // задає CSS (content у globals.css), тож у тексті сторінки їх немає: сторінка входу не містить жодних даних запусків.
 // Рухаються лише transform, opacity і stroke-dashoffset; анімації — у globals.css (auth-*), вимкнені для
 // prefers-reduced-motion. Малюнок — aria-hidden. Рух довший за 5 секунд можна поставити на паузу кнопкою (WCAG 2.2.2,
-// стан — aria-pressed); коли вкладку сховано, рух стоїть сам.
+// стан — aria-pressed); коли вкладку сховано, рух стоїть сам. Кнопку видно лише при наведенні на панель, при фокусі з
+// клавіатури, на паузі (щоб відновити) і на сенсорних екранах (без hover); з DOM вона не зникає — Tab і читачі екрана
+// її знаходять.
 const NODES = [
   { cx: 172.7, cy: 142 },
   { cx: 27.3, cy: 142 },
@@ -31,7 +33,7 @@ function AuthHero({ className }: { className?: string }) {
     <div
       data-slot="auth-hero"
       data-paused={paused || hidden}
-      className={cn("relative h-full min-h-[520px] overflow-hidden bg-hero text-hero-foreground", className)}
+      className={cn("group relative h-full min-h-[520px] overflow-hidden bg-hero text-hero-foreground", className)}
     >
       <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
         <span className="auth-orb auth-orb-3" />
@@ -69,7 +71,7 @@ function AuthHero({ className }: { className?: string }) {
         type="button"
         aria-pressed={paused}
         onClick={() => setPaused((current) => !current)}
-        className="absolute bottom-4 left-4 rounded-full border border-hero-border bg-hero-hover px-3.5 py-2 text-sm font-medium text-hero-muted outline-none transition-colors hover:text-hero-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-foreground"
+        className="absolute bottom-4 left-4 rounded-full border border-hero-border bg-hero-hover px-3.5 py-2 text-sm font-medium text-hero-muted opacity-0 outline-none transition-[opacity,color] duration-200 group-hover:opacity-100 hover:text-hero-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hero-foreground aria-pressed:opacity-100 [@media(hover:none)]:opacity-100"
       >
         {paused ? "Play animation" : "Pause animation"}
       </button>
