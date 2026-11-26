@@ -9,12 +9,9 @@ import { safeNextPath } from "@/lib/auth/access";
 import { landingPath } from "@/lib/auth/landing";
 import { createClient } from "@/lib/supabase/server";
 import { login } from "./actions";
+import { loginErrorMessage } from "@/lib/auth/login-errors";
 
 // Інтерфейс англійською (вимоги PM, «Припущення»); вигляд — лише компоненти @/components/ui і токени DESIGN.md.
-const ERRORS: Record<string, string> = {
-  missing: "Enter your email and password.",
-  invalid: "The email or password is not correct.",
-};
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error, next } = await searchParams;
@@ -25,7 +22,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const userId = data?.claims?.sub;
   if (userId) redirect(await landingPath(supabase, userId, safeNextPath(next)));
 
-  const message = typeof error === "string" ? ERRORS[error] : undefined;
+  const message = loginErrorMessage(error);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 items-center px-4 py-6 sm:px-6 sm:py-10">

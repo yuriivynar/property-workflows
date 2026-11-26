@@ -9,3 +9,5 @@
 | `ws11-error-tracker-telegram.png` | B: трекер помилок — `onRequestError` (`src/instrumentation.ts`) на staging надіслав маршрут, деплой, коміт і рядки стеку, без тексту помилки | навмисна помилка `GET /api/ops/error-test` під адміністратором на staging, 2026-11-24 |
 | `ws11-llm-call-log.png` | B: рядок `llm.call` у Vercel Logs (staging) — модель, fallback, стан, затримка, токени, версія промпту; тексту документа й відповіді моделі немає | «Propose values» на staging, 2026-11-24 |
 | `ws11-code-security.png` | D: Dependabot alerts і security updates, CodeQL default setup увімкнено | GitHub → Settings → Code security |
+| `ws11-push-protection.png` | D: Secret Protection і push protection увімкнено (On); Copilot Autofix для CodeQL | GitHub → Settings → Code security, 2026-11-26 |
+| `ws11-alert-recipients.png` | B: алерт отримують люди — у групі Telegram розробник (власник), PM і бот алертів; імена, назву групи й фото зафарбовано, ролі підписано | Telegram → інформація про групу, 2026-11-26 |

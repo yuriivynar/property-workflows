@@ -24,6 +24,17 @@ export function runsHref(tab: RunTab, query: string): string {
   return search ? `/runs?${search}` : "/runs";
 }
 
+/** Порожній список: з фільтром — «No runs match "…"» і порада; без фільтра — що вкладка порожня. */
+function NoRunsMessage({ tab, query }: { tab: RunTab; query: string }) {
+  if (!query) return <p className="font-medium">{tab === "completed" ? LABELS.noCompletedRuns : LABELS.noRunsInProgress}</p>;
+  return (
+    <>
+      <p className="font-medium">{LABELS.noRunsMatch(query)}</p>
+      <p className="text-muted-foreground">{LABELS.tryAnotherCaseName}</p>
+    </>
+  );
+}
+
 export interface RunItem {
   id: string;
   case_name: string | null;
@@ -114,8 +125,7 @@ export function RunsBrowser({
           className="flex flex-col gap-1 rounded-xl border border-dashed border-border px-4 py-6 text-sm"
           data-testid="runs-no-match"
         >
-          <p className="font-medium">{LABELS.noRunsMatch(query)}</p>
-          <p className="text-muted-foreground">{LABELS.tryAnotherCaseName}</p>
+          <NoRunsMessage tab={tab} query={query} />
         </div>
       ) : (
         <Table id="runs-list">

@@ -60,7 +60,8 @@ export async function createTemplate(form: FormData) {
   const name = cleanName(form.get("name"));
   if (!name) redirect("/templates?error=TEMPLATE_NAME_REQUIRED"); // AC-EDITOR-19
   const { data, error } = await supabase.from("templates").insert({ name }).select("id").single();
-  if (error || !data) redirect(`/templates?error=${templateErrorCode(error)}`);
+  // Введена назва повертається у вікно «New template» (DESIGN.md, «Стани»: введене лишається у формі; рев'ю 2026-11-26).
+  if (error || !data) redirect(`/templates?error=${templateErrorCode(error)}&name=${encodeURIComponent(name)}`);
   revalidatePath("/templates");
   redirect(editPath(data.id));
 }

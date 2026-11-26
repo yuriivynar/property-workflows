@@ -30,7 +30,10 @@ function CommandPalette({ load, tone = "hero" }: { load: () => Promise<SearchIte
   const [, startTransition] = useTransition()
   const collapsed = useSidebar().state === "collapsed"
 
+  // Ctrl+K / ⌘K слухає лише палітра бічної панелі (tone «hero»): палітра смуги телефону змонтована поруч (схована CSS),
+  // і два слухачі відкривали б два вікна одне над одним. Діалог — у порталі, тож на телефоні відкривається так само.
   useEffect(() => {
+    if (tone !== "hero") return
     const onKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
@@ -39,7 +42,7 @@ function CommandPalette({ load, tone = "hero" }: { load: () => Promise<SearchIte
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [])
+  }, [tone])
 
   useEffect(() => {
     if (!open) return

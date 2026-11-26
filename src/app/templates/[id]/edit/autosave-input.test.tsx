@@ -52,6 +52,16 @@ describe("Редактор: назва зберігається при втра�
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("збереження не вдалося — повернулись у поле, Enter надсилає те саме значення ще раз", () => {
+    const { submit, input } = renderField();
+    fireEvent.change(input, { target: { value: "Hand over two keys" } });
+    fireEvent.blur(input);
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(submit).toHaveBeenCalledTimes(2);
+  });
+
   it("кнопки «Rename» немає", () => {
     renderField();
     expect(screen.queryByRole("button", { name: "Rename" })).toBeNull();

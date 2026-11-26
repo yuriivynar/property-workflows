@@ -23,9 +23,10 @@ import { createTemplate } from "./actions";
  * Створення шаблону (лише admin; рішення власника 2026-11-26, ADR 0012): головна дія сторінки — кнопка «New template»,
  * яка відкриває вікно з полем «Template name» і «Create a template». Поле в шапці сторінки плутали з пошуком.
  * noValidate: порожню назву перевіряє дія й показує «Enter a template name» (AC-EDITOR-19) під полем, а «A template with
- * this name already exists» (AC-EDITOR-23) — теж там; з помилкою (адреса ?error=…) чи з ?new=1 вікно відкрите одразу.
+ * this name already exists» (AC-EDITOR-23) — теж там; з помилкою (адреса ?error=…) чи з ?new=1 вікно відкрите одразу, а
+ * введена назва (?name=…) лишається в полі.
  */
-export function CreateTemplateDialog({ error, open }: { error: string | undefined; open: boolean }) {
+export function CreateTemplateDialog({ error, open, name = "" }: { error: string | undefined; open: boolean; name?: string }) {
   return (
     <Dialog defaultOpen={open}>
       <DialogTrigger render={<Button size="lg" className="max-sm:w-full" />}>
@@ -43,6 +44,7 @@ export function CreateTemplateDialog({ error, open }: { error: string | undefine
             <Input
               id="new-template-name"
               name="name"
+              defaultValue={name}
               required
               autoFocus
               aria-invalid={Boolean(error) || undefined}

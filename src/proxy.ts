@@ -24,7 +24,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Усі шляхи, крім статики Next.js, favicon і зображень.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Усі шляхи, крім статики Next.js, favicon і файлів зображень у корені (метадані на кшталт /icon.png). Лише корінь:
+    // інакше /runs/x.png чи /templates/a.svg малювали б сторінку застосунку без CSP і без оновлення сесії (рев'ю 2026-11-26).
+    "/((?!_next/static|_next/image|favicon.ico|[^/]+\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

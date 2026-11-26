@@ -17,6 +17,9 @@ export type RunErrorCode =
   | "ANSWER_NOT_ALLOWED"
   | "INVALID_ANSWER";
 
+/** Код відмови mark_task_done для останньої обов'язкової задачі без підтвердження (AC-TASK-04, AC-TASK-16). */
+export const CONFIRMATION_REQUIRED = "CONFIRMATION_REQUIRED" satisfies RunErrorCode;
+
 export type CaseNameCheck = { ok: true; caseName: string } | { ok: false; code: RunErrorCode };
 
 /**

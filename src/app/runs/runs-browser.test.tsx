@@ -60,6 +60,12 @@ describe("Список запусків: вкладки й фільтр у бр�
     expect(screen.queryByRole("table")).toBeNull();
   });
 
+  it("порожня вкладка без фільтра — «No completed runs yet.», без «No runs match»", () => {
+    render(<RunsBrowser initialTab="completed" initialQuery="" items={ITEMS.filter((item) => item.status !== "completed")} />);
+
+    expect(screen.getByTestId("runs-no-match").textContent).toBe("No completed runs yet.");
+  });
+
   it("адреса без порожніх параметрів", () => {
     expect(runsHref("all", "")).toBe("/runs");
     expect(runsHref("in_progress", "flat 3")).toBe("/runs?status=in_progress&q=flat+3");
