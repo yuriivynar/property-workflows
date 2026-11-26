@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { ChevronsUpDown, LogOut, UserRound } from "lucide-react"
 import { cn } from "cn"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -30,9 +30,10 @@ function initialsOf(email: string | null | undefined): string {
 }
 
 /** Аватар — нейтральний, не акцентний: бірюзовий лише для головної дії екрана (ADR 0012). */
-function OwnAvatar({ email, className }: { email: string | null | undefined; className?: string }) {
+function OwnAvatar({ email, src, className }: { email: string | null | undefined; src?: string | null; className?: string }) {
   return (
     <Avatar className={cn("size-8", className)}>
+      {src ? <AvatarImage src={src} alt="Your photo" /> : null}
       <AvatarFallback className="bg-hero-border text-xs font-semibold text-hero-foreground">{initialsOf(email)}</AvatarFallback>
     </Avatar>
   )
@@ -47,9 +48,12 @@ function UserMenu({
   role,
   theme,
   signOut,
+  avatarSrc,
 }: {
   email: string | null | undefined
   role: string | null | undefined
+  /** Власне фото (/api/avatar) — лише своє; інших людей показуємо лише email (ADR 0012). */
+  avatarSrc?: string | null
   theme: Theme
   signOut: () => Promise<void>
 }) {
@@ -60,7 +64,7 @@ function UserMenu({
         data-testid="user-menu"
         className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm outline-none transition-colors duration-(--duration-fast) hover:bg-hero-hover focus-visible:outline-2 focus-visible:outline-hero-foreground data-popup-open:bg-hero-hover"
       >
-        <OwnAvatar email={email} />
+        <OwnAvatar email={email} src={avatarSrc} />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-hero-foreground">{email}</span>
           {role ? <span className="text-hero-muted">{role}</span> : null}
@@ -119,9 +123,12 @@ function UserSheet({
   role,
   theme,
   signOut,
+  avatarSrc,
 }: {
   email: string | null | undefined
   role: string | null | undefined
+  /** Власне фото (/api/avatar) — лише своє; інших людей показуємо лише email (ADR 0012). */
+  avatarSrc?: string | null
   theme: Theme
   signOut: () => Promise<void>
 }) {
@@ -131,13 +138,13 @@ function UserSheet({
         aria-label="Account and theme"
         className="flex size-11 items-center justify-center rounded-full outline-none focus-visible:outline-2 focus-visible:outline-hero-foreground"
       >
-        <OwnAvatar email={email} />
+        <OwnAvatar email={email} src={avatarSrc} />
       </SheetTrigger>
       <SheetContent side="bottom" className="gap-5 rounded-t-2xl px-5 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <SheetTitle className="sr-only">Account and theme</SheetTitle>
         <SheetDescription className="sr-only">{email}</SheetDescription>
         <div className="flex items-center gap-3">
-          <OwnAvatar email={email} className="size-10" />
+          <OwnAvatar email={email} src={avatarSrc} className="size-10" />
           <span className="flex min-w-0 flex-col text-sm">
             <span className="truncate font-medium text-foreground">{email}</span>
             {role ? <span className="text-muted-foreground">{role}</span> : null}

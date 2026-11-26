@@ -1,0 +1,37 @@
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field-error";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { messageForTemplateError } from "@/lib/templates/domain";
+import { renameTemplate } from "../../actions";
+
+/**
+ * Перейменування шаблону. noValidate: порожню назву перевіряє дія й показує «Enter a template name» (AC-EDITOR-19)
+ * під полем; «A template with this name already exists» — теж під полем; помилка зникає, щойно поле змінили (ADR 0012).
+ */
+export function RenameForm({ templateId, workingName, error }: { templateId: string; workingName: string; error: string | undefined }) {
+  return (
+    <form action={renameTemplate} noValidate className="rename-scope flex flex-wrap items-end gap-2">
+      <input type="hidden" name="template_id" value={templateId} />
+      <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
+        <Label htmlFor="template-name">Template name</Label>
+        <Input
+          id="template-name"
+          name="name"
+          defaultValue={workingName}
+          className="w-full sm:w-72"
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={error ? "editor-name-error" : undefined}
+        />
+        {error ? (
+          <FieldError id="editor-name-error" fieldId="template-name">
+            {messageForTemplateError(error)}
+          </FieldError>
+        ) : null}
+      </div>
+      <Button type="submit" variant="secondary" className="rename-btn">
+        Rename
+      </Button>
+    </form>
+  );
+}

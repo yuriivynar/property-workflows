@@ -44,8 +44,8 @@ describe("contentSecurityPolicy: прод", () => {
     expect(script).not.toContain("unsafe-inline");
   });
 
-  it("connect-src — свій origin і Supabase (лише origin, без шляху); шрифти — свої", () => {
-    expect(directive(csp, "connect-src")).toBe(`connect-src 'self' ${SUPABASE}`);
+  it("connect-src — свій origin, Supabase (лише origin, без шляху) і його Realtime (wss того самого хоста); шрифти — свої", () => {
+    expect(directive(csp, "connect-src")).toBe(`connect-src 'self' ${SUPABASE} ${SUPABASE.replace("https:", "wss:")}`);
     expect(directive(csp, "font-src")).toBe("font-src 'self'");
   });
 

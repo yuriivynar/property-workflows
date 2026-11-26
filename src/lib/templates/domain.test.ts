@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { requiredLabel } from "@/lib/runs/domain";
 import {
+  editorErrorPlace,
+  editorErrorTitle,
   versionSummary,
   addTaskFormState,
   addTaskNeedsSignIn,
@@ -218,5 +220,26 @@ describe("Картка шаблону: тексти (рішення власни
       "Saved 24.11.2026 14:05 by admin@example.test",
     );
     expect(TEMPLATE_MESSAGES.savedBy("24.11.2026 14:05", null)).toBe("Saved 24.11.2026 14:05");
+  });
+});
+
+describe("Редактор: де показати помилку (ADR 0012)", () => {
+  it("AC-EDITOR-25: «Your last change was not kept» — у статусі автозбереження, і для невідомого коду теж", () => {
+    expect(editorErrorPlace("CHANGE_NOT_KEPT")).toBe("autosave");
+    expect(editorErrorPlace("SOMETHING_ELSE")).toBe("autosave");
+    expect(TEMPLATE_MESSAGES.allChangesKept).toBe("All changes kept");
+  });
+
+  it("AC-EDITOR-04: відмова збереження — Alert форми «Version N was not saved» з дослівним текстом", () => {
+    expect(editorErrorPlace("TEMPLATE_NEEDS_REQUIRED_TASK")).toBe("form");
+    expect(editorErrorTitle("TEMPLATE_NEEDS_REQUIRED_TASK", 2)).toBe("Version 3 was not saved");
+    expect(editorErrorTitle("TEMPLATE_NEEDS_REQUIRED_TASK", null)).toBe("Version 1 was not saved");
+    expect(editorErrorTitle("NOT_ALLOWED", 2)).toBe("Change not saved");
+    expect(messageForTemplateError("TEMPLATE_NEEDS_REQUIRED_TASK")).toBe("A template needs at least one required task");
+  });
+
+  it("назва шаблону — помилка під полем", () => {
+    expect(editorErrorPlace("TEMPLATE_NAME_REQUIRED")).toBe("name");
+    expect(editorErrorPlace("NAME_TAKEN")).toBe("name");
   });
 });

@@ -34,6 +34,7 @@ export const TEMPLATE_MESSAGES = {
   // Картка шаблону (рішення власника 2026-11-26, тексти — з полотна UI v3).
   currentVersion: (n: number) => `Version ${n} · current`,
   noVersionsYet: "No versions yet",
+  allChangesKept: "All changes kept",
   templatesSubtitle: "Blueprints of processes. Managers launch only saved versions.",
   saveToLaunch: "Save the template to launch it",
   savedBy: (when: string, email: string | null) => (email ? `Saved ${when} by ${email}` : `Saved ${when}`),
@@ -206,4 +207,25 @@ export function versionSummary(content: unknown): { sections: number; tasks: num
     : [];
   const tasks = sections.flatMap((section) => (Array.isArray(section.tasks) ? section.tasks : []));
   return { sections: sections.length, tasks: tasks.length, required: tasks.filter((task) => task.is_required === true).length };
+}
+
+/**
+ * Де редактор показує помилку (ADR 0012): назва шаблону — під полем; «Your last change was not kept» (і невідомий код,
+ * що дає той самий текст) — у статусі автозбереження; решта — Alert форми з фокусом.
+ */
+export function editorErrorPlace(code: string): "name" | "autosave" | "form" {
+  if (code === "TEMPLATE_NAME_REQUIRED" || code === "NAME_TAKEN") return "name";
+  return messageForTemplateError(code) === TEMPLATE_MESSAGES.changeNotKept ? "autosave" : "form";
+}
+
+const VERSION_SAVE_ERRORS = new Set([
+  "TEMPLATE_NEEDS_REQUIRED_TASK",
+  "TEMPLATE_SECTION_EMPTY",
+  "TEMPLATE_NAME_MISSING",
+  "NO_UNPUBLISHED_CHANGES",
+]);
+
+/** Короткий заголовок Alert форми: відмова збереження версії — «Version N was not saved», інше — «Change not saved». */
+export function editorErrorTitle(code: string, currentVersion: number | null): string {
+  return VERSION_SAVE_ERRORS.has(code) ? `Version ${(currentVersion ?? 0) + 1} was not saved` : "Change not saved";
 }

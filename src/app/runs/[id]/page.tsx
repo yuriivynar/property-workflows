@@ -21,6 +21,8 @@ import { fieldOptions, RunDetailsCard, RunSection, type RunField } from "./run-p
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { BackLink } from "@/components/ui/back-link";
 import { RunDocuments } from "./_document/run-documents";
+import { ActivityCard } from "./activity-card";
+import { RunLive } from "./run-live";
 
 // Сторінка запуску: прогрес «N of M done», задачі за розділами з виконавцем, позначкою обов'язковості й статусом
 // (AC-TASK-05, AC-TASK-08; робоче рішення до solomchaak/property-workflows-spec#11), кнопка позначки — лише там, де
@@ -59,7 +61,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const runId = run.id;
   const runManagerId = run.run_manager_id;
 
-  const { sections, tasks: allTasks, fields, names, versionNumber } = await loadRun(supabase, runId);
+  const { sections, tasks: allTasks, fields, names, versionNumber, events } = await loadRun(supabase, runId);
   const fieldById = new Map(fields.map((field) => [field.id, field]));
   const sectionName = new Map(sections.map((section) => [section.id, section.name]));
   const optionsOf = (field: RunField) => fieldOptions(field, allTasks, sectionName);
@@ -69,14 +71,17 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
       <Breadcrumb items={[{ href: "/runs", label: LABELS.runsTitle }]} current={run.case_name} />
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]" data-testid="case-name">
-          {run.case_name}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {run.template_name}
-          {versionNumber ? <span data-testid="template-version"> · {templateVersionLabel(versionNumber)}</span> : null}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]" data-testid="case-name">
+            {run.case_name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {run.template_name}
+            {versionNumber ? <span data-testid="template-version"> · {templateVersionLabel(versionNumber)}</span> : null}
+          </p>
+        </div>
+        <RunLive runId={runId} />
       </div>
       {/* Від lg — дві колонки: розділи з задачами ліворуч, закріплена картка деталей праворуч (ADR 0008, ADR 0012). */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
@@ -113,6 +118,18 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           ))}
 
           <RunDocuments supabase={supabase} runId={runId} viewer={viewer} runManagerId={runManagerId} names={names} />
+
+          <ActivityCard
+            events={events}
+            context={{
+              viewerId: viewer.userId,
+              emails: names,
+              taskNames: new Map(allTasks.map((task) => [task.id, task.name])),
+              fieldNames: new Map(fields.map((field) => [field.id, field.name])),
+              templateName: run.template_name ?? "",
+              caseName: run.case_name ?? "",
+            }}
+          />
         </div>
       </div>
     </main>
@@ -121,7 +138,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
 // Номер версії — у runs (копія на момент запуску), а не у view run_overview (AC-EDITOR-06).
 async function loadRun(supabase: Awaited<ReturnType<typeof createClient>>, runId: string) {
-  const [{ data: sections }, { data: tasks }, { data: fields }, { data: staff }, { data: version }] = await Promise.all([
+  const [{ data: sections }, { data: tasks }, { data: fields }, { data: staff }, { data: version }, { data: events }] = await Promise.all([
     supabase.from("run_sections").select("id, name, position").eq("run_id", runId).order("position"),
     supabase
       .from("run_tasks")
@@ -131,8 +148,16 @@ async function loadRun(supabase: Awaited<ReturnType<typeof createClient>>, runId
     supabase.from("run_fields").select("id, name, options, position, answer").eq("run_id", runId).order("position"),
     supabase.rpc("staff_directory"),
     supabase.from("runs").select("template_version").eq("id", runId).maybeSingle(),
+    // Стрічка Activity — останні 10 подій (рішення власника, ADR 0012); RLS — як для запуску.
+    supabase
+      .from("run_events")
+      .select("id, kind, actor_id, task_id, field_id, answer, created_at")
+      .eq("run_id", runId)
+      .order("id", { ascending: false })
+      .limit(10),
   ]);
   return {
+    events: events ?? [],
     sections: sections ?? [],
     tasks: tasks ?? [],
     fields: fields ?? [],

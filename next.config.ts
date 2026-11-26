@@ -10,6 +10,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Не видаємо версію фреймворку в заголовку X-Powered-By.
   poweredByHeader: false,
+  // Фото профілю — до 2 МБ (ADR 0012): тіло Server Action з multipart-накладними витратами вміщається в 3 МБ.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

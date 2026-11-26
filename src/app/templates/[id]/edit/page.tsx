@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormAlert } from "@/components/ui/form-alert";
+import { AutosaveStatus } from "./autosave-status";
+import { RenameForm } from "./rename-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,14 +13,19 @@ import { currentUser } from "@/lib/auth/require-role";
 import { requiredLabel } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 import { unpublishedTemplateIds } from "@/lib/templates/queries";
-import { messageForTemplateError, TEMPLATE_MESSAGES, templatePageAccess } from "@/lib/templates/domain";
+import {
+  editorErrorPlace,
+  editorErrorTitle,
+  messageForTemplateError,
+  TEMPLATE_MESSAGES,
+  templatePageAccess,
+} from "@/lib/templates/domain";
 import {
   addSection,
   moveItem,
   moveTaskToSection,
   removeTask,
   renameSection,
-  renameTemplate,
   renameTask,
   saveVersion,
   setTaskRequired,
@@ -81,7 +88,10 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
   const savedNumber = typeof saved === "string" ? Number(saved) : NaN;
   const hidden = <input type="hidden" name="template_id" value={template.id} />;
   const workingName = draftName?.name ?? template.name;
-  const nameError = error === "TEMPLATE_NAME_REQUIRED" || error === "NAME_TAKEN";
+  // Автозбереження: «Your last change was not kept. Try again.» — в одному фіксованому місці, у рядку збереження
+  // (AC-EDITOR-25; ADR 0012); решта помилок — Alert форми з фокусом або помилка під полем назви.
+  const place = typeof error === "string" ? editorErrorPlace(error) : null;
+  const formError = place === "form" ? String(error) : undefined;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
@@ -92,6 +102,7 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {template.current_version ? `Current: ${TEMPLATE_MESSAGES.version(template.current_version)}` : "Never saved"}
             {hasUnpublishedChanges ? <StatusBadge status="unpublished" /> : null}
+            <AutosaveStatus failed={place === "autosave"} />
           </p>
         </div>
         <form action={saveVersion}>
@@ -103,30 +114,14 @@ export default async function EditTemplatePage({ params, searchParams }: PagePro
         </form>
       </div>
 
-      {typeof error === "string" ? (
-        <Alert variant="destructive" id="editor-error">
-          <AlertDescription>{messageForTemplateError(error)}</AlertDescription>
-        </Alert>
+      {formError ? (
+        <FormAlert id="editor-error" title={editorErrorTitle(formError, template.current_version)}>
+          {messageForTemplateError(formError)}
+        </FormAlert>
       ) : null}
 
       {/* noValidate: порожню назву перевіряє дія й показує «Enter a template name». */}
-      <form action={renameTemplate} noValidate className="rename-scope flex flex-wrap items-end gap-2">
-        {hidden}
-        <div className="flex flex-col gap-2 max-sm:min-w-0 max-sm:flex-1">
-          <Label htmlFor="template-name">Template name</Label>
-          <Input
-            id="template-name"
-            name="name"
-            defaultValue={workingName}
-            className="w-full sm:w-72"
-            aria-invalid={nameError || undefined}
-            aria-describedby={nameError ? "editor-error" : undefined}
-          />
-        </div>
-        <Button type="submit" variant="secondary" className="rename-btn">
-          Rename
-        </Button>
-      </form>
+      <RenameForm templateId={template.id} workingName={workingName} error={editorErrorPlace(String(error)) === "name" ? String(error) : undefined} />
       {Number.isInteger(savedNumber) && savedNumber > 0 ? (
         <p role="status" className="text-sm">
           {TEMPLATE_MESSAGES.versionSaved(savedNumber)}
