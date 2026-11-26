@@ -13,9 +13,19 @@ export const PRODUCT_MODELS = [
   "nvidia/nemotron-3.5-super-vl:free",
 ] as const;
 
-// Суддя для живого eval — інша родина, ніж основна модель продукту (не оцінює відповіді своєї родини).
-// Якщо відповідь дала резервна super-vl, суддя тієї ж родини: колонка modelId у звіті це показує.
+// Суддя для живого eval — інша родина, ніж модель, що відповіла (не оцінює відповіді своєї родини; ADR 0013).
+// Основна відповідь — Gemma, тож типовий суддя — nemotron; якщо відповіла резервна nemotron, суддя — Gemma
+// (порада викладача WS10: раніше в такому разі модель оцінювала сама себе).
 export const JUDGE_MODEL = "nvidia/nemotron-3.5-super-vl:free";
+export const JUDGE_FALLBACK_MODEL = "google/gemma-4-31b-it:free";
+
+/** Родина моделі OpenRouter — частина ID до «/» (google, nvidia…). */
+const familyOf = (modelId: string) => modelId.split("/")[0] ?? modelId;
+
+/** Суддя для відповіді цієї моделі: інша родина, ніж у відповіді. Невідома модель — типовий суддя. */
+export function judgeModelFor(answerModelId: string): string {
+  return familyOf(answerModelId) === familyOf(JUDGE_MODEL) ? JUDGE_FALLBACK_MODEL : JUDGE_MODEL;
+}
 
 // Фабрики приймають ключ параметром і НЕ читають process.env: так їх можна імпортувати в eval-скрипті.
 // У коді застосунку модель бере лише src/lib/ai/openrouter.ts (server-only).
@@ -32,7 +42,7 @@ export function makeProductModel(apiKey: string | undefined) {
   });
 }
 
-export function makeJudgeModel(apiKey: string | undefined) {
+export function makeJudgeModel(apiKey: string | undefined, modelId: string = JUDGE_MODEL) {
   const openrouter = createOpenRouter({ apiKey, appName: "QuitCode slice 4 eval" });
-  return openrouter.chat(JUDGE_MODEL);
+  return openrouter.chat(modelId);
 }

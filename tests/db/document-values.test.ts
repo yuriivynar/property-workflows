@@ -136,3 +136,41 @@ describe("run_document_values: хто зберігає й бачить підт�
     expect(badFields).toMatch(/run_document_values_fields_check/);
   });
 });
+
+describe("run_document_values: форма значень — та сама, що zod у дії (порада викладача WS10)", () => {
+  const insertFields = (kind: string, fields: unknown) =>
+    t
+      .asUser(MANAGER_A, "insert into public.run_document_values (run_id, kind, fields) values ($1, $2, $3)", [RUN, kind, fields])
+      .then(
+        () => "",
+        (e: Error) => e.message,
+      );
+  const ESTIMATE = {
+    items: [{ name: "Replace tap cartridge", quantity: 1, unitPrice: 45.5 }],
+    total: 45.5,
+    notes: [],
+    warning: null,
+  };
+
+  it("AC-DOCAI-08: коректні звернення й кошторис зберігаються", async () => {
+    expect(await insertFields("request", { ...REQUEST, phone: null })).toBe("");
+    expect(await insertFields("estimate", ESTIMATE)).toBe("");
+  });
+
+  it("AC-DOCAI-08: прямий insert в обхід дії — зайвий чи відсутній ключ, хибний тип чи межа відхиляє база", async () => {
+    const rejected = [
+      ["request", {}],
+      ["request", { ...REQUEST, admin: true }],
+      ["request", { ...REQUEST, category: "garden" }],
+      ["request", { ...REQUEST, description: "" }],
+      ["request", { ...REQUEST, notes: ["a", "b", "c", "d", "e", "f", "g", "h"] }],
+      ["request", { ...REQUEST, phone: 5550101 }],
+      ["estimate", { ...ESTIMATE, items: [] }],
+      ["estimate", { ...ESTIMATE, items: [{ name: "Tap", quantity: "1", unitPrice: 5 }] }],
+      ["estimate", { ...ESTIMATE, items: [{ name: "Tap", quantity: 0, unitPrice: 5 }] }],
+      ["estimate", { ...ESTIMATE, items: [{ name: "Tap", quantity: 1, unitPrice: 5, extra: 1 }] }],
+      ["estimate", { ...ESTIMATE, total: -1 }],
+    ] as const;
+    for (const [kind, fields] of rejected) expect(await insertFields(kind, fields)).toMatch(/run_document_values_shape_check/);
+  });
+});

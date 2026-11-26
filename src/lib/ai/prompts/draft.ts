@@ -44,7 +44,27 @@ export const DRAFT_INSTRUCTIONS = [
 
 // Недовірений текст завжди загортаємо як дані: теги-межі з самого тексту вирізаємо (інакше документ «закрив» би межу
 // й дописав би інструкції поза нею), довжину обмежуємо (AC-DOCAI-10).
-const withoutDocumentTags = (text: string) => text.replace(/<\s*\/?\s*document\b[^>]*>/gi, " ");
+// Порада викладача WS10 (рев'ю 18.11): спершу нормалізуємо — NFKC перетворює повноширинні «＜／ｄｏｃｕｍｅｎｔ＞» на
+// звичайні символи, символи нульової ширини всередині слова прибираємо; далі вирізаємо теги в циклі, доки текст не
+// перестане змінюватися: вкладений «<</document>/document>» після одного проходу знову склав би тег. Тег без «>» теж
+// вирізаємо (до найближчого «<» чи «>»), атрибути — разом із тегом.
+const ZERO_WIDTH = /[​-‍⁠﻿­]/g;
+const DOCUMENT_TAG = /<\s*\/?\s*document\b[^<>]*>?/gi;
+
+/** Текст документа, як його бачить модель і перевірка інструкцій: NFKC, без символів нульової ширини. */
+export function normalizeDocumentText(text: string): string {
+  return text.normalize("NFKC").replace(ZERO_WIDTH, "");
+}
+
+/** Текст без тегів-меж <document>: повторюємо, доки нічого не змінюється (вкладені й «склеєні» теги). */
+export function withoutDocumentTags(text: string): string {
+  let current = normalizeDocumentText(text);
+  for (;;) {
+    const next = current.replace(DOCUMENT_TAG, " ");
+    if (next === current) return current;
+    current = next;
+  }
+}
 
 export function wrapDocument(text: string): string {
   const clean = withoutDocumentTags(text).slice(0, MAX_DOCUMENT_CHARS);
