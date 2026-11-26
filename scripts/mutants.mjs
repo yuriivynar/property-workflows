@@ -16,6 +16,8 @@ const VERSIONS = "supabase/migrations/20261026133459_template_versions.sql";
 const EDITOR_DB = "tests/db/template-editor.test.ts";
 const CLARIFY_DB = "tests/db/template-clarify.test.ts";
 const VENDOR_ROLE = "supabase/migrations/20261102133035_vendor_role.sql";
+// Зріз 5 перевизначає launch_run, mark_task_done, vendor_runs, vendor_run_tasks (лише показані задачі): мутуємо останнє.
+const CONDITIONAL = "supabase/migrations/20261126083814_conditional_tasks.sql";
 const VENDOR_DB = "tests/db/vendor-work.test.ts";
 const WS7_RULES = "supabase/migrations/20261115134842_ws7_review_template_rules.sql";
 const RULES_DB = "tests/db/template-rules-review.test.ts";
@@ -52,7 +54,7 @@ export const mutants = [
 
   // ── Відмовні AC зрізу 2 без мутанта (рев'ю WS7 №3): «AC → що прибрали → який тест упав» ──────────────────────
   {
-    id: "E11", kind: "sql", ac: "AC-EDITOR-11", file: VENDOR_ROLE, tests: [CLARIFY_DB],
+    id: "E11", kind: "sql", ac: "AC-EDITOR-11", file: CONDITIONAL, tests: [CLARIFY_DB],
     what: "launch_run: шаблон без збереженої версії не відхиляється як TEMPLATE_NOT_FOUND (лише «не знайдено»)",
     find: "  if not found or v_version is null then",
     replace: "  if not found then",
@@ -105,13 +107,13 @@ export const mutants = [
     replace: "       or true\n     );",
   },
   {
-    id: "V06", kind: "sql", ac: "AC-VENDOR-06", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    id: "V06", kind: "sql", ac: "AC-VENDOR-06", file: CONDITIONAL, tests: [VENDOR_DB],
     what: "vendor_run_tasks: задачі запуску повертаються не лише виконавцю — чужий запуск перестає бути «Run not found»",
     find: "    and t.assignee_id = (select auth.uid())\n    and (select private.current_app_role()) = 'vendor'",
     replace: "    and (select private.current_app_role()) = 'vendor'",
   },
   {
-    id: "V07", kind: "sql", ac: "AC-VENDOR-07", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    id: "V07", kind: "sql", ac: "AC-VENDOR-07", file: CONDITIONAL, tests: [VENDOR_DB],
     what: "mark_task_done: вендор може позначити будь-яку задачу, а не лише свою",
     find: "(v_role = 'manager' and v_run_manager_id = v_uid) or v_assignee_id = v_uid)",
     replace: "(v_role = 'manager' and v_run_manager_id = v_uid) or v_role = 'vendor')",
@@ -123,7 +125,7 @@ export const mutants = [
     replace: "or ((select private.current_app_role()) in ('manager', 'vendor') and current_version is not null)",
   },
   {
-    id: "V09", kind: "sql", ac: "AC-VENDOR-09", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    id: "V09", kind: "sql", ac: "AC-VENDOR-09", file: CONDITIONAL, tests: [VENDOR_DB],
     what: "launch_run: вендор може запустити шаблон (LAUNCH_NOT_ALLOWED не спрацьовує)",
     find: "v_role is null or v_role not in ('manager', 'admin')",
     replace: "v_role is null or v_role not in ('manager', 'admin', 'vendor')",
@@ -146,7 +148,7 @@ export const mutants = [
   },
   // ── Уточнення зрізу 3 (10.11): що бачить вендор — заголовок запуску, рядок списку, навігація ───────────────────
   {
-    id: "V12", kind: "sql", ac: "AC-VENDOR-12", file: VENDOR_ROLE, tests: [VENDOR_DB],
+    id: "V12", kind: "sql", ac: "AC-VENDOR-12", file: CONDITIONAL, tests: [VENDOR_DB],
     what: "vendor_runs: до назви випадку дописано назву шаблону — вендор бачить «Tenant move-in» у рядку списку й заголовку",
     find: "  select r.id, r.case_name, r.status, r.created_at,",
     replace: "  select r.id, r.case_name || ' · ' || r.template_name, r.status, r.created_at,",
@@ -172,7 +174,7 @@ export const mutants = [
   },
   // ── Уточнення 10.11: необов'язкова задача завершеного запуску (AC-TASK-19, AC-VENDOR-16) ──────────────────────────
   {
-    id: "T19", kind: "sql", ac: "AC-TASK-19", file: VENDOR_ROLE, tests: [VENDOR_DB, "tests/db/run-progress.test.ts"],
+    id: "T19", kind: "sql", ac: "AC-TASK-19", file: CONDITIONAL, tests: [VENDOR_DB, "tests/db/run-progress.test.ts"],
     what: "mark_task_done: у запуску «completed» позначку відхилено — необов'язкову задачу вже не позначити",
     find: "  if v_status = 'done' then\n    return;\n  end if;",
     replace: "  if v_status = 'done' then\n    return;\n  end if;\n  if exists (select 1 from public.runs where id = v_run_id and status = 'completed') then\n    raise exception 'RUN_COMPLETED' using errcode = '22023';\n  end if;",
