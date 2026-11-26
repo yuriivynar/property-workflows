@@ -3,6 +3,9 @@
 import { describe, expect, it } from "vitest";
 import {
   answerLabel,
+  caseQueryParam,
+  filterRuns,
+  runTabParam,
   canChangeAnswer,
   canMarkTask,
   errorCodeFrom,
@@ -279,5 +282,28 @@ describe("Задачі лише для певної відповіді (openspec
   it("відповідь показано з великої літери: «Urgent», «Not urgent»", () => {
     expect(answerLabel("urgent")).toBe("Urgent");
     expect(answerLabel("not urgent")).toBe("Not urgent");
+  });
+});
+
+describe("Список запусків: вкладки й фільтр (рішення власника 2026-11-26, ADR 0012)", () => {
+  const runs = [
+    { case_name: "Apartment 12, move-in", status: "in_progress" },
+    { case_name: "Apartment 7, leak", status: "completed" },
+    { case_name: "House 3, move-in", status: "completed" },
+  ];
+
+  it("вкладка й фільтр без урахування регістру; лічильники — з урахуванням фільтра", () => {
+    expect(filterRuns(runs, "all", "").counts).toEqual({ all: 3, in_progress: 1, completed: 2 });
+    const moveIn = filterRuns(runs, "completed", "MOVE-IN");
+    expect(moveIn.rows.map((run) => run.case_name)).toEqual(["House 3, move-in"]);
+    expect(moveIn.counts).toEqual({ all: 2, in_progress: 1, completed: 1 });
+  });
+
+  it("параметри адреси: невідома вкладка — all; запит обрізано", () => {
+    expect(runTabParam("archived")).toBe("all");
+    expect(runTabParam(["completed"])).toBe("all");
+    expect(runTabParam("completed")).toBe("completed");
+    expect(caseQueryParam("  leak ")).toBe("leak");
+    expect(caseQueryParam(undefined)).toBe("");
   });
 });

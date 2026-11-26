@@ -15,17 +15,20 @@ export function MarkDoneButton({
   taskId,
   taskName,
   confirm,
+  action = markTaskDone,
 }: {
   runId: string;
   taskId: string;
   taskName: string;
   confirm: boolean;
+  /** Дія форми: типово markTaskDone (переадресація); TaskItem передає миттєву позначку з відкатом на місці. */
+  action?: (formData: FormData) => void | Promise<void>;
 }) {
   const [confirming, setConfirming] = useState(false);
 
   if (!confirm) {
     return (
-      <form action={markTaskDone}>
+      <form action={action}>
         <input type="hidden" name="run_id" value={runId} />
         <input type="hidden" name="task_id" value={taskId} />
         <MarkNowButton />
@@ -44,7 +47,7 @@ export function MarkDoneButton({
   }
 
   return (
-    <form action={markTaskDone} className="flex flex-wrap items-center gap-2" role="group" aria-label={LABELS.confirmGroup}>
+    <form action={action} className="flex flex-wrap items-center gap-2" role="group" aria-label={LABELS.confirmGroup}>
       <input type="hidden" name="run_id" value={runId} />
       <input type="hidden" name="task_id" value={taskId} />
       <input type="hidden" name="confirmed" value="true" />

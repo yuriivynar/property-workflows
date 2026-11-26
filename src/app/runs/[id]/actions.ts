@@ -3,12 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth/require-role";
-import { canChangeAnswer, errorCodeFrom, isUuid, taskBelongsToRun } from "@/lib/runs/domain";
+import { canChangeAnswer, errorCodeFrom, isUuid, messageForError, taskBelongsToRun } from "@/lib/runs/domain";
 import { createClient } from "@/lib/supabase/server";
 
 // Позначка задачі виконаною (openspec/specs/run-progress). Хто може позначати і чи завершено запуск, вирішує функція
-// бази mark_task_done; відмова — код NOT_ALLOWED, текст AC-TASK-03 показує сторінка запуску.
-export async function markTaskDone(formData: FormData) {
+// бази mark_task_done; відмова — код NOT_ALLOWED, текст AC-TASK-03 показує сторінка запуску (markTaskDone) або рядок
+// задачі на місці (markTaskDoneInPlace, миттєва позначка UI v3 — ADR 0012).
+/** Підсумок позначки: сторінка запуску й код відмови (null — позначено). */
+type MarkOutcome = { runPath: string; code: string | null };
+
+async function performMark(formData: FormData): Promise<MarkOutcome> {
   const runId = String(formData.get("run_id") ?? "");
   const taskId = String(formData.get("task_id") ?? "");
 
@@ -24,11 +28,8 @@ export async function markTaskDone(formData: FormData) {
   }
   const runPath = `/runs/${runId}`;
   // Без профілю з відомою роллю нічого не позначаємо; хто саме може позначити задачу, вирішує mark_task_done.
-  if (!user.ok) {
-    redirect(`${runPath}?error=NOT_ALLOWED`);
-  }
-  if (!isUuid(taskId)) {
-    redirect(`${runPath}?error=NOT_ALLOWED`);
+  if (!user.ok || !isUuid(taskId)) {
+    return { runPath, code: "NOT_ALLOWED" };
   }
 
   // Задача має належати саме запуску з форми: інакше дія виконала б позначку в іншому запуску й повернула б на чужу
@@ -39,10 +40,10 @@ export async function markTaskDone(formData: FormData) {
     .eq("id", taskId)
     .maybeSingle();
   if (taskError) {
-    redirect(`${runPath}?error=UNEXPECTED`);
+    return { runPath, code: "UNEXPECTED" };
   }
   if (!taskBelongsToRun(task, runId)) {
-    redirect(`${runPath}?error=NOT_ALLOWED`);
+    return { runPath, code: "NOT_ALLOWED" };
   }
 
   // confirmed=true надсилає лише форма підтвердження; останню обов'язкову задачу база без нього не позначить
@@ -50,12 +51,25 @@ export async function markTaskDone(formData: FormData) {
   const confirmed = formData.get("confirmed") === "true";
   const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId, p_confirmed: confirmed });
   if (error) {
-    redirect(`${runPath}?error=${encodeURIComponent(errorCodeFrom(error.message) ?? "UNEXPECTED")}`);
+    return { runPath, code: errorCodeFrom(error.message) ?? "UNEXPECTED" };
   }
 
   revalidatePath("/runs");
   revalidatePath(runPath);
-  redirect(runPath);
+  return { runPath, code: null };
+}
+
+export async function markTaskDone(formData: FormData) {
+  const { runPath, code } = await performMark(formData);
+  redirect(code ? `${runPath}?error=${encodeURIComponent(code)}` : runPath);
+}
+
+/** Та сама позначка без переадресації: відмову (дослівний текст AC) показує рядок задачі на місці. */
+export type InPlaceResult = { error: string | null };
+
+export async function markTaskDoneInPlace(formData: FormData): Promise<InPlaceResult> {
+  const { code } = await performMark(formData);
+  return { error: code ? messageForError(code) : null };
 }
 
 // Відповідь на поле запуску (openspec/specs/conditional-tasks). Роль перевіряємо до запису (AGENTS.md): лише менеджер

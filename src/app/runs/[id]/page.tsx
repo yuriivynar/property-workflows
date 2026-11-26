@@ -13,7 +13,7 @@ import {
   staffLabel,
   vendorRunNotice,
 } from "@/lib/runs/domain";
-import { signedInViewer } from "@/lib/auth/require-role";
+import { getViewer } from "@/lib/auth/viewer";
 import { createClient } from "@/lib/supabase/server";
 import { templateVersionLabel } from "@/lib/templates/version";
 import { MarkDoneButton } from "./mark-done-button";
@@ -36,7 +36,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const errorCode = errorParam(error);
 
   const supabase = await createClient();
-  const viewer = await signedInViewer(supabase);
+  const viewer = await getViewer();
   if (!viewer) {
     redirect("/login");
   }

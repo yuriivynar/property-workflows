@@ -1,19 +1,16 @@
 import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { messageForError, requiredLabel, staffLabel } from "@/lib/runs/domain";
+import { messageForError } from "@/lib/runs/domain";
 import { LABELS, MESSAGES } from "@/lib/runs/messages";
 import { NotEnoughRights } from "@/components/not-enough-rights";
-import { signedInViewer } from "@/lib/auth/require-role";
+import { getViewer } from "@/lib/auth/viewer";
 import { createClient } from "@/lib/supabase/server";
 import { launchOptions } from "@/lib/templates/domain";
 import { parseVersionContent } from "@/lib/templates/version";
-import { SubmitButton } from "../submit-button";
-import { launchRun } from "./actions";
+import { LaunchForm } from "./launch-form";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 // Запуск шаблону: спершу вибір шаблону, потім назва випадку і виконавець кожної задачі (за розділами).
@@ -22,9 +19,11 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const { template, error } = await searchParams;
   const templateId = typeof template === "string" ? template : undefined;
   const message = typeof error === "string" ? messageForError(error) : undefined;
+  // Помилки назви випадку — під полем (AC-RUN-03, AC-RUN-07; ADR 0012); решта — Alert над кнопкою.
+  const caseNameError = error === "CASE_NAME_REQUIRED" || error === "CASE_NAME_TOO_LONG";
 
   const supabase = await createClient();
-  const viewer = await signedInViewer(supabase);
+  const viewer = await getViewer();
   if (!viewer) {
     redirect("/login");
   }
@@ -97,62 +96,14 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
       ) : null}
 
       {selected && !versionMissing ? (
-        <form action={launchRun} className="flex flex-col gap-5">
-          <input type="hidden" name="template_id" value={selected.id} />
-          <input type="hidden" name="expected_version" value={selected.current_version ?? ""} />
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="case_name">{LABELS.caseName}</Label>
-            <Input
-              id="case_name"
-              name="case_name"
-              type="text"
-              placeholder={LABELS.caseNamePlaceholder}
-              aria-describedby={message ? "launch-error" : undefined}
-            />
-          </div>
-
-          {sections.map((section) => (
-            <Card key={section.id} className="gap-3 px-4">
-              <fieldset className="flex flex-col gap-3">
-                <legend className="mb-1 text-base font-semibold">{section.name}</legend>
-                {section.tasks
-                  .map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <Label htmlFor={`assignee:${task.id}`} className="font-normal">
-                        {task.name}{" "}
-                        <span className="text-muted-foreground">({requiredLabel(task.is_required)})</span>
-                      </Label>
-                      <NativeSelect
-                        id={`assignee:${task.id}`}
-                        name={`assignee:${task.id}`}
-                        defaultValue=""
-                        aria-label={LABELS.assigneeOf(task.name)}
-                      >
-                        <NativeSelectOption value="">{LABELS.meAsRunManager}</NativeSelectOption>
-                        {colleagues.map((person) => (
-                          <NativeSelectOption key={person.id} value={person.id}>
-                            {staffLabel(person)}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelect>
-                    </div>
-                  ))}
-              </fieldset>
-            </Card>
-          ))}
-
-          {message ? (
-            <Alert variant="destructive" id="launch-error">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          ) : null}
-          <div>
-            <SubmitButton label={LABELS.launch} pendingLabel={LABELS.launching} />
-          </div>
-        </form>
+        <LaunchForm
+          templateId={selected.id}
+          version={selected.current_version}
+          sections={sections}
+          colleagues={colleagues}
+          message={message}
+          caseNameError={caseNameError}
+        />
       ) : null}
 
     </main>
