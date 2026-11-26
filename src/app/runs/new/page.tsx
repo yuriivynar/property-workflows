@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
   const { template, error } = await searchParams;
   const templateId = typeof template === "string" ? template : undefined;
   const message = typeof error === "string" ? messageForError(error) : undefined;
+  // Помилки назви випадку — під полем (AC-RUN-03, AC-RUN-07; ADR 0012); решта — Alert над кнопкою.
+  const caseNameError = error === "CASE_NAME_REQUIRED" || error === "CASE_NAME_TOO_LONG";
 
   const supabase = await createClient();
   const viewer = await getViewer();
@@ -107,8 +110,15 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
               name="case_name"
               type="text"
               placeholder={LABELS.caseNamePlaceholder}
+              autoFocus={caseNameError || undefined}
+              aria-invalid={caseNameError || undefined}
               aria-describedby={message ? "launch-error" : undefined}
             />
+            {caseNameError ? (
+              <FieldError id="launch-error" fieldId="case_name">
+                {message}
+              </FieldError>
+            ) : null}
           </div>
 
           {sections.map((section) => (
@@ -144,7 +154,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
             </Card>
           ))}
 
-          {message ? (
+          {message && !caseNameError ? (
             <Alert variant="destructive" id="launch-error">
               <AlertDescription>{message}</AlertDescription>
             </Alert>

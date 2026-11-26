@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { CircleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -72,10 +72,9 @@ export default async function TemplatesPage({ searchParams }: PageProps<"/templa
                 aria-describedby={nameError ? "template-error" : undefined}
               />
               {nameError ? (
-                <p id="template-error" role="alert" className="flex items-start gap-1.5 text-sm text-destructive">
-                  <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <FieldError id="template-error" fieldId="new-template-name">
                   {messageForTemplateError(String(error))}
-                </p>
+                </FieldError>
               ) : null}
             </div>
             <Button type="submit" size="lg" className="sm:mt-7">
