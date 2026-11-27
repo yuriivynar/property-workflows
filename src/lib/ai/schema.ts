@@ -38,6 +38,8 @@ export const ProposalSchema = z.object({
   total: z.number().nonnegative().max(100_000_000).nullable(),
   notes: z.array(z.string().max(200)).max(5),
   twoProblems: z.boolean(),
+  // docai-v5: запит згадує запах газу чи витік — примітку «possible gas leak» пише код (golden case 6, вимога PM #40).
+  gasLeakRisk: z.boolean(),
   instructionsIgnored: z.boolean(),
 });
 

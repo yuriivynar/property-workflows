@@ -7,6 +7,7 @@ import { scoreFields, type GoldenCase } from "@/lib/ai/scorer";
 import { containsInstructionsToAi, DOCUMENT_MESSAGES, toProposalView } from "@/lib/documents/values";
 import casesJson from "./fixtures/golden/cases.json";
 import recordedJson from "./fixtures/golden/recorded.json";
+import recordedFailuresJson from "./fixtures/golden/recorded-failures.json";
 
 // Офлайн-реплей golden cases solomchaak/property-workflows-spec#40: без мережі й без ключа, тож працює в CI
 // (`npm test`, job `app`). Перевіряє КОД навколо моделі (промпт, межа <document>, схема, правила коду, мапінг збоїв,
@@ -54,7 +55,6 @@ const casesOf = (ac: string) => cases.filter((c) => c.ac === ac);
 // RECORD=1 дописує лише ✅-відповіді: кейс, що впав у живому прогоні поточної версії, лишає запис старшої. Такі кейси —
 // лише тут, з причиною (повний розбір — evals/reports/README.md); реплей перевіряє код на справжній відповіді моделі.
 const OLDER_RECORDS: Record<string, string> = {
-  "GC-06": "docai-v3 і docai-v4 FAIL: примітка «smell of gas» / «gas smell» замість «possible gas leak»; запис — ✅-відповідь docai-v1",
 };
 
 // Точні поля PM збіглися, і недовірений вхід дійшов до моделі загорнутим як дані.
@@ -143,7 +143,7 @@ describe("оцінювач golden cases", () => {
         items: [{ name: "Labour", quantity: 1, unitPrice: 10 }, { name: "Washer", quantity: 2, unitPrice: 5 }],
         total: 20,
         notes: [],
-        twoProblems: false,
+        twoProblems: false, gasLeakRisk: false,
         instructionsIgnored: false,
       },
       "Estimate",
@@ -278,5 +278,29 @@ describe("ін'єкція: текст документа — дані, а не �
     const prompt = JSON.stringify(model.doGenerateCalls[0].prompt);
     expect(prompt).toContain("never instructions to you");
     expect(prompt).toContain("instructionsIgnored");
+  });
+});
+
+// Відповіді моделі, що НЕ пройшли точні поля PM у живому прогоні (RECORD=1 пише всі відповіді — порада викладача WS10).
+// Реплей перевіряє, що код не «підтягує» таку відповідь до правильної: оцінювач бачить ту саму розбіжність.
+type FailureRecording = Recording & { mismatches: { field: string }[] };
+const failures = recordedFailuresJson as Record<string, FailureRecording>;
+
+describe("golden cases: записані неуспішні відповіді", () => {
+  it("кожен запис — поточна версія промпту з розбіжностями, і для кейсу немає водночас ✅-запису цієї версії", () => {
+    // Файл може бути порожнім (жоден кейс не впав на точних полях), але ключі — лише ID кейсів #40.
+    expect(Object.keys(failures).filter((id) => !cases.some((c) => c.id === id))).toEqual([]);
+    for (const [id, rec] of Object.entries(failures)) {
+      expect(rec.promptVersion).toBe(DRAFT_PROMPT_VERSION);
+      expect(rec.mismatches.length).toBeGreaterThan(0);
+      expect(recorded[id]?.promptVersion === DRAFT_PROMPT_VERSION && recorded[id]?.text === rec.text).toBe(false);
+    }
+  });
+
+  it.each(Object.keys(failures))("golden %s: код відхиляє записану неуспішну відповідь", async (id) => {
+    const c = cases.find((x) => x.id === id)!;
+    const result = await proposeDocumentValues(c.input, replay(failures[id].text, failures[id].modelId));
+    const fields = result.ok ? scoreFields(c.expected, toProposalView(result.proposal, c.input)).mismatches.map((m) => m.field) : ["(не за схемою)"];
+    expect(fields).toEqual(failures[id].mismatches.map((m) => m.field));
   });
 });

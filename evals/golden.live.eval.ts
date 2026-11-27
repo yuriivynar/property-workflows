@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { classifyError, proposeDocumentValues } from "@/lib/ai/draft";
-import { JUDGE_MODEL, PRODUCT_MODELS, judgeModelFor, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
+import { JUDGE_MODEL, PRODUCT_MODELS, judgeModelsFor, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
 import { JUDGE_PROMPT_VERSION } from "@/lib/ai/prompts/judge";
 import { ProposalSchema } from "@/lib/ai/schema";
@@ -17,7 +17,8 @@ import casesJson from "../tests/fixtures/golden/cases.json";
 // Перший 429 (моделі чи судді) зупиняє прогін: цей і решта кейсів — NOT RUN з причиною у звіті, у частку успіху не входять.
 // Таймаут, помилка постачальника, відповідь не за схемою — FAIL з причиною (входять у частку успіху).
 //   RUNS=2    — кілька прогонів поспіль для частки успіху (pass rate); бюджет див. нижче.
-//   RECORD=1  — успішні відповіді дописати в tests/fixtures/golden/recorded.json (для офлайн-реплею в CI).
+//   RECORD=1  — УСІ відповіді: успішні — у tests/fixtures/golden/recorded.json (офлайн-реплей в CI), неуспішні —
+//               у tests/fixtures/golden/recorded-failures.json з розбіжностями (офлайн-тест перевіряє, що код їх відхиляє).
 //   CASES=GC-03,GC-10 — лише ці кейси (дорозбір, коли денного ліміту бракує на всі 10); поріг такий звіт не рахує.
 // PowerShell: $env:RECORD="1"; npm run eval   (а потім Remove-Item Env:RECORD)
 
@@ -31,6 +32,7 @@ const key = process.env.OPENROUTER_API_KEY;
 const RECORD = process.env.RECORD === "1";
 const RUNS = Math.max(1, Number(process.env.RUNS ?? 1) || 1);
 const RECORDED_PATH = "tests/fixtures/golden/recorded.json";
+const FAILURES_PATH = "tests/fixtures/golden/recorded-failures.json";
 const REPORT_DIR = "evals/reports";
 
 // Бюджет: на прогін — 10 викликів моделі + до 10 викликів судді, з одного денного лічильника акаунта
@@ -43,6 +45,8 @@ type Recording = { modelId: string; recordedAt: string; promptVersion: string; t
 type Row = { run: number; id: string; modelId: string; fields: boolean; judge?: boolean; pass: boolean; notRun?: boolean; why?: string };
 const rows: Row[] = [];
 const fresh: Record<string, Recording> = {};
+// Відповіді, що не пройшли точні поля PM (порада викладача WS10: записувати всі відповіді, а не лише ✅).
+const freshFailures: Record<string, Recording & { mismatches: unknown[] }> = {};
 // Перший 429 зупиняє прогін (і наступні RUNS): денний ліміт повтором не виправити, решта кейсів — NOT RUN.
 let stoppedAt: string | undefined;
 
@@ -83,8 +87,9 @@ describe.skipIf(!key)("golden cases, живий прогін (безкоштов
         }
         const pass = fields.pass && (judged?.pass ?? true);
         rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, judge: judged?.pass, pass, why: [fieldsWhy(fields.mismatches), judged?.reason].filter(Boolean).join("; ") });
-        // Записуємо ЛИШЕ успішні відповіді: офлайн-реплей у CI має лишатися зеленим.
+        // Записуємо всі відповіді: ✅ — для офлайн-реплею, ❌ за точними полями — окремо, з розбіжностями.
         if (RECORD && pass) fresh[c.id] = recording(result);
+        if (RECORD && !fields.pass) freshFailures[c.id] = { ...recording(result), mismatches: fields.mismatches };
         expect(fields.mismatches).toEqual([]);
         if (judged) expect(judged.pass, judged.reason).toBe(true);
       });
@@ -98,6 +103,12 @@ describe.skipIf(!key)("golden cases, живий прогін (безкоштов
       // Злиття, а не заміна: прогін, обірваний 429, зберігає старі записи решти кейсів.
       const old = JSON.parse(readFileSync(RECORDED_PATH, "utf8")) as Record<string, Recording>;
       writeFileSync(RECORDED_PATH, JSON.stringify({ ...old, ...fresh }, null, 2) + "\n");
+    }
+    if (RECORD) {
+      // Неуспішні відповіді цього прогону замінюють попередні; кейс, що тепер пройшов, з файла зникає.
+      const old = JSON.parse(readFileSync(FAILURES_PATH, "utf8")) as Record<string, unknown>;
+      for (const id of Object.keys(fresh)) delete old[id];
+      writeFileSync(FAILURES_PATH, JSON.stringify({ ...old, ...freshFailures }, null, 2) + "\n");
     }
   });
 });
@@ -121,8 +132,8 @@ function reportModelFailure(run: number, c: GoldenCase, result: Failure): boolea
 async function judgeCase(c: GoldenCase, view: ReturnType<typeof toProposalView>, answerModelId: string) {
   if (!c.rubric) return undefined;
   try {
-    // Суддя — інша родина, ніж модель, що відповіла (judgeModelFor; ADR 0013).
-    return await judgeFreeText(makeJudgeModel(key, judgeModelFor(answerModelId)), c.rubric, freeText(view));
+    // Суддя — інша родина, ніж модель, що відповіла (judgeModelsFor; ADR 0013).
+    return await judgeFreeText(makeJudgeModel(key, judgeModelsFor(answerModelId)), c.rubric, freeText(view));
   } catch (error) {
     // Суддя теж може отримати 429 чи не відповісти — кейс лишається у звіті з причиною.
     const failure = classifyError(error);
@@ -158,7 +169,7 @@ function writeReport() {
   const lines = [
     `# Живий прогін golden cases — ${new Date().toISOString()}`,
     "",
-    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\`, для відповідей тієї самої родини — \`${judgeModelFor(JUDGE_MODEL)}\` (\`${JUDGE_PROMPT_VERSION}\`)`,
+    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя — інша родина, ніж відповідь: для Gemma ${judgeModelsFor(PRODUCT_MODELS[0]).map((m) => `\`${m}\``).join(" → ")}, для nemotron ${judgeModelsFor(JUDGE_MODEL).map((m) => `\`${m}\``).join(" → ")} (\`${JUDGE_PROMPT_VERSION}\`)`,
     `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}${PARTIAL ? ` з ${allCases.length} (CASES=${cases.map((c) => c.id).join(",")})` : ""}`,
     `- **Частка успіху: ${total.passed}/${total.total} (${Math.round(total.rate * 100)}%)** — з кейсів, що отримали відповідь`,
     thresholdLine(ran),
