@@ -1,6 +1,3 @@
-// Типи схеми бази — згенеровано: supabase gen types typescript --local на одноразовій базі з усіма міграціями
-// (job db-check у CI, артефакт database-types). Не редагуйте вручну: оновлюйте файлом з артефакту разом із міграцією.
-
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
