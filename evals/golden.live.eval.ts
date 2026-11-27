@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { classifyError, proposeDocumentValues } from "@/lib/ai/draft";
-import { JUDGE_MODEL, PRODUCT_MODELS, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
+import { JUDGE_MODEL, PRODUCT_MODELS, judgeModelFor, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
 import { JUDGE_PROMPT_VERSION } from "@/lib/ai/prompts/judge";
 import { ProposalSchema } from "@/lib/ai/schema";
@@ -75,7 +75,7 @@ describe.skipIf(!key)("golden cases, живий прогін (безкоштов
         if (!result.ok) return;
         const view = toProposalView(result.proposal, c.input);
         const fields = scoreFields(c.expected, view);
-        const judged = await judgeCase(c, view);
+        const judged = await judgeCase(c, view, result.modelId);
         if (judged === "rate_limited") {
           stoppedAt = `${c.id}, прогін ${run}, суддя`;
           rows.push({ run, id: c.id, modelId: result.modelId, fields: fields.pass, pass: false, notRun: true, why: `NOT RUN: суддя — 429` });
@@ -118,10 +118,11 @@ function reportModelFailure(run: number, c: GoldenCase, result: Failure): boolea
 }
 
 /** Вердикт судді для вільного тексту; undefined — кейс без rubric; "rate_limited" — суддя отримав 429. */
-async function judgeCase(c: GoldenCase, view: ReturnType<typeof toProposalView>) {
+async function judgeCase(c: GoldenCase, view: ReturnType<typeof toProposalView>, answerModelId: string) {
   if (!c.rubric) return undefined;
   try {
-    return await judgeFreeText(makeJudgeModel(key), c.rubric, freeText(view));
+    // Суддя — інша родина, ніж модель, що відповіла (judgeModelFor; ADR 0013).
+    return await judgeFreeText(makeJudgeModel(key, judgeModelFor(answerModelId)), c.rubric, freeText(view));
   } catch (error) {
     // Суддя теж може отримати 429 чи не відповісти — кейс лишається у звіті з причиною.
     const failure = classifyError(error);
@@ -157,7 +158,7 @@ function writeReport() {
   const lines = [
     `# Живий прогін golden cases — ${new Date().toISOString()}`,
     "",
-    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\` (\`${JUDGE_PROMPT_VERSION}\`)`,
+    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\`, для відповідей тієї самої родини — \`${judgeModelFor(JUDGE_MODEL)}\` (\`${JUDGE_PROMPT_VERSION}\`)`,
     `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}${PARTIAL ? ` з ${allCases.length} (CASES=${cases.map((c) => c.id).join(",")})` : ""}`,
     `- **Частка успіху: ${total.passed}/${total.total} (${Math.round(total.rate * 100)}%)** — з кейсів, що отримали відповідь`,
     thresholdLine(ran),

@@ -122,6 +122,17 @@ jobs:
             cat "$RUNNER_TEMP/database.types.ts"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+      # Той самий файл — артефактом: його можна забрати командою, без копіювання зі сторінки Summary
+      # (gh run download <id> -n database-types). Без Docker локально інакше типи не згенерувати.
+      - name: Generated types (artifact)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: database-types
+          path: ${{ runner.temp }}/database.types.ts
+          retention-days: 3
+          if-no-files-found: ignore
 
   # WS11: спершу база STAGING, і лише якщо там зелено — прод (db-deploy чекає на цей job). Зразок —
   # materials/ops-kit/ci-examples/db-deploy-staging.yml репо курсу WS11. Потрібні (Settings): environment `staging`

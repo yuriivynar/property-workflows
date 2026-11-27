@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_DOCUMENT_CHARS } from "@/lib/ai/prompts/draft";
+import { MAX_DOCUMENT_CHARS, withoutDocumentTags } from "@/lib/ai/prompts/draft";
 import { CATEGORIES, ItemSchema, URGENCIES, type Item, type Proposal } from "@/lib/ai/schema";
 
 // AI-розбір документа (openspec/specs/document-parsing): правила, які перевіряє КОД, а не лише промпт.
@@ -59,15 +59,20 @@ export function totalWarning(items: readonly Item[], total: number | null): stri
 
 // Типові інструкції для AI всередині документа. Код шукає їх сам: примітка AC-DOCAI-10 з'являється, навіть якщо модель
 // прапорця instructionsIgnored не поставила. Модель усе одно бачить текст лише як дані між тегами <document>.
+// Перевіряємо той самий текст, що бачить модель (withoutDocumentTags: NFKC, без символів нульової ширини й тегів-меж),
+// інакше «ig​nore previous instructions» чи повноширинні літери обійшли б перевірку (порада викладача WS10).
 const INSTRUCTION_PATTERNS = [
-  /\b(ignore|disregard|forget|override)\b[^.!?\n]{0,40}\b(instructions?|rules|prompts?|guidelines)\b/i,
+  /\b(ignore|disregard|forget|override|skip)\b[^.!?\n]{0,40}\b(instructions?|rules|prompts?|guidelines|directions)\b/i,
   /\bsystem prompt\b/i,
   /\byou are now\b/i,
-  /\b(act|behave) as\b[^.!?\n]{0,20}\b(assistant|ai|model|admin)\b/i,
+  /\b(new|updated) instructions?\b/i,
+  /\bdo not (follow|obey)\b/i,
+  /\b(act|behave|pretend) (as|to be)\b[^.!?\n]{0,20}\b(assistant|ai|model|admin)\b/i,
 ];
 
 export function containsInstructionsToAi(text: string): boolean {
-  return INSTRUCTION_PATTERNS.some((pattern) => pattern.test(text));
+  const seen = withoutDocumentTags(text);
+  return INSTRUCTION_PATTERNS.some((pattern) => pattern.test(seen));
 }
 
 /** Що бачить людина після розбору: значення для перевірки, примітки, попередження — або відмова. */
