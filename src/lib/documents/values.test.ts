@@ -20,7 +20,7 @@ const base: Proposal = {
   items: [],
   total: null,
   notes: [],
-  twoProblems: false,
+  twoProblems: false, gasLeakRisk: false,
   instructionsIgnored: false,
 };
 
@@ -53,6 +53,19 @@ describe("правила коду AI-розбору документа", () => {
   it("AC-DOCAI-10: ін'єкція в нетерміновому зверненні — лише примітка про проігноровані інструкції", () => {
     const view = toProposalView({ ...base, instructionsIgnored: true, notes: ["the sender asked to mark it urgent"] }, "x");
     expect(view).toMatchObject({ state: "proposed", notes: ["the text contains instructions to the AI that were ignored"] });
+  });
+
+  it("Прапорець газу → рівно примітка коду «possible gas leak» (golden case 6, #40), а не вільна примітка моделі", () => {
+    const view = toProposalView(
+      { ...base, gasLeakRisk: true, category: "other", urgency: "urgent", notes: ["smell of gas in the kitchen"] },
+      "There is a strong smell of gas in the kitchen.",
+    );
+    expect(view).toMatchObject({ state: "proposed", notes: ["possible gas leak"] });
+  });
+
+  it("Прапорець газу в кошторисі нічого не додає: примітка — лише для звернення", () => {
+    const view = toProposalView({ ...base, kind: "estimate", gasLeakRisk: true, items: [{ name: "Gas valve", quantity: 1, unitPrice: 40 }], total: 40 }, "x");
+    expect(view).toMatchObject({ state: "proposed", notes: [] });
   });
 
   it("Примітка моделі про ризик лишається для людини", () => {

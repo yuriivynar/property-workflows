@@ -18,13 +18,21 @@ export const PRODUCT_MODELS = [
 // (порада викладача WS10: раніше в такому разі модель оцінювала сама себе).
 export const JUDGE_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 export const JUDGE_FALLBACK_MODEL = "google/gemma-4-31b-it:free";
+/** Кандидати в судді за пріоритетом (усі :free зі structured_outputs, станом на 27.11.2026; ERNIE — запасна третя родина,
+ * коли безкоштовна Gemma перевантажена в постачальника). */
+export const JUDGE_CANDIDATES = [JUDGE_MODEL, JUDGE_FALLBACK_MODEL, "baidu/ernie-5.5-flash-preview:free"] as const;
 
 /** Родина моделі OpenRouter — частина ID до «/» (google, nvidia…). */
 const familyOf = (modelId: string) => modelId.split("/")[0] ?? modelId;
 
-/** Суддя для відповіді цієї моделі: інша родина, ніж у відповіді. Невідома модель — типовий суддя. */
+/** Ланцюжок суддів для відповіді цієї моделі: лише інші родини, ніж у відповіді, за пріоритетом. */
+export function judgeModelsFor(answerModelId: string): string[] {
+  return JUDGE_CANDIDATES.filter((id) => familyOf(id) !== familyOf(answerModelId));
+}
+
+/** Перший суддя ланцюжка для відповіді цієї моделі. */
 export function judgeModelFor(answerModelId: string): string {
-  return familyOf(answerModelId) === familyOf(JUDGE_MODEL) ? JUDGE_FALLBACK_MODEL : JUDGE_MODEL;
+  return judgeModelsFor(answerModelId)[0];
 }
 
 // Фабрики приймають ключ параметром і НЕ читають process.env: так їх можна імпортувати в eval-скрипті.
@@ -42,7 +50,8 @@ export function makeProductModel(apiKey: string | undefined) {
   });
 }
 
-export function makeJudgeModel(apiKey: string | undefined, modelId: string = JUDGE_MODEL) {
+/** Суддя з ланцюжком: OpenRouter пробує наступного кандидата при помилці чи ліміті постачальника. */
+export function makeJudgeModel(apiKey: string | undefined, models: readonly string[] = [JUDGE_MODEL]) {
   const openrouter = createOpenRouter({ apiKey, appName: "QuitCode slice 4 eval" });
-  return openrouter.chat(modelId);
+  return openrouter.chat(models[0], { models: [...models] });
 }

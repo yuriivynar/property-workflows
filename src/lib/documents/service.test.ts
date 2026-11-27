@@ -4,6 +4,7 @@
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
+import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
 import type { Proposal } from "@/lib/ai/schema";
 import type { RoleCheck } from "@/lib/auth/require-role";
 import { DOCUMENT_ERRORS } from "./form";
@@ -24,7 +25,7 @@ const REQUEST: Proposal = {
   items: [],
   total: null,
   notes: [],
-  twoProblems: false,
+  twoProblems: false, gasLeakRisk: false,
   instructionsIgnored: false,
 };
 
@@ -331,7 +332,7 @@ describe("llm.call з «Propose values»", () => {
         state: "ok",
         inputTokens: 10,
         outputTokens: 20,
-        promptVersion: "docai-v4",
+        promptVersion: DRAFT_PROMPT_VERSION,
       });
     } finally {
       info.mockRestore();

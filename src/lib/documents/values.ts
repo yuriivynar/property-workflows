@@ -16,6 +16,8 @@ export const DOCUMENT_MESSAGES = {
   notFound: "not found",
   /** AC-DOCAI-07 — рішення PM solomchaak/property-workflows-spec#54. */
   twoProblems: "the email has two problems",
+  /** Golden case 6 вимоги PM #40 — дослівно; формує код за прапорцем gasLeakRisk (порада викладача WS10). */
+  gasLeak: "possible gas leak",
   /** AC-DOCAI-10 — golden case 10. */
   instructionsIgnored: "the text contains instructions to the AI that were ignored",
   /** Текст довший, ніж бачить модель (MAX_DOCUMENT_CHARS): людина має знати, що решту не прочитано. */
@@ -92,6 +94,24 @@ export type ProposalView =
     };
 
 /**
+ * Примітки пропозиції. Примітки PM — точні (вимога #59): у звичайному зверненні й кошторисі лише сталі примітки коду.
+ * Власна примітка моделі (назва небезпеки) — лише для звернення, яке модель позначила терміновим. Газ — точна примітка коду
+ * замість вільної примітки моделі (golden case 6, #40; вимога #59, «Припущення»).
+ */
+function proposalNotes(proposal: Proposal, documentText: string): string[] {
+  const notes = modelNotesOf(proposal).map((note) => note.trim()).filter(Boolean);
+  if (proposal.kind === "request" && proposal.twoProblems) notes.push(DOCUMENT_MESSAGES.twoProblems);
+  if (proposal.instructionsIgnored || containsInstructionsToAi(documentText)) notes.push(DOCUMENT_MESSAGES.instructionsIgnored);
+  return [...new Set(notes)];
+}
+
+function modelNotesOf(proposal: Proposal): string[] {
+  if (proposal.kind !== "request") return [];
+  if (proposal.gasLeakRisk) return [DOCUMENT_MESSAGES.gasLeak];
+  return proposal.urgency === "urgent" ? proposal.notes : [];
+}
+
+/**
  * Пропозиція моделі → те, що показуємо людині (AC-DOCAI-01, -02, -06…-10). `refused` — жодних значень і текст
  * відмови. `needs_info` — звернення без названої проблеми: показуємо порожні поля з «not found» для ручного вводу.
  */
@@ -100,15 +120,7 @@ export function toProposalView(proposal: Proposal, documentText: string): Propos
     return { state: "refused", message: DOCUMENT_MESSAGES.refused };
   }
 
-  // Примітки PM — точні (вимога #59): у звичайному зверненні й кошторисі лише сталі примітки коду. Власна примітка моделі
-  // (назва небезпеки, golden case 6) — лише для звернення, яке модель позначила терміновим.
-  const modelNotes = proposal.kind === "request" && proposal.urgency === "urgent" ? proposal.notes : [];
-  const notes = modelNotes.map((note) => note.trim()).filter(Boolean);
-  if (proposal.kind === "request" && proposal.twoProblems) notes.push(DOCUMENT_MESSAGES.twoProblems);
-  if (proposal.instructionsIgnored || containsInstructionsToAi(documentText)) {
-    notes.push(DOCUMENT_MESSAGES.instructionsIgnored);
-  }
-  const uniqueNotes = [...new Set(notes)];
+  const uniqueNotes = proposalNotes(proposal, documentText);
 
   if (proposal.kind === "estimate") {
     return {

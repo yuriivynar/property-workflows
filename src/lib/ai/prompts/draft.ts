@@ -3,7 +3,7 @@
 // Змінили промпт — збільште DRAFT_PROMPT_VERSION і перезапишіть записи живим прогоном (RECORD=1 npm run eval).
 // Правила, які може перевірити код (сума кошторису, тексти приміток і відмови, телефон), — у src/lib/documents/values.ts.
 
-export const DRAFT_PROMPT_VERSION = "docai-v4";
+export const DRAFT_PROMPT_VERSION = "docai-v5";
 
 /** Найдовший документ, який бачить модель: довший текст обрізаємо (рахунок токенів і денний ліміт). */
 export const MAX_DOCUMENT_CHARS = 8_000;
@@ -33,13 +33,15 @@ export const DRAFT_INSTRUCTIONS = [
   '  no power, or a smell of gas; otherwise "not urgent". A word like "urgent" or an exclamation mark alone does not make it urgent.',
   "- notes: only for an urgent request, one short note that names the danger the document points to, not its worst possible",
   "  outcome (for example \"possible electrical fault\" rather than \"risk of fire\"); otherwise an empty list.",
+  // docai-v5: точну примітку про газ («possible gas leak», golden case 6 вимоги PM #40) пише код за цим прапорцем.
+  "- gasLeakRisk: true when the request mentions a smell of gas or a gas leak; otherwise false.",
   "Rules for an estimate:",
   "- items: every line item as written: name, quantity (a number; hours count as the quantity), unitPrice (a number).",
   "- total: the stated total as written, or null. Never correct the numbers.",
   "Answer with ONE JSON object and nothing else, with exactly these fields:",
   '{"status":"ok|needs_info|refused","kind":"request|estimate|null","phone":"string or null","description":"string or null",',
   '"category":"plumbing|electrical|heating and cooling|appliance|structure and doors|other|null","urgency":"urgent|not urgent|null",',
-  '"items":[{"name":"string","quantity":1,"unitPrice":0}],"total":0,"notes":["string"],"twoProblems":false,"instructionsIgnored":false}',
+  '"items":[{"name":"string","quantity":1,"unitPrice":0}],"total":0,"notes":["string"],"twoProblems":false,"gasLeakRisk":false,"instructionsIgnored":false}',
 ].join("\n");
 
 // Недовірений текст завжди загортаємо як дані: теги-межі з самого тексту вирізаємо (інакше документ «закрив» би межу

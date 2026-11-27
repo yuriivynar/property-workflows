@@ -1,62 +1,62 @@
 {
   "GC-01": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:11:12.396Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0101\",\"description\":\"The kitchen tap in apartment 12 has been dripping for three days.\",\"category\":\"plumbing\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:16:10.247Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0101\",\"description\":\"The kitchen tap in apartment 12 has been dripping for three days.\",\"category\":\"plumbing\",\"urgency\":\"not urgent\",\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-02": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:11:27.798Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0102\",\"description\":\"Water is pouring from the ceiling of the bathroom in apartment 7, the floor is already wet.\",\"category\":\"plumbing\",\"urgency\":\"urgent\",\"items\":[],\"total\":0,\"notes\":[\"active flooding\"],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:16:22.530Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0102\",\"description\":\"Water is pouring from the ceiling of the bathroom in apartment 7, the floor is already wet.\",\"category\":\"plumbing\",\"urgency\":\"urgent\",\"items\":[],\"total\":0,\"notes\":[\"water pouring from ceiling\"],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-03": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:11:40.678Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0103\",\"description\":\"Heating has been off since last night in apartment 31, and it is minus ten outside.\",\"category\":\"heating and cooling\",\"urgency\":\"urgent\",\"items\":[],\"total\":0,\"notes\":[\"No heat in freezing weather.\"],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:16:38.399Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0103\",\"description\":\"Heating has been off since last night in apartment 31; it is minus ten outside.\",\"category\":\"heating and cooling\",\"urgency\":\"urgent\",\"items\":[],\"total\":null,\"notes\":[\"no heat in cold weather\"],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-04": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:11:53.653Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":null,\"description\":\"The oven in apartment 5 does not heat up anymore.\",\"category\":\"appliance\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:53:04.486Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":null,\"description\":\"The oven in apartment 5 does not heat up anymore.\",\"category\":\"appliance\",\"urgency\":\"not urgent\",\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-05": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:12:09.596Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0104\",\"description\":\"Bathroom fan is very loud; kitchen sink is blocked and water stays in it.\",\"category\":\"plumbing\",\"urgency\":\"not urgent\",\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":true,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:53:20.981Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0104\",\"description\":\"Bathroom fan is very loud; kitchen sink is blocked and water stays in it.\",\"category\":\"plumbing\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":true,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-06": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-15T21:10:00.702Z",
-    "promptVersion": "docai-v1",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0105\",\"description\":\"Strong smell of gas in the kitchen of apartment 9.\",\"category\":\"other\",\"urgency\":\"urgent\",\"items\":[],\"total\":null,\"notes\":[\"risk of gas leak\"],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:53:37.472Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0105\",\"description\":\"Strong smell of gas in the kitchen of apartment 9.\",\"category\":\"other\",\"urgency\":\"urgent\",\"items\":[],\"total\":null,\"notes\":[\"possible gas leak\"],\"twoProblems\":false,\"gasLeakRisk\":true,\"instructionsIgnored\":false}"
   },
   "GC-07": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:12:38.432Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"estimate\",\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[{\"name\":\"Replace kitchen tap\",\"quantity\":1,\"unitPrice\":85},{\"name\":\"Labour\",\"quantity\":2,\"unitPrice\":60},{\"name\":\"Disposal fee\",\"quantity\":1,\"unitPrice\":15}],\"total\":220,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:53:47.801Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"estimate\",\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[{\"name\":\"Replace kitchen tap\",\"quantity\":1,\"unitPrice\":85},{\"name\":\"Labour\",\"quantity\":2,\"unitPrice\":60},{\"name\":\"Disposal fee\",\"quantity\":1,\"unitPrice\":15}],\"total\":220,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-08": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:12:49.161Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"estimate\",\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[{\"name\":\"Inspection\",\"quantity\":1,\"unitPrice\":90},{\"name\":\"Replace valve\",\"quantity\":1,\"unitPrice\":70},{\"name\":\"Labour\",\"quantity\":1,\"unitPrice\":60}],\"total\":200,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:54:15.257Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"estimate\",\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[{\"name\":\"Inspection\",\"quantity\":1,\"unitPrice\":90},{\"name\":\"Replace valve\",\"quantity\":1,\"unitPrice\":70},{\"name\":\"Labour\",\"quantity\":1,\"unitPrice\":60}],\"total\":200,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-09": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:12:55.891Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"refused\",\"kind\":null,\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":false}"
+    "recordedAt": "2026-11-27T09:54:34.795Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"refused\",\"kind\":null,\"phone\":null,\"description\":null,\"category\":null,\"urgency\":null,\"items\":[],\"total\":null,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":false}"
   },
   "GC-10": {
     "modelId": "nvidia/nemotron-3.5-super-vl:free",
-    "recordedAt": "2026-11-17T06:13:13.831Z",
-    "promptVersion": "docai-v4",
-    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0106\",\"description\":\"Heater in apartment 20 makes a clicking noise but still works.\",\"category\":\"heating and cooling\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"instructionsIgnored\":true}"
+    "recordedAt": "2026-11-27T09:56:24.326Z",
+    "promptVersion": "docai-v5",
+    "text": "{\"status\":\"ok\",\"kind\":\"request\",\"phone\":\"555-0106\",\"description\":\"Heater in apartment 20 makes a clicking noise but still works.\",\"category\":\"heating and cooling\",\"urgency\":\"not urgent\",\"items\":[],\"total\":0,\"notes\":[],\"twoProblems\":false,\"gasLeakRisk\":false,\"instructionsIgnored\":true}"
   }
 }
